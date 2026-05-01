@@ -1,2 +1,1 @@
-release: python manage.py migrate
-web: gunicorn stockzone.wsgi
+web: python manage.py migrate && gunicorn stockzone.wsgi
