@@ -1,0 +1,885 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Picks — StockZone</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      color: #fff;
+      background: #050507;
+      overflow-x: hidden;
+    }
+
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(153,69,255,0.22), transparent 36%),
+        linear-gradient(180deg, #08030f 0%, #050507 100%);
+    }
+
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(rgba(153,69,255,0.075) 0px, rgba(153,69,255,0.075) 1px, transparent 1px, transparent 44px),
+        repeating-linear-gradient(90deg, rgba(153,69,255,0.075) 0px, rgba(153,69,255,0.075) 1px, transparent 1px, transparent 44px);
+      animation: gridPulse 5s ease-in-out infinite;
+    }
+
+    @keyframes gridPulse {
+      0%, 100% { opacity: 0.45; }
+      50% { opacity: 0.85; }
+    }
+
+    .arrow-particle {
+      position: absolute;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .arrow-up {
+      color: rgba(0,255,135,0.25);
+      animation: rise linear infinite;
+    }
+
+    .arrow-down {
+      color: rgba(255,71,87,0.25);
+      animation: fall linear infinite;
+    }
+
+    @keyframes rise {
+      0% { transform: translateY(0); opacity: 0; }
+      15% { opacity: 1; }
+      100% { transform: translateY(-110vh); opacity: 0; }
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(0); opacity: 0; }
+      15% { opacity: 1; }
+      100% { transform: translateY(110vh); opacity: 0; }
+    }
+
+    .ticker-tape, .ekg-bar, .navbar, .hero, .content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .ticker-tape {
+      height: 36px;
+      background: #050505;
+      border-bottom: 1px solid rgba(153,69,255,0.22);
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .ticker-label {
+      height: 100%;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      background: #070707;
+      border-right: 1px solid #222;
+      color: #9945FF;
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 1.3px;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+
+    .ticker-mask { overflow: hidden; flex: 1; }
+
+    .ticker-track {
+      display: flex;
+      width: max-content;
+      white-space: nowrap;
+      animation: tickerScroll 34s linear infinite;
+    }
+
+    @keyframes tickerScroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .tick-item {
+      height: 36px;
+      padding: 0 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-right: 1px solid #1c1c1c;
+      font-size: 0.82rem;
+    }
+
+    .tick-sym { color: #fff; font-weight: 900; }
+    .tick-price { color: #8a8a8a; font-weight: 700; }
+    .tick-up { color: #00ff87; font-weight: 900; }
+    .tick-down { color: #ff4757; font-weight: 900; }
+
+    .ekg-bar {
+      height: 30px;
+      background: #070314;
+      border-bottom: 1px solid rgba(153,69,255,0.22);
+      overflow: hidden;
+      box-shadow: 0 0 18px rgba(153,69,255,0.26);
+    }
+
+    .ekg-bar svg {
+      display: block;
+      animation: ekgScroll 2.8s linear infinite;
+      filter: drop-shadow(0 0 8px rgba(153,69,255,0.95));
+    }
+
+    @keyframes ekgScroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-200px); }
+    }
+
+    .navbar {
+      height: 78px;
+      padding: 0 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(7,7,8,0.96);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .navbar-brand img {
+      height: 42px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .brand-text {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-text span { color: #9945FF; }
+
+    .navbar-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .navbar-links a {
+      color: #b6b6b6;
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 800;
+      padding: 10px 14px;
+      border-radius: 12px;
+      transition: 0.2s ease;
+    }
+
+    .navbar-links a:hover,
+    .navbar-links a.active {
+      color: #fff;
+      background: rgba(153,69,255,0.22);
+      box-shadow: inset 0 -2px 0 #9945FF, 0 0 18px rgba(153,69,255,0.18);
+    }
+
+    .logout-link {
+      border: 1px solid rgba(153,69,255,0.48);
+      color: #fff !important;
+    }
+
+    .hero {
+      min-height: 430px;
+      padding: 56px 70px 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 42px;
+      background:
+        radial-gradient(circle at 74% 45%, rgba(153,69,255,0.5), transparent 34%),
+        radial-gradient(circle at 44% 62%, rgba(153,69,255,0.2), transparent 42%),
+        linear-gradient(135deg, #050509 0%, #12051f 45%, #08080c 100%);
+      border-bottom: 1px solid rgba(153,69,255,0.28);
+      overflow: hidden;
+    }
+
+    .hero-left {
+      position: relative;
+      z-index: 3;
+      flex: 1;
+      min-width: 460px;
+      animation: fadeUp 0.65s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 84px;
+      line-height: 0.95;
+      font-weight: 400;
+      letter-spacing: 2px;
+      color: #fff;
+      text-shadow: 0 0 24px rgba(255,255,255,0.14);
+    }
+
+    .hero h1 span {
+      color: #ffd700;
+      text-shadow: 0 0 26px rgba(255,215,0,0.55);
+    }
+
+    .hero-line {
+      margin-top: 17px;
+      width: 94px;
+      height: 5px;
+      border-radius: 999px;
+      background: #9945FF;
+      box-shadow: 0 0 22px rgba(153,69,255,0.85);
+    }
+
+    .hero-sub {
+      margin-top: 14px;
+      color: #d3d3d3;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .stat-row {
+      margin-top: 30px;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(125px, 1fr));
+      gap: 16px;
+      max-width: 930px;
+    }
+
+    .stat-card {
+      background: rgba(15,15,17,0.9);
+      border: 1px solid rgba(153,69,255,0.42);
+      border-radius: 18px;
+      padding: 18px 20px;
+      box-shadow: 0 0 30px rgba(153,69,255,0.16);
+      transition: 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 42px rgba(153,69,255,0.28);
+    }
+
+    .stat-label {
+      color: #9b9b9b;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.85rem;
+      line-height: 1;
+      letter-spacing: 1px;
+    }
+
+    .stat-total { color: #fff; }
+    .stat-win { color: #00ff87; text-shadow: 0 0 18px rgba(0,255,135,0.4); }
+    .stat-loss { color: #ff4757; text-shadow: 0 0 18px rgba(255,71,87,0.4); }
+    .stat-pending { color: #9945FF; text-shadow: 0 0 18px rgba(153,69,255,0.55); }
+    .stat-pnl { color: #ffd700; text-shadow: 0 0 18px rgba(255,215,0,0.4); }
+
+    .hero-bull-wrap {
+      position: relative;
+      width: 540px;
+      height: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      overflow: visible;
+      animation: fadeUp 0.75s ease both;
+    }
+
+    .bull-glow {
+      position: absolute;
+      width: 590px;
+      height: 520px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, rgba(153,69,255,0.58) 0%, rgba(153,69,255,0.22) 36%, transparent 72%);
+      filter: blur(20px);
+      animation: glowPulse 3.5s ease-in-out infinite;
+    }
+
+    .hero-bull {
+      position: relative;
+      z-index: 2;
+      width: 540px;
+      max-width: none;
+      height: auto;
+      object-fit: contain;
+      filter:
+        drop-shadow(0 0 24px rgba(153,69,255,0.95))
+        drop-shadow(0 0 60px rgba(153,69,255,0.5));
+      animation: bullBreath 3.8s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.72; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.08); }
+    }
+
+    @keyframes bullBreath {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.025); }
+    }
+
+    .content {
+      padding: 40px 70px 86px;
+      animation: fadeUp 0.75s ease both;
+    }
+
+    .sector-card {
+      width: 100%;
+      margin-bottom: 24px;
+      background:
+        linear-gradient(90deg, rgba(153,69,255,0.2), transparent 36%),
+        rgba(11,11,13,0.96);
+      border: 1px solid rgba(153,69,255,0.42);
+      border-left: 5px solid #9945FF;
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 0 38px rgba(0,0,0,0.42), 0 0 24px rgba(153,69,255,0.12);
+    }
+
+    .sector-header {
+      padding: 20px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.09);
+    }
+
+    .sector-header h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.05rem;
+      font-weight: 400;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sector-count {
+      color: #c184ff;
+      background: rgba(153,69,255,0.18);
+      border: 1px solid rgba(153,69,255,0.45);
+      padding: 7px 13px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .pick-row {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 110px 120px 80px;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 28px;
+      border-bottom: 1px solid rgba(255,255,255,0.075);
+      transition: 0.18s ease;
+      cursor: pointer;
+    }
+
+    .pick-row:last-child { border-bottom: none; }
+
+    .pick-row:hover {
+      background: rgba(153,69,255,0.1);
+      transform: scale(1.008);
+      box-shadow: 0 0 20px rgba(153,69,255,0.16);
+    }
+
+    .ticker {
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .company {
+      margin-top: 4px;
+      color: #969696;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .momentum {
+      color: #c7c7c7;
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .confidence {
+      color: #9945FF;
+      font-size: 0.75rem;
+      margin-top: 5px;
+      font-weight: 900;
+    }
+
+    .picked-time {
+      color: #888;
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-width: 92px;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .badge-up {
+      color: #001b0e;
+      background: #00ff87;
+      box-shadow: 0 0 18px rgba(0,255,135,0.4);
+    }
+
+    .badge-down {
+      color: #220006;
+      background: #ff4757;
+      box-shadow: 0 0 18px rgba(255,71,87,0.4);
+    }
+
+    .badge-win {
+      color: #2c2300;
+      background: #ffd700;
+      box-shadow: 0 0 18px rgba(255,215,0,0.42);
+    }
+
+    .badge-loss {
+      color: #fff;
+      background: rgba(255,71,87,0.22);
+      border: 1px solid rgba(255,71,87,0.6);
+    }
+
+    .badge-pending {
+      color: #fff;
+      background: rgba(153,69,255,0.24);
+      border: 1px solid rgba(153,69,255,0.58);
+    }
+
+    .empty-state {
+      max-width: 620px;
+      margin: 74px auto 0;
+      padding: 62px 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      text-align: center;
+      background: rgba(13,13,15,0.96);
+      border: 1px solid rgba(153,69,255,0.5);
+      border-radius: 28px;
+      box-shadow: 0 0 60px rgba(153,69,255,0.26);
+    }
+
+    .empty-icon {
+      width: 78px;
+      height: 78px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(153,69,255,0.22);
+      color: #9945FF;
+      font-size: 2.4rem;
+      box-shadow: 0 0 34px rgba(153,69,255,0.48);
+    }
+
+    .empty-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3.35rem;
+      letter-spacing: 1.5px;
+      color: #fff;
+    }
+
+    .empty-sub {
+      max-width: 390px;
+      color: #bdbdbd;
+      font-size: 0.98rem;
+      line-height: 1.5;
+      font-weight: 600;
+    }
+
+    .empty-btn {
+      margin-top: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 15px 38px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #9945FF, #7c2ee0);
+      color: #fff;
+      text-decoration: none;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.22rem;
+      letter-spacing: 1px;
+      box-shadow: 0 0 34px rgba(153,69,255,0.6);
+      transition: 0.18s ease;
+    }
+
+    .empty-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 48px rgba(153,69,255,0.9);
+    }
+
+    @media (max-width: 1200px) {
+      .stat-row { grid-template-columns: repeat(3, minmax(135px, 1fr)); }
+    }
+
+    @media (max-width: 1100px) {
+      .hero {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .hero-left {
+        min-width: 0;
+        width: 100%;
+      }
+
+      .hero-bull-wrap {
+        width: 100%;
+        height: 330px;
+      }
+
+      .hero-bull { width: 390px; }
+      .stat-row { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
+      .pick-row { grid-template-columns: 1fr 1fr; }
+      .picked-time { text-align: left; }
+    }
+
+    @media (max-width: 760px) {
+      .navbar {
+        height: auto;
+        padding: 18px 22px;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .navbar-links {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .hero {
+        padding: 42px 24px 34px;
+      }
+
+      .hero h1 { font-size: 60px; }
+      .content { padding: 24px; }
+      .stat-row { grid-template-columns: 1fr; }
+      .pick-row { grid-template-columns: 1fr; gap: 12px; }
+
+      .sector-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .hero-bull-wrap { height: 280px; }
+      .hero-bull { width: 320px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="bg-layer">
+    <div class="bg-grid"></div>
+    <div id="arrowParticles"></div>
+  </div>
+
+  <div class="ticker-tape">
+    <div class="ticker-label">STOCKZONE LIVE</div>
+    <div class="ticker-mask">
+      <div class="ticker-track" id="tickerTrack">
+        <span class="tick-item"><span class="tick-sym">AAPL</span><span class="tick-price">$213.45</span><span class="tick-up">▲ 1.24%</span></span>
+        <span class="tick-item"><span class="tick-sym">TSLA</span><span class="tick-price">$184.22</span><span class="tick-down">▼ 0.81%</span></span>
+        <span class="tick-item"><span class="tick-sym">NVDA</span><span class="tick-price">$901.10</span><span class="tick-up">▲ 2.41%</span></span>
+        <span class="tick-item"><span class="tick-sym">MSFT</span><span class="tick-price">$421.77</span><span class="tick-up">▲ 0.62%</span></span>
+        <span class="tick-item"><span class="tick-sym">AMZN</span><span class="tick-price">$189.34</span><span class="tick-down">▼ 0.32%</span></span>
+        <span class="tick-item"><span class="tick-sym">META</span><span class="tick-price">$512.18</span><span class="tick-up">▲ 1.11%</span></span>
+        <span class="tick-item"><span class="tick-sym">GOOG</span><span class="tick-price">$167.90</span><span class="tick-up">▲ 0.41%</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ekg-bar" id="ekgBar"></div>
+
+  <nav class="navbar">
+    <a class="navbar-brand" href="{% url 'dashboard' %}">
+      <img src="{% static 'core/logo.png' %}" alt="StockZone Logo">
+      <div class="brand-text">Stock<span>Zone</span></div>
+    </a>
+
+    <div class="navbar-links">
+      <a href="{% url 'dashboard' %}">Dashboard</a>
+      <a href="{% url 'make_picks' %}">Make Picks</a>
+      <a href="{% url 'my_picks' %}" class="active">My Picks</a>
+      <a href="{% url 'portfolio' %}">Portfolio</a>
+      <a href="{% url 'leaderboard' %}">Leaderboard</a>
+      <a href="{% url 'logout' %}" class="logout-link">Log Out</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-left">
+      <h1>MY <span>PICKS</span></h1>
+      <div class="hero-line"></div>
+      <p class="hero-sub">Today’s picks — results update when markets close.</p>
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-label">Total Picks</div>
+          <div class="stat-value stat-total count-up" data-target="{{ total|default:0 }}">0</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Wins</div>
+          <div class="stat-value stat-win count-up" data-target="{{ wins|default:0 }}">0</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Losses</div>
+          <div class="stat-value stat-loss count-up" data-target="{{ losses|default:0 }}">0</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Pending</div>
+          <div class="stat-value stat-pending count-up" data-target="{{ pending|default:0 }}">0</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Total P&L</div>
+          <div class="stat-value stat-pnl">
+            {% if total_pnl %}
+              {{ total_pnl }}
+            {% else %}
+              $0
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-bull-wrap">
+      <div class="bull-glow"></div>
+      <img src="{% static 'core/smoke_bull_transparent.png' %}" alt="StockZone Bull" class="hero-bull">
+    </div>
+  </section>
+
+  <main class="content">
+
+    {% if total %}
+      {% for sector, picks in sectors.items %}
+        <section class="sector-card">
+          <div class="sector-header">
+            <h2>
+              {% if sector == "Technology" %}💻
+              {% elif sector == "Healthcare" %}💜
+              {% elif sector == "Finance" %}🏦
+              {% elif sector == "Energy" %}⚡
+              {% elif sector == "Consumer" %}🛒
+              {% else %}📈
+              {% endif %}
+              {{ sector }}
+            </h2>
+
+            <div class="sector-count">{{ picks|length }} Pick{{ picks|length|pluralize }}</div>
+          </div>
+
+          {% for pick in picks %}
+            <div class="pick-row">
+              <div>
+                <div class="ticker">{{ pick.ticker }}</div>
+                <div class="company">{{ pick.company_name }}</div>
+              </div>
+
+              <div>
+                <div class="momentum">
+                  {% if pick.momentum %}
+                    {{ pick.momentum }}
+                  {% else %}
+                    Neutral
+                  {% endif %}
+                </div>
+
+                <div class="confidence">
+                  {% if pick.confidence %}
+                    Confidence: {{ pick.confidence }}%
+                  {% else %}
+                    Confidence: 72%
+                  {% endif %}
+                </div>
+              </div>
+
+              {% if pick.direction == "UP" %}
+                <div class="badge badge-up">▲ UP</div>
+              {% else %}
+                <div class="badge badge-down">▼ DOWN</div>
+              {% endif %}
+
+              {% if pick.result == "WIN" %}
+                <div class="badge badge-win">★ WIN</div>
+              {% elif pick.result == "LOSS" %}
+                <div class="badge badge-loss">✕ LOSS</div>
+              {% else %}
+                <div class="badge badge-pending">PENDING</div>
+              {% endif %}
+
+              <div class="picked-time">{{ pick.picked_at|date:"g:i A" }}</div>
+            </div>
+          {% endfor %}
+        </section>
+      {% endfor %}
+
+    {% else %}
+      <section class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">NO PICKS YET</div>
+        <p class="empty-sub">You haven’t made any picks today. Lock in your picks before the market closes.</p>
+        <a href="{% url 'make_picks' %}" class="empty-btn">⚡ GO MAKE YOUR PICKS</a>
+      </section>
+    {% endif %}
+
+  </main>
+
+  <script>
+    const tickerTrack = document.getElementById('tickerTrack');
+    tickerTrack.innerHTML += tickerTrack.innerHTML;
+
+    document.querySelectorAll('.count-up').forEach(el => {
+      const target = parseInt(el.dataset.target) || 0;
+      let current = 0;
+      const steps = 24;
+      const increment = Math.max(1, Math.ceil(target / steps));
+
+      const timer = setInterval(() => {
+        current += increment;
+
+        if (current >= target) {
+          el.textContent = target;
+          clearInterval(timer);
+        } else {
+          el.textContent = current;
+        }
+      }, 28);
+    });
+
+    (function buildEKG() {
+      const bar = document.getElementById('ekgBar');
+      const cycleWidth = 200;
+      const height = 30;
+      const repeats = 60;
+
+      const cycle = [
+        [0, 15], [42, 15], [50, 10], [58, 15],
+        [72, 15], [78, 3], [84, 26], [92, 15],
+        [108, 15], [118, 9], [128, 15], [200, 15]
+      ];
+
+      const points = [];
+
+      for (let i = 0; i < repeats; i++) {
+        cycle.forEach(([x, y]) => {
+          points.push(`${i * cycleWidth + x},${y}`);
+        });
+      }
+
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', cycleWidth * repeats);
+      svg.setAttribute('height', height);
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      line.setAttribute('points', points.join(' '));
+      line.setAttribute('fill', 'none');
+      line.setAttribute('stroke', '#9945FF');
+      line.setAttribute('stroke-width', '1.8');
+      line.setAttribute('stroke-linejoin', 'round');
+
+      svg.appendChild(line);
+      bar.appendChild(svg);
+    })();
+
+    (function buildParticles() {
+      const container = document.getElementById('arrowParticles');
+
+      for (let i = 0; i < 34; i++) {
+        const isUp = Math.random() < 0.6;
+        const particle = document.createElement('div');
+
+        particle.className = `arrow-particle ${isUp ? 'arrow-up' : 'arrow-down'}`;
+        particle.textContent = isUp ? '▲' : '▼';
+
+        const size = 8 + Math.random() * 10;
+        const duration = 14 + Math.random() * 20;
+
+        particle.style.left = `${Math.random() * 100}vw`;
+        particle.style.fontSize = `${size}px`;
+        particle.style.animationDuration = `${duration}s`;
+        particle.style.animationDelay = `${-Math.random() * duration}s`;
+
+        if (isUp) {
+          particle.style.bottom = '-10vh';
+        } else {
+          particle.style.top = '-10vh';
+        }
+
+        container.appendChild(particle);
+      }
+    })();
+  </script>
+
+</body>
+</html>

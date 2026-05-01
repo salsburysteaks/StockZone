@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Log In — StockZone</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #0f1117; color: #e0e0e0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .card { background: #1a1a2a; padding: 40px; border-radius: 8px; width: 100%; max-width: 400px; }
+    h1 { font-size: 1.4rem; color: #fff; margin-bottom: 24px; }
+    label { display: block; font-size: 0.8rem; color: #aaa; margin-bottom: 4px; margin-top: 16px; }
+    input { width: 100%; padding: 8px 10px; background: #0f1117; border: 1px solid #2a2a3a; border-radius: 4px; color: #e0e0e0; font-size: 0.9rem; }
+    input:focus { outline: none; border-color: #90caf9; }
+    .errorlist { list-style: none; color: #f44336; font-size: 0.8rem; margin-top: 4px; }
+    button { margin-top: 24px; width: 100%; padding: 10px; background: #90caf9; color: #0f1117; font-weight: 700; border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem; }
+    button:hover { background: #bbdefb; }
+    .footer { text-align: center; margin-top: 16px; font-size: 0.85rem; color: #888; }
+    .footer a { color: #90caf9; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Log in to StockZone</h1>
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      {% endfor %}
+      <button type="submit">Log In</button>
+    </form>
+    <p class="footer">Don't have an account? <a href="{% url 'signup' %}">Sign up</a></p>
+  </div>
+</body>
+</html>

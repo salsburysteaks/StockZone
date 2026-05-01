@@ -1,0 +1,833 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Portfolio — StockZone</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      color: #fff;
+      background: #050507;
+      overflow-x: hidden;
+    }
+
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(153,69,255,0.24), transparent 36%),
+        linear-gradient(180deg, #08030f 0%, #050507 100%);
+    }
+
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(rgba(153,69,255,0.075) 0px, rgba(153,69,255,0.075) 1px, transparent 1px, transparent 44px),
+        repeating-linear-gradient(90deg, rgba(153,69,255,0.075) 0px, rgba(153,69,255,0.075) 1px, transparent 1px, transparent 44px);
+    }
+
+    .arrow-particle {
+      position: absolute;
+      pointer-events: none;
+      user-select: none;
+      font-size: 14px;
+      font-weight: 900;
+      opacity: 0;
+    }
+
+    .arrow-up {
+      color: rgba(0,255,135,0.34);
+      animation: riseArrow linear infinite;
+    }
+
+    .arrow-down {
+      color: rgba(255,71,87,0.34);
+      animation: fallArrow linear infinite;
+    }
+
+    @keyframes riseArrow {
+      0% { transform: translateY(110vh) scale(0.8); opacity: 0; }
+      12% { opacity: 0.35; }
+      100% { transform: translateY(-15vh) scale(1.1); opacity: 0; }
+    }
+
+    @keyframes fallArrow {
+      0% { transform: translateY(-15vh) scale(0.8); opacity: 0; }
+      12% { opacity: 0.35; }
+      100% { transform: translateY(110vh) scale(1.1); opacity: 0; }
+    }
+
+    .ticker-tape,
+    .ekg-bar,
+    .navbar,
+    .hero,
+    .content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .ticker-tape {
+      height: 36px;
+      background: #050505;
+      border-bottom: 1px solid rgba(153,69,255,0.22);
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .ticker-label {
+      height: 100%;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      background: #070707;
+      color: #9945FF;
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 1.3px;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+
+    .ticker-mask { overflow: hidden; flex: 1; }
+
+    .ticker-track {
+      display: flex;
+      width: max-content;
+      white-space: nowrap;
+      animation: tickerScroll 34s linear infinite;
+    }
+
+    @keyframes tickerScroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .tick-item {
+      height: 36px;
+      padding: 0 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-right: 1px solid #1c1c1c;
+      font-size: 0.82rem;
+    }
+
+    .tick-sym { color: #fff; font-weight: 900; }
+    .tick-price { color: #8a8a8a; font-weight: 700; }
+    .tick-up { color: #00ff87; font-weight: 900; }
+    .tick-down { color: #ff4757; font-weight: 900; }
+
+    .ekg-bar {
+      height: 30px;
+      background: #070314;
+      border-bottom: 1px solid rgba(153,69,255,0.22);
+      overflow: hidden;
+      box-shadow: 0 0 18px rgba(153,69,255,0.26);
+    }
+
+    .ekg-bar svg {
+      display: block;
+      animation: ekgScroll 2.8s linear infinite;
+      filter: drop-shadow(0 0 8px rgba(153,69,255,0.95));
+    }
+
+    @keyframes ekgScroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-200px); }
+    }
+
+    .navbar {
+      height: 78px;
+      padding: 0 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(7,7,8,0.96);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .navbar-brand img {
+      height: 42px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .brand-text {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .brand-text span { color: #9945FF; }
+
+    .navbar-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .navbar-links a {
+      color: #b6b6b6;
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 800;
+      padding: 10px 14px;
+      border-radius: 12px;
+      transition: 0.2s ease;
+    }
+
+    .navbar-links a:hover,
+    .navbar-links a.active {
+      color: #fff;
+      background: rgba(153,69,255,0.22);
+      box-shadow: inset 0 -2px 0 #9945FF, 0 0 18px rgba(153,69,255,0.18);
+    }
+
+    .logout-link {
+      border: 1px solid rgba(153,69,255,0.48);
+      color: #fff !important;
+    }
+
+    .hero {
+      min-height: 430px;
+      padding: 56px 70px 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 42px;
+      background:
+        radial-gradient(circle at 74% 45%, rgba(153,69,255,0.5), transparent 34%),
+        radial-gradient(circle at 44% 62%, rgba(153,69,255,0.2), transparent 42%),
+        linear-gradient(135deg, #050509 0%, #12051f 45%, #08080c 100%);
+      border-bottom: 1px solid rgba(153,69,255,0.28);
+      overflow: hidden;
+    }
+
+    .hero-left {
+      position: relative;
+      z-index: 3;
+      flex: 1;
+      min-width: 460px;
+    }
+
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 84px;
+      line-height: 0.95;
+      font-weight: 400;
+      letter-spacing: 2px;
+      color: #fff;
+    }
+
+    .hero h1 span {
+      color: #ffd700;
+      text-shadow: 0 0 26px rgba(255,215,0,0.55);
+    }
+
+    .hero-line {
+      margin-top: 17px;
+      width: 94px;
+      height: 5px;
+      border-radius: 999px;
+      background: #9945FF;
+      box-shadow: 0 0 22px rgba(153,69,255,0.85);
+    }
+
+    .hero-sub {
+      margin-top: 14px;
+      color: #d3d3d3;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .stat-row {
+      margin-top: 30px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(150px, 1fr));
+      gap: 16px;
+      max-width: 760px;
+    }
+
+    .stat-card {
+      background: rgba(15,15,17,0.9);
+      border: 1px solid rgba(153,69,255,0.42);
+      border-radius: 18px;
+      padding: 18px 20px;
+      box-shadow: 0 0 30px rgba(153,69,255,0.16);
+      transition: 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 42px rgba(153,69,255,0.28);
+    }
+
+    .stat-label {
+      color: #9b9b9b;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.85rem;
+      line-height: 1;
+      letter-spacing: 1px;
+    }
+
+    .stat-cash { color: #00ff87; }
+    .stat-holdings { color: #9945FF; }
+    .stat-total { color: #ffd700; }
+
+    .hero-bull-wrap {
+      position: relative;
+      width: 560px;
+      height: 430px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: transparent;
+      overflow: visible;
+    }
+
+    .bull-glow {
+      position: absolute;
+      width: 600px;
+      height: 520px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(153,69,255,0.62) 0%, rgba(153,69,255,0.23) 38%, transparent 72%);
+      filter: blur(20px);
+      animation: glowPulse 3.5s ease-in-out infinite;
+    }
+
+    .hero-bull {
+      position: relative;
+      z-index: 2;
+      width: 550px;
+      max-width: none;
+      height: auto;
+      object-fit: contain;
+      background: transparent;
+      filter:
+        saturate(1.15)
+        contrast(1.08)
+        drop-shadow(0 0 24px rgba(153,69,255,0.95))
+        drop-shadow(0 0 60px rgba(153,69,255,0.5));
+      animation: bullBreath 3.8s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.72; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.08); }
+    }
+
+    @keyframes bullBreath {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.025); }
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      padding: 40px 70px 86px;
+    }
+
+    .messages {
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .msg {
+      padding: 14px 18px;
+      border-radius: 14px;
+      font-weight: 800;
+      background: rgba(15,15,17,0.95);
+      border: 1px solid rgba(153,69,255,0.35);
+    }
+
+    .msg-success { color: #00ff87; }
+    .msg-error { color: #ff4757; }
+
+    .portfolio-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(360px, 0.8fr);
+      gap: 26px;
+      align-items: start;
+    }
+
+    .panel {
+      background:
+        linear-gradient(90deg, rgba(153,69,255,0.16), transparent 40%),
+        rgba(11,11,13,0.96);
+      border: 1px solid rgba(153,69,255,0.42);
+      border-radius: 24px;
+      box-shadow: 0 0 38px rgba(0,0,0,0.42), 0 0 24px rgba(153,69,255,0.12);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 22px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.09);
+    }
+
+    .panel-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.05rem;
+      font-weight: 400;
+      letter-spacing: 1px;
+    }
+
+    .panel-chip {
+      color: #c184ff;
+      background: rgba(153,69,255,0.18);
+      border: 1px solid rgba(153,69,255,0.45);
+      padding: 7px 13px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .holdings-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .holdings-table th {
+      text-align: left;
+      padding: 14px 18px;
+      color: #9b9b9b;
+      font-size: 0.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .holdings-table td {
+      padding: 16px 18px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      color: #d8d8d8;
+    }
+
+    .holdings-table tbody tr:hover {
+      background: rgba(153,69,255,0.1);
+    }
+
+    .ticker-cell strong {
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    .pos { color: #00ff87 !important; }
+    .neg { color: #ff4757 !important; }
+
+    .empty {
+      padding: 42px 28px;
+      color: #bdbdbd;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .sell-form {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .sell-form input {
+      width: 88px;
+      padding: 9px 10px;
+      background: rgba(5,5,7,0.9);
+      border: 1px solid rgba(255,71,87,0.38);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .sell-btn {
+      padding: 9px 13px;
+      background: rgba(255,71,87,0.15);
+      border: 1px solid rgba(255,71,87,0.55);
+      color: #ff4757;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .buy-form {
+      padding: 26px 28px 0;
+    }
+
+    .buy-form label {
+      display: block;
+      font-size: 0.75rem;
+      color: #9b9b9b;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+      margin-top: 18px;
+    }
+
+    .buy-form label:first-child { margin-top: 0; }
+
+    .buy-form input {
+      width: 100%;
+      padding: 14px;
+      background: rgba(5,5,7,0.95);
+      border: 1px solid rgba(153,69,255,0.35);
+      border-radius: 14px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 800;
+      outline: none;
+    }
+
+    .buy-form button {
+      margin-top: 22px;
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #9945FF, #7c2ee0);
+      color: #fff;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.25rem;
+      letter-spacing: 1px;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: 0 0 34px rgba(153,69,255,0.55);
+    }
+
+    .mini-note {
+      margin: 18px 28px 26px;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(153,69,255,0.1);
+      border: 1px solid rgba(153,69,255,0.25);
+      color: #bdbdbd;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    @media (max-width: 1200px) {
+      .portfolio-layout { grid-template-columns: 1fr; }
+      .hero { flex-direction: column; align-items: flex-start; }
+      .hero-left { min-width: 0; width: 100%; }
+      .hero-bull-wrap { width: 100%; height: 330px; }
+      .hero-bull { width: 390px; }
+    }
+
+    @media (max-width: 850px) {
+      .navbar {
+        height: auto;
+        padding: 18px 22px;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .navbar-links {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .hero {
+        padding: 42px 24px 34px;
+      }
+
+      .hero h1 { font-size: 60px; }
+      .content { padding: 24px; }
+      .stat-row { grid-template-columns: 1fr; }
+      .hero-bull-wrap { height: 280px; }
+      .hero-bull { width: 320px; }
+
+      .holdings-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="bg-layer">
+    <div class="bg-grid"></div>
+    <div id="arrowParticles"></div>
+  </div>
+
+  <div class="ticker-tape">
+    <div class="ticker-label">PORTFOLIO LIVE</div>
+    <div class="ticker-mask">
+      <div class="ticker-track" id="tickerTrack">
+        <span class="tick-item"><span class="tick-sym">AAPL</span><span class="tick-price">$213.45</span><span class="tick-up">▲ 1.24%</span></span>
+        <span class="tick-item"><span class="tick-sym">TSLA</span><span class="tick-price">$184.22</span><span class="tick-down">▼ 0.81%</span></span>
+        <span class="tick-item"><span class="tick-sym">NVDA</span><span class="tick-price">$901.10</span><span class="tick-up">▲ 2.41%</span></span>
+        <span class="tick-item"><span class="tick-sym">MSFT</span><span class="tick-price">$421.77</span><span class="tick-up">▲ 0.62%</span></span>
+        <span class="tick-item"><span class="tick-sym">AMZN</span><span class="tick-price">$189.34</span><span class="tick-down">▼ 0.32%</span></span>
+        <span class="tick-item"><span class="tick-sym">META</span><span class="tick-price">$512.18</span><span class="tick-up">▲ 1.11%</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ekg-bar" id="ekgBar"></div>
+
+  <nav class="navbar">
+    <a class="navbar-brand" href="{% url 'dashboard' %}">
+      <img src="{% static 'core/logo.png' %}" alt="StockZone Logo">
+      <div class="brand-text">Stock<span>Zone</span></div>
+    </a>
+
+    <div class="navbar-links">
+      <a href="{% url 'dashboard' %}">Dashboard</a>
+      <a href="{% url 'make_picks' %}">Make Picks</a>
+      <a href="{% url 'my_picks' %}">My Picks</a>
+      <a href="{% url 'portfolio' %}" class="active">Portfolio</a>
+      <a href="{% url 'leaderboard' %}">Leaderboard</a>
+      <a href="{% url 'logout' %}" class="logout-link">Log Out</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-left">
+      <h1>PAPER <span>PORTFOLIO</span></h1>
+      <div class="hero-line"></div>
+      <p class="hero-sub">Manage your StockZone paper trading account.</p>
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-label">Cash Balance</div>
+          <div class="stat-value stat-cash">${{ paper.balance|floatformat:2|intcomma }}</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Holdings Value</div>
+          <div class="stat-value stat-holdings">${{ total_holdings_value|floatformat:2|intcomma }}</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Total Value</div>
+          <div class="stat-value stat-total">${{ total_value|floatformat:2|intcomma }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-bull-wrap">
+      <div class="bull-glow"></div>
+      <img src="{% static 'core/portfolio_bul.png' %}" alt="Portfolio Bull" class="hero-bull">
+    </div>
+  </section>
+
+  <main class="content">
+
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <div class="msg {% if message.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="portfolio-layout">
+
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">💼 Holdings</div>
+          <div class="panel-chip">
+            {% if holdings %}{{ holdings|length }} Position{{ holdings|length|pluralize }}{% else %}No Positions{% endif %}
+          </div>
+        </div>
+
+        {% if holdings %}
+          <table class="holdings-table">
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Shares</th>
+                <th>Buy Price</th>
+                <th>Current Price</th>
+                <th>Value</th>
+                <th>Gain / Loss</th>
+                <th>Sell</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for row in holdings %}
+                <tr>
+                  <td class="ticker-cell"><strong>{{ row.holding.ticker }}</strong></td>
+                  <td>{{ row.holding.shares }}</td>
+                  <td>${{ row.holding.buy_price|floatformat:2|intcomma }}</td>
+                  <td>
+                    {% if row.current_price %}
+                      ${{ row.current_price|floatformat:2|intcomma }}
+                    {% else %}
+                      —
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if row.holding_value %}
+                      ${{ row.holding_value|floatformat:2|intcomma }}
+                    {% else %}
+                      —
+                    {% endif %}
+                  </td>
+                  <td class="{% if row.gain_loss %}{% if row.gain_loss >= 0 %}pos{% else %}neg{% endif %}{% endif %}">
+                    {% if row.gain_loss is not None %}
+                      {% if row.gain_loss >= 0 %}+{% endif %}${{ row.gain_loss|floatformat:2|intcomma }}
+                      ({% if row.gain_loss_pct >= 0 %}+{% endif %}{{ row.gain_loss_pct }}%)
+                    {% else %}
+                      —
+                    {% endif %}
+                  </td>
+                  <td>
+                    <form class="sell-form" method="post" action="{% url 'sell_stock' %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="holding_id" value="{{ row.holding.id }}">
+                      <input type="number" name="shares" placeholder="Shares" min="0.0001" max="{{ row.holding.shares }}" step="any" required>
+                      <button type="submit" class="sell-btn">Sell</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="empty">No holdings yet. Buy your first stock to start building your paper portfolio.</div>
+        {% endif %}
+      </section>
+
+      <aside class="panel buy-panel">
+        <div class="panel-header">
+          <div class="panel-title">⚡ Buy Stock</div>
+          <div class="panel-chip">Paper Trade</div>
+        </div>
+
+        <form class="buy-form" method="post" action="{% url 'buy_stock' %}">
+          {% csrf_token %}
+
+          <label for="ticker">Ticker Symbol</label>
+          <input type="text" id="ticker" name="ticker" placeholder="e.g. AAPL" maxlength="10" required>
+
+          <label for="shares">Number of Shares</label>
+          <input type="number" id="shares" name="shares" placeholder="e.g. 5" min="0.0001" step="any" required>
+
+          <button type="submit">Buy Shares</button>
+        </form>
+
+        <div class="mini-note">
+          This is your paper trading wallet. Use it to test moves, track positions, and build your StockZone portfolio without real money.
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <script>
+    const tickerTrack = document.getElementById('tickerTrack');
+    tickerTrack.innerHTML += tickerTrack.innerHTML;
+
+    (function buildEKG() {
+      const bar = document.getElementById('ekgBar');
+      const cycleWidth = 200;
+      const height = 30;
+      const repeats = 60;
+
+      const cycle = [
+        [0, 15], [42, 15], [50, 10], [58, 15],
+        [72, 15], [78, 3], [84, 26], [92, 15],
+        [108, 15], [118, 9], [128, 15], [200, 15]
+      ];
+
+      const points = [];
+
+      for (let i = 0; i < repeats; i++) {
+        cycle.forEach(([x, y]) => {
+          points.push(`${i * cycleWidth + x},${y}`);
+        });
+      }
+
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', cycleWidth * repeats);
+      svg.setAttribute('height', height);
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      line.setAttribute('points', points.join(' '));
+      line.setAttribute('fill', 'none');
+      line.setAttribute('stroke', '#9945FF');
+      line.setAttribute('stroke-width', '1.8');
+      line.setAttribute('stroke-linejoin', 'round');
+
+      svg.appendChild(line);
+      bar.appendChild(svg);
+    })();
+
+    (function buildArrowParticles() {
+      const container = document.getElementById('arrowParticles');
+      const total = 36;
+
+      for (let i = 0; i < total; i++) {
+        const isUp = Math.random() > 0.42;
+        const arrow = document.createElement('div');
+
+        arrow.className = `arrow-particle ${isUp ? 'arrow-up' : 'arrow-down'}`;
+        arrow.textContent = isUp ? '▲' : '▼';
+
+        const size = 8 + Math.random() * 13;
+        const duration = 12 + Math.random() * 18;
+        const delay = -Math.random() * duration;
+
+        arrow.style.left = `${Math.random() * 100}vw`;
+        arrow.style.fontSize = `${size}px`;
+        arrow.style.animationDuration = `${duration}s`;
+        arrow.style.animationDelay = `${delay}s`;
+
+        container.appendChild(arrow);
+      }
+    })();
+  </script>
+
+</body>
+</html>

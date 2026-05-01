@@ -1,0 +1,582 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Make Your Picks — StockZone</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, #0d0a1a 0%, #0d0d0d 100%);
+      background-attachment: fixed;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding-bottom: 86px;
+    }
+
+    /* ══════════════════════════════════════
+       TICKER TAPE
+    ══════════════════════════════════════ */
+    .ticker-tape {
+      position: sticky; top: 0; z-index: 300; height: 34px;
+      background: #080808; border-bottom: 1px solid #1a1a1a;
+      overflow: hidden; display: flex; align-items: center;
+    }
+    .ticker-label {
+      flex-shrink: 0; padding: 0 14px;
+      font-family: 'Bebas Neue', sans-serif; font-size: 0.8rem;
+      letter-spacing: 1px; color: #9945FF;
+      border-right: 1px solid #1e1e1e; height: 100%;
+      display: flex; align-items: center;
+      background: #080808; z-index: 1;
+    }
+    .ticker-mask { flex: 1; overflow: hidden; }
+    .ticker-track {
+      display: flex; align-items: center; white-space: nowrap;
+      animation: tape-scroll 50s linear infinite; will-change: transform;
+    }
+    @keyframes tape-scroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .tick-item {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 0 20px; font-size: 0.75rem;
+      border-right: 1px solid #1e1e1e; height: 34px;
+    }
+    .tick-sym { font-weight: 700; color: #ddd; }
+    .tick-px  { color: #666; }
+    .tick-mom { font-weight: 600; }
+    .tick-mom.pos { color: #00ff87; }
+    .tick-mom.neg { color: #ff4757; }
+
+    /* ══════════════════════════════════════
+       EKG BAR
+    ══════════════════════════════════════ */
+    .ekg-bar {
+      position: sticky; top: 34px; z-index: 250;
+      height: 24px; background: #060606;
+      border-bottom: 1px solid #111; overflow: hidden;
+    }
+    .ekg-bar svg { position: absolute; top: 0; left: 0; }
+    .ekg-bar::before, .ekg-bar::after {
+      content: ''; position: absolute; top: 0; bottom: 0; width: 60px; z-index: 1; pointer-events: none;
+    }
+    .ekg-bar::before { left: 0;  background: linear-gradient(90deg, #060606, transparent); }
+    .ekg-bar::after  { right: 0; background: linear-gradient(90deg, transparent, #060606); }
+    @keyframes ekg-scroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-200px); }
+    }
+
+    /* ══════════════════════════════════════
+       NAVBAR
+    ══════════════════════════════════════ */
+    .navbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 36px; height: 64px;
+      background: rgba(13,13,13,0.96); backdrop-filter: blur(12px);
+      border-bottom: 1px solid #1e1e1e;
+      position: sticky; top: 58px; z-index: 200;
+    }
+    .navbar-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .navbar-brand img { height: 40px; width: auto; object-fit: contain; mix-blend-mode: lighten; }
+    .navbar-brand span { font-size: 19px; font-weight: 700; color: #fff; }
+    .navbar-brand span em { font-style: normal; color: #9945FF; }
+    .navbar-links { display: flex; align-items: center; gap: 2px; }
+    .navbar-links a {
+      font-size: 0.94rem; font-weight: 500; color: #666;
+      text-decoration: none; padding: 6px 12px; border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .navbar-links a:hover { color: #fff; background: #1a1a1a; }
+    .navbar-links a.active { color: #fff; border-bottom: 2px solid #9945FF; border-radius: 0; padding-bottom: 4px; }
+    .navbar-links .logout { margin-left: 10px; color: #444; border: 1px solid #222; border-radius: 6px; }
+    .navbar-links .logout:hover { color: #fff; border-color: #444; background: #1a1a1a; }
+
+    /* ══════════════════════════════════════
+       HERO
+    ══════════════════════════════════════ */
+    .hero {
+      padding: 40px 48px 0;
+      background: linear-gradient(135deg, #0d0a1a 0%, #1a0a2e 50%, #0d0d0d 100%);
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 32px;
+    }
+    .hero-text { flex: 1; padding-bottom: 28px; min-width: 0; }
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 72px; font-weight: 400; color: #fff;
+      letter-spacing: 2px; line-height: 1; margin-bottom: 10px;
+    }
+    .gold-picks {
+      color: #ffd700;
+      text-shadow: 0 0 20px rgba(255,215,0,0.35);
+    }
+    .hero-underline {
+      width: 68px; height: 4px; background: #9945FF; border-radius: 2px;
+      margin-bottom: 12px; box-shadow: 0 0 14px rgba(153,69,255,0.6);
+    }
+    .hero-sub { font-size: 0.87rem; color: #666; font-weight: 500; }
+
+    .hero-stats { display: flex; gap: 12px; margin-top: 20px; }
+    .hero-stat-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid #1e1e1e; border-radius: 10px;
+      padding: 12px 20px; min-width: 110px;
+    }
+    .hero-stat-label {
+      font-size: 0.62rem; font-weight: 600; color: #444;
+      text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;
+    }
+    .hero-stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.9rem; color: #fff; line-height: 1;
+    }
+
+    /* ══════════════════════════════════════
+       COIN BULL MASCOT
+    ══════════════════════════════════════ */
+    .hero-mascot-wrap {
+      flex-shrink: 0;
+      align-self: flex-end;
+      line-height: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      animation: bull-breathe 3s ease-in-out infinite;
+      transform-origin: center bottom;
+    }
+    @keyframes bull-breathe {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.02); }
+    }
+    .bull-container {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+    }
+    .bull-glow {
+      position: absolute;
+      width: 400px; height: 400px;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(ellipse, rgba(153,69,255,0.3) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .bull-img {
+      display: block;
+      height: 280px;
+      width: auto;
+      mix-blend-mode: lighten;
+      border: none;
+      outline: none;
+    }
+
+    /* ══════════════════════════════════════
+       CONTENT
+    ══════════════════════════════════════ */
+    .content {
+      padding: 20px 48px 40px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+
+    /* ══════════════════════════════════════
+       SECTOR CARD
+    ══════════════════════════════════════ */
+    .card {
+      background:
+        linear-gradient(180deg, rgba(153,69,255,0.1) 0%, rgba(0,255,135,0.1) 100%) left / 3px 100% no-repeat,
+        #111111;
+      border: 1px solid #1e1e1e;
+      border-left: 3px solid transparent;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 28px 16px; border-bottom: 1px solid #1a1a1a;
+    }
+    .card-header h2 {
+      font-family: 'Bebas Neue', sans-serif; font-size: 24px;
+      font-weight: 400; color: #fff; letter-spacing: 0.5px;
+    }
+    .sector-badge {
+      font-size: 0.61rem; font-weight: 700; color: #9945FF;
+      background: rgba(153,69,255,0.1); border: 1px solid rgba(153,69,255,0.28);
+      border-radius: 20px; padding: 3px 10px; letter-spacing: 0.5px;
+      text-transform: uppercase; box-shadow: 0 0 10px rgba(153,69,255,0.2);
+    }
+
+    /* ══════════════════════════════════════
+       PICK ROW
+    ══════════════════════════════════════ */
+    .pick-row {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 28px; border-bottom: 1px solid #161616;
+      transition: background 0.15s;
+    }
+    .pick-row:last-child { border-bottom: none; }
+    .pick-row:hover { background: rgba(153,69,255,0.04); }
+
+    .pick-stock-info { flex: 1; min-width: 0; }
+    .pick-ticker {
+      font-size: 18px; font-weight: 700; color: #fff;
+      letter-spacing: 0.3px; line-height: 1.2;
+    }
+    .pick-company { font-size: 13px; color: #454545; font-weight: 500; margin-top: 2px; }
+
+    .pick-price-wrap { flex-shrink: 0; text-align: right; min-width: 90px; }
+    .pick-price {
+      font-size: 0.93rem; font-weight: 600; color: #666;
+      font-variant-numeric: tabular-nums;
+    }
+    .pick-mom {
+      font-size: 0.8rem; font-weight: 700; margin-top: 3px;
+      font-variant-numeric: tabular-nums;
+    }
+    .pick-mom.pos { color: #00ff87; }
+    .pick-mom.neg { color: #ff4757; }
+
+    /* ══════════════════════════════════════
+       PICK BUTTONS
+    ══════════════════════════════════════ */
+    .pick-btns { display: flex; gap: 8px; flex-shrink: 0; }
+
+    .pick-radio { display: none; }
+
+    .pick-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 11px 22px; border-radius: 8px; border: 1.5px solid;
+      font-size: 0.8rem; font-weight: 800; letter-spacing: 0.6px;
+      cursor: pointer; user-select: none; white-space: nowrap;
+      transition: background 0.12s, border-color 0.12s, color 0.12s, box-shadow 0.15s;
+    }
+
+    /* UP button */
+    .pick-up {
+      border-color: rgba(0,255,135,0.2);
+      color: rgba(0,255,135,0.4);
+      background: rgba(0,255,135,0.04);
+    }
+    .pick-up:hover {
+      border-color: rgba(0,255,135,0.5);
+      color: rgba(0,255,135,0.75);
+      background: rgba(0,255,135,0.08);
+    }
+    .pick-radio:checked + .pick-up {
+      border-color: #00ff87;
+      color: #00ff87;
+      background: rgba(0,255,135,0.14);
+      box-shadow: 0 0 14px rgba(0,255,135,0.5), 0 0 4px rgba(0,255,135,0.7);
+    }
+
+    /* DOWN button */
+    .pick-down {
+      border-color: rgba(255,71,87,0.2);
+      color: rgba(255,71,87,0.4);
+      background: rgba(255,71,87,0.04);
+    }
+    .pick-down:hover {
+      border-color: rgba(255,71,87,0.5);
+      color: rgba(255,71,87,0.75);
+      background: rgba(255,71,87,0.08);
+    }
+    .pick-radio:checked + .pick-down {
+      border-color: #ff4757;
+      color: #ff4757;
+      background: rgba(255,71,87,0.14);
+      box-shadow: 0 0 14px rgba(255,71,87,0.5), 0 0 4px rgba(255,71,87,0.7);
+    }
+
+    /* ══════════════════════════════════════
+       STICKY SUBMIT BAR
+    ══════════════════════════════════════ */
+    .submit-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+      background: rgba(7,7,7,0.97); backdrop-filter: blur(16px);
+      border-top: 1px solid #1e1e1e;
+      padding: 14px 48px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    }
+    .submit-left { display: flex; flex-direction: column; gap: 3px; }
+    .submit-progress { font-size: 0.84rem; font-weight: 600; }
+    .submit-progress .picked-count { color: #9945FF; font-size: 1.1rem; }
+    .submit-progress .total-count  { color: #444; }
+    .submit-hint { font-size: 0.75rem; color: #333; }
+
+    .submit-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 13px 38px; border-radius: 10px;
+      background: #9945FF; border: none; color: #fff;
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem;
+      letter-spacing: 1.5px; cursor: pointer; flex-shrink: 0;
+      transition: background 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 24px rgba(153,69,255,0.4);
+    }
+    .submit-btn:hover {
+      background: #7c2ee0;
+      box-shadow: 0 4px 36px rgba(153,69,255,0.75);
+    }
+
+    /* ══════════════════════════════════════
+       BACKGROUND PARTICLES
+    ══════════════════════════════════════ */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .arrow-particle {
+      position: absolute;
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+    }
+    .arrow-up   { color: rgba(0,255,135,0.3);  animation: arrow-rise linear infinite; }
+    .arrow-down { color: rgba(255,71,87,0.3);  animation: arrow-fall linear infinite; }
+    @keyframes arrow-rise {
+      0%   { transform: translateY(0);       opacity: 0; }
+      10%  { opacity: 1; }
+      88%  { opacity: 0.45; }
+      100% { transform: translateY(-105vh);  opacity: 0; }
+    }
+    @keyframes arrow-fall {
+      0%   { transform: translateY(0);      opacity: 0; }
+      10%  { opacity: 1; }
+      88%  { opacity: 0.45; }
+      100% { transform: translateY(105vh);  opacity: 0; }
+    }
+
+    @media (max-width: 768px) {
+      .hero { padding: 28px 20px 20px; }
+      .content { padding: 16px 20px 40px; }
+      .submit-bar { padding: 12px 20px; }
+      .pick-row { padding: 14px 16px; gap: 10px; flex-wrap: wrap; }
+      .pick-company { display: none; }
+      .pick-btn { padding: 9px 14px; font-size: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══ Background Particles ══ -->
+  <div class="bg-layer" aria-hidden="true">
+    <div id="arrowParticles"></div>
+  </div>
+
+  <!-- ══ Ticker Tape ══ -->
+  <div class="ticker-tape">
+    <div class="ticker-label">LIVE</div>
+    <div class="ticker-mask">
+      <div class="ticker-track" id="tickerTrack">
+        {% for sector, stocks in sectors.items %}{% for stock in stocks %}
+        <span class="tick-item">
+          <span class="tick-sym">{{ stock.ticker }}</span>
+          <span class="tick-px">${{ stock.price }}</span>
+          <span class="tick-mom {% if stock.momentum >= 0 %}pos{% else %}neg{% endif %}">{% if stock.momentum >= 0 %}▲{% else %}▼{% endif %} {% if stock.momentum >= 0 %}+{% endif %}{{ stock.momentum }}%</span>
+        </span>
+        {% endfor %}{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ EKG Bar ══ -->
+  <div class="ekg-bar" id="ekgBar" aria-hidden="true"></div>
+
+  <!-- ══ Navbar ══ -->
+  <nav class="navbar">
+    <a class="navbar-brand" href="{% url 'dashboard' %}">
+      <img src="{% static 'core/logo.png' %}" alt="StockZone">
+      <span>Stock<em>Zone</em></span>
+    </a>
+    <div class="navbar-links">
+      <a href="{% url 'dashboard' %}">Dashboard</a>
+      <a href="{% url 'make_picks' %}" class="active">Make Picks</a>
+      <a href="{% url 'my_picks' %}">My Picks</a>
+      <a href="{% url 'portfolio' %}">Portfolio</a>
+      <a href="{% url 'leaderboard' %}">Leaderboard</a>
+      <a href="{% url 'logout' %}" class="logout">Log Out</a>
+    </div>
+  </nav>
+
+  <!-- ══ Hero ══ -->
+  <div class="hero">
+    <div class="hero-text">
+      <h1>Make Your <span class="gold-picks">Picks</span></h1>
+      <div class="hero-underline"></div>
+      <p class="hero-sub">Pick UP or DOWN on each stock. Results drop tomorrow morning.</p>
+      <div class="hero-stats">
+        <div class="hero-stat-card">
+          <div class="hero-stat-label">Total Stocks</div>
+          <div class="hero-stat-value" id="statTotal">25</div>
+        </div>
+        <div class="hero-stat-card">
+          <div class="hero-stat-label">Your Picks Today</div>
+          <div class="hero-stat-value" id="statPicked">0</div>
+        </div>
+        <div class="hero-stat-card">
+          <div class="hero-stat-label">Picks Remaining</div>
+          <div class="hero-stat-value" id="statRemaining">25</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-mascot-wrap">
+      <div class="bull-container">
+        <div class="bull-glow"></div>
+        <img class="bull-img" src="{% static 'core/coin_bull.png' %}" alt="">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Form ══ -->
+  <form method="post" id="picksForm">
+    {% csrf_token %}
+    <div class="content">
+
+      {% for sector, stocks in sectors.items %}
+      <div class="card">
+        <div class="card-header">
+          <h2>{% if sector == "Technology" %}💻{% elif sector == "Healthcare" %}🩺{% elif sector == "Finance" %}🏦{% elif sector == "Energy" %}⚡{% elif sector == "Consumer" %}🛒{% endif %} {{ sector }}</h2>
+          <span class="sector-badge">5 Stocks</span>
+        </div>
+
+        {% for stock in stocks %}
+        <div class="pick-row">
+          <div class="pick-stock-info">
+            <div class="pick-ticker">{{ stock.ticker }}</div>
+            <div class="pick-company">{{ stock.company_name }}</div>
+          </div>
+
+          <div class="pick-price-wrap">
+            <div class="pick-price">${{ stock.price }}</div>
+            <div class="pick-mom {% if stock.momentum >= 0 %}pos{% else %}neg{% endif %}">
+              {% if stock.momentum >= 0 %}▲ +{% else %}▼ {% endif %}{{ stock.momentum }}%
+            </div>
+          </div>
+
+          <div class="pick-btns">
+            <input type="radio" id="up_{{ stock.ticker }}"   name="pick_{{ stock.ticker }}" value="UP"   class="pick-radio" required>
+            <label  for="up_{{ stock.ticker }}"   class="pick-btn pick-up">▲ UP</label>
+            <input type="radio" id="down_{{ stock.ticker }}" name="pick_{{ stock.ticker }}" value="DOWN" class="pick-radio">
+            <label  for="down_{{ stock.ticker }}" class="pick-btn pick-down">▼ DOWN</label>
+          </div>
+        </div>
+        {% endfor %}
+
+      </div>
+      {% endfor %}
+
+    </div>
+
+    <!-- ══ Sticky Submit Bar ══ -->
+    <div class="submit-bar">
+      <div class="submit-left">
+        <div class="submit-progress">
+          <span class="picked-count" id="pickedCount">0</span>
+          <span class="total-count"> / <span id="totalCount">—</span> picked</span>
+        </div>
+        <div class="submit-hint">You can only submit once per day</div>
+      </div>
+      <button type="submit" class="submit-btn">⚡ LOCK IN MY PICKS</button>
+    </div>
+  </form>
+
+  <script>
+    /* ── Ticker tape: duplicate for seamless loop ── */
+    (function () {
+      const track = document.getElementById('tickerTrack');
+      track.innerHTML += track.innerHTML;
+    })();
+
+    /* ── EKG bar builder ── */
+    (function () {
+      const bar = document.getElementById('ekgBar');
+      if (!bar) return;
+      const CW = 200, H = 24, N = 50;
+      const cycle = [[0,12],[40,12],[48,9],[56,12],[70,12],[76,2],[81,20],[88,12],[104,12],[114,7],[124,12],[200,12]];
+      const totalW = CW * N;
+      const pts = [];
+      for (let i = 0; i < N; i++) {
+        cycle.forEach(([x, y]) => pts.push((i * CW + x) + ',' + y));
+      }
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', totalW);
+      svg.setAttribute('height', H);
+      svg.style.cssText = 'animation: ekg-scroll ' + (CW / (CW * N) * CW * 14).toFixed(0) + 'ms linear infinite; display:block;';
+      const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      pl.setAttribute('points', pts.join(' '));
+      pl.setAttribute('fill', 'none');
+      pl.setAttribute('stroke', '#9945FF');
+      pl.setAttribute('stroke-width', '1.5');
+      pl.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(pl);
+      bar.appendChild(svg);
+      svg.style.animation = 'ekg-scroll 2.8s linear infinite';
+    })();
+
+    /* ── Pick counter + hero stat cards ── */
+    (function () {
+      const rows      = document.querySelectorAll('.pick-row');
+      const radios    = document.querySelectorAll('.pick-radio');
+      const countEl   = document.getElementById('pickedCount');
+      const totalEl   = document.getElementById('totalCount');
+      const statTotal = document.getElementById('statTotal');
+      const statPicked= document.getElementById('statPicked');
+      const statRem   = document.getElementById('statRemaining');
+
+      const total = rows.length;
+      if (totalEl)   totalEl.textContent   = total;
+      if (statTotal) statTotal.textContent = total;
+
+      function update() {
+        const picked = new Set();
+        radios.forEach(r => { if (r.checked) picked.add(r.name); });
+        const n = picked.size;
+        if (countEl)   { countEl.textContent = n; countEl.style.color = n === total ? '#00ff87' : '#9945FF'; }
+        if (statPicked) statPicked.textContent = n;
+        if (statRem)    { statRem.textContent = total - n; statRem.style.color = (total - n) === 0 ? '#00ff87' : '#fff'; }
+      }
+
+      radios.forEach(r => r.addEventListener('change', update));
+      update();
+    })();
+
+    /* ── Arrow particles (60% green up, 40% red down) ── */
+    (function () {
+      const container = document.getElementById('arrowParticles');
+      for (let i = 0; i < 30; i++) {
+        const isUp = Math.random() < 0.6;
+        const p    = document.createElement('div');
+        p.className  = 'arrow-particle ' + (isUp ? 'arrow-up' : 'arrow-down');
+        p.textContent = isUp ? '▲' : '▼';
+        const size = 8 + Math.random() * 8;
+        const dur  = 14 + Math.random() * 22;
+        p.style.cssText = [
+          'left:'               + (Math.random() * 100) + 'vw',
+          isUp ? 'bottom:-8vh' : 'top:-8vh',
+          'font-size:'          + size + 'px',
+          'animation-duration:' + dur  + 's',
+          'animation-delay:'    + (-Math.random() * dur) + 's',
+        ].join(';');
+        container.appendChild(p);
+      }
+    })();
+  </script>
+
+</body>
+</html>

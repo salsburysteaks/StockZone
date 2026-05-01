@@ -1,0 +1,509 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sign Up — StockZone</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { height: 100%; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0d0d0d;
+      color: #e0e0e0;
+      min-height: 100%;
+      display: flex;
+      align-items: stretch;
+    }
+
+    /* ── Left panel ── */
+    .left {
+      flex: 1;
+      height: 100vh;
+      overflow-y: auto;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 40px 56px;
+      background: linear-gradient(160deg, #0d0d0d 60%, #1a0a2e 100%);
+      border-right: 1px solid #1e1e1e;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 42px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -1px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      line-height: 1;
+    }
+
+    .logo-icon {
+      width: 38px;
+      height: 38px;
+      background: #9945FF;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .logo span { color: #9945FF; }
+
+    .headline {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3.25rem;
+      font-weight: 400;
+      color: #fff;
+      line-height: 1.05;
+      margin-bottom: 16px;
+      letter-spacing: 1px;
+    }
+
+    .headline em {
+      font-style: normal;
+      color: #9945FF;
+    }
+
+    .subheading {
+      font-size: 1.05rem;
+      color: #888;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      max-width: 380px;
+    }
+
+    .stat-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 380px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 10px;
+      padding: 14px 18px;
+    }
+
+    .stat-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #1e0a3c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .stat-card p {
+      font-size: 0.95rem;
+      color: #ccc;
+      font-weight: 500;
+    }
+
+    /* ── Mock leaderboard preview ── */
+    .preview {
+      margin-top: 32px;
+      max-width: 380px;
+    }
+
+    .preview-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .preview-header h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .live-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      background: #9945FF;
+      color: #fff;
+      padding: 2px 7px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .preview-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #1e1e1e;
+    }
+
+    .preview-table th {
+      background: #0f0f0f;
+      color: #555;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    .preview-table td {
+      padding: 10px 12px;
+      font-size: 0.92rem;
+      background: #111;
+      border-top: 1px solid #1a1a1a;
+    }
+
+    .preview-table tr:last-child td { border-bottom: none; }
+
+    .rank-num { color: #555; font-weight: 700; width: 28px; }
+    .rank-num.gold { color: #ffd700; }
+    .rank-num.silver { color: #c0c0c0; }
+    .rank-num.bronze { color: #cd7f32; }
+    .fake-name { color: #ddd; font-weight: 600; }
+    .fake-value { color: #fff; font-weight: 700; text-align: right; }
+    .fake-gain { color: #4caf50; font-weight: 600; text-align: right; font-size: 0.8rem; }
+
+    .preview-cta {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: #555;
+    }
+
+    .preview-cta span { color: #9945FF; font-weight: 600; }
+
+    /* ── Bull mascot ── */
+    .bull-wrap {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-block;
+      pointer-events: none;
+      mix-blend-mode: lighten;
+    }
+
+    .bull-body {
+      position: relative;
+      transform-origin: bottom center;
+      animation: bull-snort 4s ease-in-out infinite;
+    }
+
+    .bull-img {
+      display: block;
+    }
+
+    @keyframes bull-snort {
+      0%   { transform: scale(1);    }
+      5%   { transform: scale(1.04); }
+      12%  { transform: scale(1);    }
+      18%  { transform: scale(1.04); }
+      26%  { transform: scale(1);    }
+      100% { transform: scale(1);    }
+    }
+
+    .bull-glow {
+      position: absolute;
+      top: 2%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(153, 69, 255, 0.28) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── Nostril particle streams ── */
+    .particle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(200, 170, 255, 0.85);
+      filter: blur(2px);
+      animation-duration: 2s;
+      animation-timing-function: ease-out;
+      animation-iteration-count: infinite;
+    }
+
+    /* Left nostril — 8 particles, stagger 0.25s each */
+    .p-l { top: 21%; left: 57.5%; animation-name: stream-left; }
+    .p-l-1 { animation-delay: 0s;    } .p-l-2 { animation-delay: 0.25s; }
+    .p-l-3 { animation-delay: 0.5s;  } .p-l-4 { animation-delay: 0.75s; }
+    .p-l-5 { animation-delay: 1.0s;  } .p-l-6 { animation-delay: 1.25s; }
+    .p-l-7 { animation-delay: 1.5s;  } .p-l-8 { animation-delay: 1.75s; }
+
+    /* Right nostril — 8 particles, stagger 0.25s each */
+    .p-r { top: 21%; left: 64%; animation-name: stream-right; }
+    .p-r-1 { animation-delay: 0s;    } .p-r-2 { animation-delay: 0.25s; }
+    .p-r-3 { animation-delay: 0.5s;  } .p-r-4 { animation-delay: 0.75s; }
+    .p-r-5 { animation-delay: 1.0s;  } .p-r-6 { animation-delay: 1.25s; }
+    .p-r-7 { animation-delay: 1.5s;  } .p-r-8 { animation-delay: 1.75s; }
+
+    @keyframes stream-left {
+      0%   { opacity: 0;   transform: translate(0,    0)    scale(0.3); }
+      10%  { opacity: 0.8;                                              }
+      100% { opacity: 0;   transform: translate(-70px, -15px) scale(2.5); }
+    }
+
+    @keyframes stream-right {
+      0%   { opacity: 0;   transform: translate(0,   0)    scale(0.3); }
+      10%  { opacity: 0.8;                                             }
+      100% { opacity: 0;   transform: translate(70px, -15px) scale(2.5); }
+    }
+
+    /* ── Right panel ── */
+    .right {
+      width: 460px;
+      min-height: 100vh;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 40px;
+      background: #0d0d0d;
+    }
+
+    .form-box {
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .form-box h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .form-box .form-sub {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 28px;
+    }
+
+    .form-box label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 16px;
+      margin-bottom: 5px;
+    }
+
+    .form-box input {
+      width: 100%;
+      padding: 10px 12px;
+      background: #111;
+      border: 1px solid #3a3a3a;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 0.9rem;
+      transition: border-color 0.15s;
+    }
+
+    .form-box input:focus {
+      outline: none;
+      border-color: #9945FF;
+      box-shadow: 0 0 0 3px rgba(153, 69, 255, 0.15);
+    }
+
+    /* Prevent browser autofill from overriding the dark background */
+    .form-box input:-webkit-autofill,
+    .form-box input:-webkit-autofill:hover,
+    .form-box input:-webkit-autofill:focus {
+      -webkit-box-shadow: 0 0 0 1000px #111 inset;
+      -webkit-text-fill-color: #e0e0e0;
+      border-color: #3a3a3a;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+
+    .helptext {
+      font-size: 0.72rem;
+      color: #555;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .errorlist {
+      list-style: none;
+      color: #ff5252;
+      font-size: 0.78rem;
+      margin-top: 4px;
+    }
+
+    .submit-btn {
+      margin-top: 24px;
+      width: 100%;
+      padding: 11px;
+      background: #9945FF;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: background 0.15s;
+    }
+
+    .submit-btn:hover { background: #7c2ee0; }
+
+    .form-footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.83rem;
+      color: #555;
+    }
+
+    .form-footer a {
+      color: #9945FF;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .form-footer a:hover { text-decoration: underline; }
+
+    /* ── Responsive: stack on small screens ── */
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .left { padding: 40px 24px; border-right: none; border-bottom: 1px solid #1e1e1e; }
+      .headline { font-size: 1.8rem; }
+      .right { width: 100%; padding: 40px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Left: branding panel -->
+  <div class="left">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 32px;">
+      <img src="{% static 'core/logo.png' %}" alt="StockZone" style="height: 80px; width: auto; object-fit: contain; mix-blend-mode: lighten;">
+      <span style="font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; line-height: 1; color: #fff;">Stock<span style="color: #9945FF;">Zone</span></span>
+    </div>
+
+    <h1 class="headline">Stocks With<br><em>Sportsbook</em> Energy</h1>
+    <p class="subheading">Pick direction. Build your portfolio. Chase the leaderboard.</p>
+
+    <div class="bull-wrap" aria-hidden="true">
+      <div class="bull-glow"></div>
+      <div class="bull-body">
+        <img class="bull-img" src="{% static 'core/bull.png' %}" alt="" style="height: 750px; width: auto; opacity: 0.85; mix-blend-mode: lighten;">
+        <div class="particle p-l p-l-1"></div><div class="particle p-l p-l-2"></div>
+        <div class="particle p-l p-l-3"></div><div class="particle p-l p-l-4"></div>
+        <div class="particle p-l p-l-5"></div><div class="particle p-l p-l-6"></div>
+        <div class="particle p-l p-l-7"></div><div class="particle p-l p-l-8"></div>
+        <div class="particle p-r p-r-1"></div><div class="particle p-r p-r-2"></div>
+        <div class="particle p-r p-r-3"></div><div class="particle p-r p-r-4"></div>
+        <div class="particle p-r p-r-5"></div><div class="particle p-r p-r-6"></div>
+        <div class="particle p-r p-r-7"></div><div class="particle p-r p-r-8"></div>
+      </div>
+    </div>
+
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <p>$10,000 starting balance — no real money, full-on competition.</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <p>Top 5 picks per sector daily — call UP or DOWN on live stocks.</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🏆</div>
+        <p>Compete on the leaderboard — see who's running the best portfolio.</p>
+      </div>
+    </div>
+
+    <!-- Mock leaderboard preview -->
+    <div class="preview">
+      <div class="preview-header">
+        <h3>Leaderboard Preview</h3>
+        <span class="live-badge">LIVE</span>
+      </div>
+      <table class="preview-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Player</th>
+            <th style="text-align:right">Portfolio</th>
+            <th style="text-align:right">Gain</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="rank-num gold">1</td>
+            <td class="fake-name">trader_88</td>
+            <td class="fake-value">$14,320.50</td>
+            <td class="fake-gain">+43.2%</td>
+          </tr>
+          <tr>
+            <td class="rank-num silver">2</td>
+            <td class="fake-name">stonkmaster</td>
+            <td class="fake-value">$12,890.00</td>
+            <td class="fake-gain">+28.9%</td>
+          </tr>
+          <tr>
+            <td class="rank-num bronze">3</td>
+            <td class="fake-name">bullrun99</td>
+            <td class="fake-value">$11,450.75</td>
+            <td class="fake-gain">+14.5%</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="preview-cta">Sign up to claim your spot — <span>could #1 be you?</span></p>
+    </div>
+  </div>
+
+  <!-- Right: signup form -->
+  <div class="right">
+    <div class="form-box">
+      <h2>Create your account</h2>
+      <p class="form-sub">Free to join. Start trading in seconds.</p>
+
+      <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<p class="helptext">{{ field.help_text }}</p>{% endif %}
+          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        {% endfor %}
+        <button type="submit" class="submit-btn">Create Account</button>
+      </form>
+
+      <p class="form-footer">Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+    </div>
+  </div>
+
+</body>
+</html>
