@@ -123,3 +123,5 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+CSRF_TRUSTED_ORIGINS = ['https://web-production-a1930.up.railway.app']
