@@ -1,0 +1,71 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block page_title %}My Future Bets — StockZone{% endblock %}
+{% block active_nav %}future_bets{% endblock %}
+
+{% block extra_css %}
+<style>
+  .tf-tag {
+    font-size: 0.66rem; font-weight: 700; color: #9945FF;
+    background: rgba(153,69,255,0.08); border: 1px solid rgba(153,69,255,0.2);
+    border-radius: 20px; padding: 2px 9px;
+  }
+  .top-actions { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div>
+    <h1>My Future <em>Bets</em></h1>
+    <div class="hero-underline"></div>
+    <p class="page-hero-sub">Track all your directional calls across timeframes.</p>
+  </div>
+</section>
+
+<div class="page-content">
+  <div class="top-actions">
+    <a href="{% url 'place_future_bet' %}" class="btn-purple">+ Place New Bet</a>
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-hd">
+      <span class="pcard-title">All Future Bets</span>
+      <span class="pcard-badge">{{ bets|length }} Bet{{ bets|length|pluralize }}</span>
+    </div>
+    {% if bets %}
+    <table>
+      <thead>
+        <tr>
+          <th>Ticker</th><th>Direction</th><th>Timeframe</th>
+          <th>Price at Pick</th><th>Wager</th><th>Payout</th>
+          <th>Placed</th><th>Resolves</th><th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for bet in bets %}
+        <tr>
+          <td class="tc-ticker">{{ bet.ticker }}</td>
+          <td>{% if bet.direction == "UP" %}<span class="dir-up">▲ UP</span>{% else %}<span class="dir-dn">▼ DOWN</span>{% endif %}</td>
+          <td><span class="tf-tag">{{ bet.get_timeframe_display }}</span></td>
+          <td class="mono">{% if bet.price_at_pick %}${{ bet.price_at_pick }}{% else %}—{% endif %}</td>
+          <td class="mono" style="color:#9945FF">${{ bet.wager }}</td>
+          <td class="mono" style="color:#00ff87">{% if bet.payout %}${{ bet.payout }}{% else %}—{% endif %}</td>
+          <td style="color:#555">{{ bet.placed_at|date:"M j, Y" }}</td>
+          <td style="color:#555">{{ bet.resolves_at|date:"M j, Y" }}</td>
+          <td><span class="chip chip-{{ bet.result }}">{{ bet.result }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center;padding:60px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <img src="{% static 'core/coin_bull.png' %}" alt="" style="height:200px;width:auto;mix-blend-mode:lighten;opacity:0.9;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;color:#fff;">NO FUTURE BETS YET</div>
+      <p style="color:#666;font-size:0.9rem;margin:0;">Make a long-term call on a stock — 3 days to 1 month out.</p>
+      <a href="{% url 'place_future_bet' %}" class="btn-purple">Place a Bet</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,742 +1,325 @@
+{% extends 'core/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="60">
-  <title>Dashboard — StockZone</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(180deg, #0d0a1a 0%, #0d0d0d 100%);
-      background-attachment: fixed;
-      color: #e0e0e0;
-      min-height: 100vh;
-    }
-
-    /* ══════════════════════════════════════
-       TICKER TAPE
-    ══════════════════════════════════════ */
-    .ticker-tape {
-      position: sticky;
-      top: 0;
-      z-index: 300;
-      height: 34px;
-      background: #080808;
-      border-bottom: 1px solid #1a1a1a;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-    }
-
-    .ticker-label {
-      flex-shrink: 0;
-      padding: 0 14px;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 0.8rem;
-      letter-spacing: 1px;
-      color: #9945FF;
-      border-right: 1px solid #1e1e1e;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      background: #080808;
-      z-index: 1;
-    }
-
-    .ticker-mask {
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .ticker-track {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      white-space: nowrap;
-      animation: tape-scroll 50s linear infinite;
-      will-change: transform;
-    }
-
-    @keyframes tape-scroll {
-      0%   { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-
-    .tick-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 0 20px;
-      font-size: 0.75rem;
-      border-right: 1px solid #1e1e1e;
-      height: 34px;
-    }
-
-    .tick-sym  { font-weight: 700; color: #ddd; }
-    .tick-px   { color: #666; }
-    .tick-mom  { font-weight: 600; }
-    .tick-mom.pos { color: #00ff87; }
-    .tick-mom.neg { color: #ff4757; }
-
-    /* ══════════════════════════════════════
-       NAVBAR
-    ══════════════════════════════════════ */
-    .navbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 36px;
-      height: 64px;
-      background: rgba(13, 13, 13, 0.96);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid #1e1e1e;
-      position: sticky;
-      top: 58px;
-      z-index: 200;
-    }
-
-    .navbar-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-    .navbar-brand img { height: 44px; width: auto; object-fit: contain; mix-blend-mode: lighten; }
-    .navbar-brand span { font-size: 19px; font-weight: 700; color: #fff; }
-    .navbar-brand span em { font-style: normal; color: #9945FF; }
-
-    .navbar-links { display: flex; align-items: center; gap: 2px; }
-    .navbar-links a {
-      font-size: 0.94rem; font-weight: 500; color: #666;
-      text-decoration: none; padding: 6px 12px; border-radius: 6px;
-      transition: color 0.15s, background 0.15s;
-    }
-    .navbar-links a:hover { color: #fff; background: #1a1a1a; }
-    .navbar-links a.active { color: #fff; border-bottom: 2px solid #9945FF; border-radius: 0; padding-bottom: 4px; }
-    .navbar-links .logout { margin-left: 10px; color: #444; border: 1px solid #222; border-radius: 6px; }
-    .navbar-links .logout:hover { color: #fff; border-color: #444; background: #1a1a1a; }
-
-    /* ══════════════════════════════════════
-       EKG BAR
-    ══════════════════════════════════════ */
-    .ekg-bar {
-      position: sticky;
-      top: 34px;
-      z-index: 250;
-      height: 24px;
-      background: #060606;
-      border-bottom: 1px solid #111;
-      overflow: hidden;
-    }
-    .ekg-bar::before,
-    .ekg-bar::after {
-      content: '';
-      position: absolute;
-      top: 0; bottom: 0;
-      width: 80px;
-      z-index: 1;
-      pointer-events: none;
-    }
-    .ekg-bar::before { left: 0;  background: linear-gradient(90deg, #060606, transparent); }
-    .ekg-bar::after  { right: 0; background: linear-gradient(90deg, transparent, #060606); }
-
-    #ekgContainer { overflow: hidden; width: 100%; height: 24px; }
-
-    @keyframes ekg-scroll {
-      from { transform: translateX(0); }
-      to   { transform: translateX(-200px); }
-    }
-
-    /* ══════════════════════════════════════
-       HERO
-    ══════════════════════════════════════ */
-    .hero {
-      padding: 40px 48px 28px;
-      background: linear-gradient(180deg, #110820 0%, #0d0d0d 100%);
-    }
-
-    .hero-inner {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-
-    .hero-text h1 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 3.5rem;
-      font-weight: 400;
-      color: #fff;
-      letter-spacing: 2px;
-      line-height: 1;
-      margin-bottom: 10px;
-    }
-
-    .hero-underline {
-      width: 68px; height: 4px;
-      background: #9945FF; border-radius: 2px; margin-bottom: 14px;
-      box-shadow: 0 0 14px rgba(153,69,255,0.6);
-    }
-
-    .hero-tagline {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 0.87rem; color: #666; font-weight: 500;
-    }
-
-    .live-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: #00ff87; box-shadow: 0 0 6px #00ff87;
-      animation: pulse-dot 1.8s ease-in-out infinite; flex-shrink: 0;
-    }
-
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.4; transform: scale(0.7); }
-    }
-
-    .countdown-pill {
-      display: flex; align-items: center; gap: 8px;
-      background: #111; border: 1px solid #1e1e1e; border-radius: 20px;
-      padding: 8px 16px; font-size: 0.81rem; color: #555; white-space: nowrap;
-    }
-    .countdown-pill .timer-val { font-weight: 700; color: #9945FF; font-variant-numeric: tabular-nums; min-width: 20px; text-align: right; }
-
-    /* ══════════════════════════════════════
-       MOOD BANNER
-    ══════════════════════════════════════ */
-    .mood-banner {
-      display: none; align-items: center; justify-content: center;
-      gap: 10px; padding: 11px 48px;
-      font-family: 'Bebas Neue', sans-serif; font-size: 1.15rem; letter-spacing: 1.5px;
-    }
-    .mood-banner.bullish { background: rgba(0,255,135,0.06); border-top: 1px solid rgba(0,255,135,0.12); border-bottom: 1px solid rgba(0,255,135,0.12); color: #00ff87; }
-    .mood-banner.bearish { background: rgba(255,71,87,0.06); border-top: 1px solid rgba(255,71,87,0.12); border-bottom: 1px solid rgba(255,71,87,0.12); color: #ff4757; }
-    .mood-banner.neutral { background: rgba(153,69,255,0.06); border-top: 1px solid rgba(153,69,255,0.12); border-bottom: 1px solid rgba(153,69,255,0.12); color: #9945FF; }
-    .mood-count { font-family: 'Inter', sans-serif; font-size: 0.71rem; font-weight: 600; opacity: 0.6; letter-spacing: 0; }
-
-    /* ══════════════════════════════════════
-       SPOTLIGHT CARD
-    ══════════════════════════════════════ */
-    .spotlight-wrap { padding: 24px 48px 0; }
-
-    @keyframes spotlight-pulse {
-      from { background-color: #1a0a2e; }
-      to   { background-color: #2d1060; }
-    }
-
-    .spotlight-card {
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 32px;
-      background-color: #1a0a2e;
-      background-image: linear-gradient(120deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 100%);
-      animation: spotlight-pulse 2s ease-in-out infinite alternate;
-      border: 1px solid #2e1f50;
-      border-left: 4px solid #ffd700;
-      border-radius: 14px;
-      padding: 24px 32px 0 32px;
-      overflow: hidden;
-    }
-
-    .spotlight-bull-wrap {
-      position: relative;
-      flex-shrink: 0;
-      align-self: stretch;
-      width: 200px;
-      pointer-events: none;
-    }
-
-    .bull-frame {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      height: 120px;
-      width: auto;
-      mix-blend-mode: lighten;
-    }
-
-    .bull-frame-base   { opacity: 1; }
-
-    .bull-frame-exhale {
-      opacity: 0;
-      animation: exhale-show 4s ease-in-out infinite;
-    }
-
-    @keyframes exhale-show {
-      0%     { opacity: 0; }   /* closed mouth — 0s to 2.5s */
-      62.5%  { opacity: 0; }
-      75%    { opacity: 1; }   /* crossfade in */
-      95%    { opacity: 1; }   /* hold exhale frame */
-      100%   { opacity: 0; }   /* crossfade back out */
-    }
-
-    .spotlight-card::before {
-      content: '';
-      position: absolute;
-      top: -40px; right: -40px;
-      width: 200px; height: 200px;
-      border-radius: 50%;
-      background: radial-gradient(ellipse at center, rgba(255,215,0,0.07) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .spotlight-left { flex: 1; min-width: 0; }
-
-    .spotlight-eyebrow {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 0.65rem; font-weight: 700; color: #ffd700;
-      text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;
-    }
-
-    .spotlight-crown { font-size: 1rem; }
-
-    .spotlight-ticker {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 3rem; color: #fff; letter-spacing: 2px; line-height: 1;
-    }
-
-    .spotlight-company { font-size: 0.95rem; color: #aaa; font-weight: 500; margin-top: 4px; }
-    .spotlight-sector  { font-size: 0.72rem; color: #9945FF; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
-
-    .spotlight-right { text-align: right; flex-shrink: 0; }
-
-    .spotlight-price {
-      font-size: 2.2rem; font-weight: 800; color: #fff;
-      font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 8px;
-    }
-
-    .spotlight-mom {
-      display: inline-block;
-      font-size: 1.1rem; font-weight: 700;
-      padding: 6px 18px; border-radius: 8px;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .spotlight-mom.pos { color: #00ff87; background: rgba(0,255,135,0.1); border: 1px solid rgba(0,255,135,0.25); }
-    .spotlight-mom.neg { color: #ff4757; background: rgba(255,71,87,0.1); border: 1px solid rgba(255,71,87,0.25); }
-
-    /* ══════════════════════════════════════
-       SECTOR TABS + SEARCH
-    ══════════════════════════════════════ */
-    .tabs-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 0 48px;
-      height: 50px;
-      background: rgba(13,13,13,0.96);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid #1a1a1a;
-      position: sticky;
-      top: 122px; /* 34px tape + 24px ekg + 64px navbar */
-      z-index: 100;
-    }
-
-    .tabs-left { display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
-    .tabs-left::-webkit-scrollbar { display: none; }
-
-    .tab {
-      display: inline-flex; align-items: center;
-      padding: 5px 15px; border-radius: 20px;
-      font-size: 0.875rem; font-weight: 600; color: #555;
-      text-decoration: none; white-space: nowrap;
-      border: 1px solid transparent;
-      transition: color 0.15s, background 0.15s, border-color 0.15s;
-    }
-    .tab:hover { color: #ccc; background: #1a1a1a; }
-    .tab.active { color: #9945FF; background: rgba(153,69,255,0.1); border-color: rgba(153,69,255,0.3); }
-
-    .search-wrap { position: relative; flex-shrink: 0; }
-    .search-icon {
-      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
-      color: #444; font-size: 0.85rem; pointer-events: none;
-    }
-    .search-input {
-      background: #111; border: 1px solid #222; border-radius: 20px;
-      color: #e0e0e0; font-size: 0.79rem; padding: 6px 14px 6px 30px;
-      width: 200px; outline: none;
-      transition: border-color 0.15s, width 0.2s;
-    }
-    .search-input::placeholder { color: #444; }
-    .search-input:focus { border-color: #9945FF; width: 240px; }
-
-    /* ══════════════════════════════════════
-       CONTENT + CARDS
-    ══════════════════════════════════════ */
-    .content {
-      position: relative;
-      padding: 24px 48px 60px;
-      display: flex; flex-direction: column; gap: 20px;
-    }
-
-    .card {
-      background:
-        linear-gradient(180deg, rgba(153,69,255,0.1) 0%, rgba(0,255,135,0.1) 100%) left / 3px 100% no-repeat,
-        #111111;
-      border: 1px solid #1e1e1e;
-      border-left: 3px solid transparent;
-      border-radius: 14px;
-      overflow: hidden;
-      transition: box-shadow 0.2s;
-    }
-    .card:hover { box-shadow: 0 4px 32px rgba(153,69,255,0.09); }
-
-    .card-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 18px 28px 16px; border-bottom: 1px solid #1a1a1a;
-    }
-    .card-header-left { display: flex; align-items: center; gap: 10px; }
-    .card-header h2 {
-      font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem;
-      font-weight: 400; color: #fff; letter-spacing: 0.5px;
-    }
-
-    .hot-badge {
-      display: none; align-items: center; gap: 3px;
-      font-size: 0.58rem; font-weight: 700; color: #ff9500;
-      background: rgba(255,149,0,0.12); border: 1px solid rgba(255,149,0,0.28);
-      border-radius: 20px; padding: 2px 8px; letter-spacing: 0.5px; text-transform: uppercase;
-    }
-    .hot-badge.visible { display: flex; }
-    .hot-fire { animation: fire-flicker 0.6s ease-in-out infinite alternate; display: inline-block; }
-    @keyframes fire-flicker {
-      0%   { transform: scale(1)   rotate(-5deg); }
-      100% { transform: scale(1.2) rotate(5deg); }
-    }
-
-    .sector-badge {
-      font-size: 0.61rem; font-weight: 700; color: #9945FF;
-      background: rgba(153,69,255,0.1); border: 1px solid rgba(153,69,255,0.28);
-      border-radius: 20px; padding: 3px 10px; letter-spacing: 0.5px;
-      text-transform: uppercase; box-shadow: 0 0 10px rgba(153,69,255,0.2);
-    }
-
-    /* ══════════════════════════════════════
-       STOCK ROWS
-    ══════════════════════════════════════ */
-    .stock-row {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 15px 28px;
-      border-bottom: 1px solid #161616;
-      cursor: pointer;
-      transition: background 0.15s;
-      user-select: none;
-    }
-    .stock-row:last-of-type { border-bottom: none; }
-    .stock-row:hover { background: rgba(153,69,255,0.07); }
-    .stock-row:hover .ticker { font-weight: 800; }
-    .stock-row.top-row { background: rgba(153,69,255,0.04); }
-
-    /* Rank */
-    .rank {
-      font-size: 0.82rem; font-weight: 800;
-      width: 22px; text-align: center; flex-shrink: 0; font-variant-numeric: tabular-nums;
-    }
-    .rank-1 { color: #ffd700; }
-    .rank-2 { color: #c0c0c0; }
-    .rank-3 { color: #cd7f32; }
-    .rank-4, .rank-5 { color: #383838; }
-
-    .top-flame { font-size: 1rem; flex-shrink: 0; width: 20px; text-align: center; }
-    .no-flame  { width: 20px; flex-shrink: 0; }
-    .stock-row.top-row .ticker     { color: #ffd700; }
-    .stock-row.top-row .top-flame  { text-shadow: 0 0 10px rgba(255,215,0,0.7); }
-
-    .stock-identity { flex: 1; min-width: 0; }
-    .ticker {
-      font-size: 18px; font-weight: 700; color: #fff;
-      letter-spacing: 0.3px; line-height: 1.2; transition: font-weight 0.1s;
-    }
-    .stock-sublabel { font-size: 13px; color: #454545; font-weight: 500; margin-top: 2px; }
-
-    /* Sparkline */
-    .sparkline-wrap { width: 64px; height: 28px; flex-shrink: 0; }
-    .sparkline-wrap svg { display: block; }
-
-    .stock-price {
-      font-size: 0.93rem; font-weight: 600; color: #666;
-      font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0;
-    }
-
-    /* Momentum badge */
-    .mom-badge {
-      font-size: 0.87rem; font-weight: 700; font-variant-numeric: tabular-nums;
-      letter-spacing: -0.2px; padding: 5px 13px; border-radius: 8px;
-      white-space: nowrap; flex-shrink: 0; min-width: 76px; text-align: center;
-    }
-    .mom-badge.pos { color: #00ff87; background: rgba(0,255,135,0.09); border: 1px solid rgba(0,255,135,0.2); box-shadow: 0 0 8px rgba(0,255,135,0.4); }
-    .mom-badge.neg { color: #ff4757; background: rgba(255,71,87,0.09); border: 1px solid rgba(255,71,87,0.2); }
-
-    /* Pulse for |momentum| >= 50 */
-    .mom-badge.pulse-glow {
-      animation: badge-glow 1.6s ease-in-out infinite;
-    }
-    @keyframes badge-glow {
-      0%, 100% { box-shadow: 0 0 4px rgba(0,255,135,0.3); }
-      50%       { box-shadow: 0 0 14px rgba(0,255,135,0.7), 0 0 24px rgba(0,255,135,0.3); }
-    }
-    .mom-badge.neg.pulse-glow {
-      animation: badge-glow-neg 1.6s ease-in-out infinite;
-    }
-    @keyframes badge-glow-neg {
-      0%, 100% { box-shadow: 0 0 4px rgba(255,71,87,0.3); }
-      50%       { box-shadow: 0 0 14px rgba(255,71,87,0.7), 0 0 24px rgba(255,71,87,0.3); }
-    }
-
-    /* Buy button */
-    .buy-btn {
-      flex-shrink: 0;
-      font-size: 0.73rem; font-weight: 700; letter-spacing: 0.3px;
-      padding: 5px 12px; border-radius: 6px;
-      border: 1px solid #2a2a2a; color: #555;
-      text-decoration: none; white-space: nowrap;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
-    }
-    .buy-btn:hover {
-      background: rgba(153,69,255,0.12); border-color: #9945FF; color: #9945FF;
-      animation: buy-glow 0.7s ease-in-out infinite;
-    }
-    @keyframes buy-glow {
-      0%, 100% { box-shadow: 0 0 6px rgba(0,255,135,0.4); }
-      50%       { box-shadow: 0 0 16px rgba(0,255,135,0.9), 0 0 28px rgba(0,255,135,0.3); }
-    }
-
-    /* Card footer */
-    .card-footer { padding: 12px 28px; border-top: 1px solid #1a1a1a; }
-    .picks-btn {
-      display: block; text-align: center; padding: 9px 12px;
-      background: transparent; border: 1px solid #232323; border-radius: 8px;
-      color: #484848; font-size: 0.78rem; font-weight: 600; text-decoration: none;
-      letter-spacing: 0.3px; transition: background 0.15s, border-color 0.15s, color 0.15s;
-    }
-    .picks-btn:hover { background: rgba(153,69,255,0.1); border-color: #9945FF; color: #9945FF; }
-
-    /* ══════════════════════════════════════
-       MODAL
-    ══════════════════════════════════════ */
-    .modal-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
-      z-index: 400; align-items: center; justify-content: center; padding: 24px;
-    }
-    .modal-overlay.open { display: flex; }
-
-    .modal-card {
-      background: #131313; border: 1px solid #2a2a2a;
-      border-left: 3px solid #9945FF; border-radius: 16px;
-      padding: 28px 28px 24px; width: 100%; max-width: 400px; position: relative;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(153,69,255,0.08);
-      animation: modal-in 0.18s ease-out;
-    }
-    @keyframes modal-in {
-      from { opacity: 0; transform: translateY(12px) scale(0.97); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    .modal-close {
-      position: absolute; top: 16px; right: 18px;
-      background: none; border: none; color: #555; font-size: 1.4rem;
-      cursor: pointer; line-height: 1; transition: color 0.15s;
-    }
-    .modal-close:hover { color: #fff; }
-
-    .modal-ticker  { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; color: #fff; letter-spacing: 1px; line-height: 1; margin-bottom: 3px; }
-    .modal-company { font-size: 1rem; font-weight: 500; color: #aaa; margin-bottom: 5px; }
-    .modal-sector  { font-size: 0.71rem; font-weight: 600; color: #9945FF; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 18px; }
-    .modal-price-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-    .modal-price { font-size: 1.6rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
-    .modal-mom { font-size: 1rem; font-weight: 700; padding: 6px 16px; border-radius: 8px; font-variant-numeric: tabular-nums; }
-    .modal-mom.pos { color: #00ff87; background: rgba(0,255,135,0.1); border: 1px solid rgba(0,255,135,0.2); }
-    .modal-mom.neg { color: #ff4757; background: rgba(255,71,87,0.1); border: 1px solid rgba(255,71,87,0.2); }
-    .modal-divider { height: 1px; background: #1e1e1e; margin-bottom: 18px; }
-    .modal-stats { display: flex; flex-direction: column; gap: 11px; margin-bottom: 22px; }
-    .modal-stat { display: flex; align-items: center; justify-content: space-between; }
-    .modal-stat-label { font-size: 0.79rem; color: #555; font-weight: 500; }
-    .modal-stat-value { font-size: 0.88rem; font-weight: 700; color: #ddd; font-variant-numeric: tabular-nums; }
-    .modal-picks-btn {
-      display: block; text-align: center; padding: 11px;
-      background: #9945FF; border: none; border-radius: 8px;
-      color: #fff; font-size: 0.88rem; font-weight: 700;
-      text-decoration: none; letter-spacing: 0.3px; transition: background 0.15s;
-    }
-    .modal-picks-btn:hover { background: #7c2ee0; }
-
-    /* ══════════════════════════════════════
-       NO-RESULTS
-    ══════════════════════════════════════ */
-    .no-results {
-      display: none; text-align: center; padding: 40px;
-      color: #444; font-size: 0.88rem;
-    }
-
-    /* ══════════════════════════════════════
-       BACKGROUND LAYER
-    ══════════════════════════════════════ */
-    .bg-layer {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      overflow: hidden;
-    }
-
-    .bg-grid {
-      position: absolute;
-      inset: 0;
-      background-image:
-        repeating-linear-gradient(rgba(153,69,255,0.08) 0px, rgba(153,69,255,0.08) 1px, transparent 1px, transparent 40px),
-        repeating-linear-gradient(90deg, rgba(153,69,255,0.08) 0px, rgba(153,69,255,0.08) 1px, transparent 1px, transparent 40px);
-      animation: grid-pulse 4s ease-in-out infinite;
-      pointer-events: none;
-    }
-    @keyframes grid-pulse {
-      0%, 100% { opacity: 0.5; }
-      50%       { opacity: 1; }
-    }
-
-    .green-particle {
-      position: absolute;
-      color: rgba(0,255,135,0.3);
-      line-height: 1;
-      pointer-events: none;
-      user-select: none;
-      animation: green-rise linear infinite;
-    }
-    @keyframes green-rise {
-      0%   { transform: translateY(0);       opacity: 0; }
-      8%   { opacity: 1; }
-      90%  { opacity: 0.5; }
-      100% { transform: translateY(-105vh);  opacity: 0; }
-    }
-
-    .bg-left-border {
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: linear-gradient(180deg,
-        transparent 0%,
-        #9945FF 15%,
-        #9945FF 85%,
-        transparent 100%
-      );
-      box-shadow: 0 0 8px rgba(153, 69, 255, 0.6), 0 0 20px rgba(153, 69, 255, 0.2);
-    }
-
-    .bg-particle {
-      position: absolute;
-      border-radius: 50%;
-      background: #9945FF;
-      animation: particle-rise linear infinite;
-    }
-
-    @keyframes particle-rise {
-      0%   { transform: translateY(0);       opacity: 0; }
-      8%   { opacity: 1; }
-      90%  { opacity: 0.6; }
-      100% { transform: translateY(-100vh); opacity: 0; }
-    }
-
-    /* ══════════════════════════════════════
-       MARKET CLOSE PILL
-    ══════════════════════════════════════ */
-    .market-close-pill {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #111;
-      border: 1px solid #1e1e1e;
-      border-radius: 20px;
-      padding: 8px 16px;
-      font-size: 0.81rem;
-      color: #555;
-      white-space: nowrap;
-    }
-
-    .market-close-pill .close-val {
-      font-weight: 700;
-      color: #ff9500;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .market-close-pill .close-val.closed { color: #ff4757; }
-    .market-close-pill .close-val.open   { color: #00ff87; }
-
-    .hero-pills {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    @media (max-width: 768px) {
-      .hero { padding: 32px 20px 24px; }
-      .spotlight-wrap { padding: 16px 20px 0; }
-      .tabs-bar { padding: 0 20px; }
-      .content { padding: 16px 20px 40px; }
-      .search-input { width: 140px; }
-      .sparkline-wrap { display: none; }
-      .stock-row { padding: 14px 16px; gap: 10px; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- ══ Background Layer ══ -->
-  <div class="bg-layer" aria-hidden="true">
-    <div class="bg-grid"></div>
-    <div class="bg-left-border"></div>
-    <div id="bgParticles"></div>
-    <div id="greenParticles"></div>
-  </div>
-
-  <!-- ══ Ticker Tape ══ -->
-  <div class="ticker-tape">
-    <div class="ticker-label">LIVE</div>
-    <div class="ticker-mask">
-      <div class="ticker-track" id="tickerTrack">
-        {% for stock in all_stocks %}
-        <span class="tick-item">
-          <span class="tick-sym">{{ stock.ticker }}</span>
-          <span class="tick-px">${{ stock.price }}</span>
-          <span class="tick-mom {% if stock.momentum >= 0 %}pos{% else %}neg{% endif %}">{% if stock.momentum >= 0 %}▲{% else %}▼{% endif %} {% if stock.momentum >= 0 %}+{% endif %}{{ stock.momentum }}%</span>
-        </span>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ EKG Bar ══ -->
-  <div class="ekg-bar" aria-hidden="true">
-    <div id="ekgContainer"></div>
-  </div>
-
-  <!-- ══ Navbar ══ -->
-  <nav class="navbar">
-    <a class="navbar-brand" href="{% url 'dashboard' %}">
-      <img src="{% static 'core/logo.png' %}" alt="StockZone">
-      <span>Stock<em>Zone</em></span>
-    </a>
-    <div class="navbar-links">
-      <a href="{% url 'dashboard' %}" class="active">Dashboard</a>
-      <a href="{% url 'make_picks' %}">Make Picks</a>
-      <a href="{% url 'my_picks' %}">My Picks</a>
-      <a href="{% url 'portfolio' %}">Portfolio</a>
-      <a href="{% url 'leaderboard' %}">Leaderboard</a>
-      <a href="{% url 'logout' %}" class="logout">Log Out</a>
-    </div>
-  </nav>
-
+{% block page_title %}Dashboard — StockZone{% endblock %}
+{% block active_nav %}dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Hero ── */
+  .hero {
+    padding: 40px 48px 28px;
+    background: linear-gradient(180deg, #150832 0%, #0c0720 100%);
+    border-bottom: 1px solid rgba(153,69,255,0.3);
+  }
+  .hero-inner {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 24px; flex-wrap: wrap;
+  }
+  .hero-text h1 {
+    font-family: 'Bebas Neue', sans-serif; font-size: 3.5rem; font-weight: 400;
+    color: #fff; letter-spacing: 2px; line-height: 1; margin-bottom: 10px;
+  }
+  .hero-underline {
+    width: 68px; height: 4px; background: #9945FF; border-radius: 2px; margin-bottom: 14px;
+    box-shadow: 0 0 14px rgba(153,69,255,0.6);
+  }
+  .hero-tagline { display: flex; align-items: center; gap: 8px; font-size: 0.87rem; color: #666; font-weight: 500; }
+  .live-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: #00ff87;
+    box-shadow: 0 0 6px #00ff87; animation: pulse-dot 1.8s ease-in-out infinite; flex-shrink: 0;
+  }
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.7); } }
+  .hero-pills { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .market-pill {
+    display: inline-flex; align-items: center; border-radius: 20px; padding: 8px 16px;
+    font-size: 0.81rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap;
+    border: 1px solid; transition: color 0.4s, border-color 0.4s, background 0.4s;
+  }
+  .market-pill.open   { color: #00ff87; border-color: rgba(0,255,135,0.4); background: rgba(0,255,135,0.06); text-shadow: 0 0 8px rgba(0,255,135,0.9); }
+  .market-pill.closed { color: #ff4757; border-color: rgba(255,71,87,0.4);  background: rgba(255,71,87,0.06); text-shadow: 0 0 8px rgba(255,71,87,0.9); }
+  .streak-pill {
+    display: inline-flex; align-items: center; gap: 5px; border-radius: 20px; padding: 6px 14px;
+    font-size: 0.81rem; font-weight: 700; white-space: nowrap;
+    color: #9945FF; border: 1px solid rgba(153,69,255,0.5); background: rgba(153,69,255,0.1);
+    box-shadow: 0 0 12px rgba(153,69,255,0.3); text-shadow: 0 0 8px rgba(153,69,255,0.9);
+  }
+
+  /* ── Mood Banner ── */
+  .mood-banner {
+    display: none; align-items: center; justify-content: center;
+    gap: 10px; padding: 11px 48px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.15rem; letter-spacing: 1.5px;
+  }
+  .mood-banner.bullish { background: rgba(0,255,135,0.06); border-top: 1px solid rgba(0,255,135,0.12); border-bottom: 1px solid rgba(0,255,135,0.12); color: #00ff87; text-shadow: 0 0 8px rgba(0,255,135,0.9), 0 0 16px rgba(0,255,135,0.5); }
+  .mood-banner.bearish { background: rgba(255,71,87,0.06); border-top: 1px solid rgba(255,71,87,0.12); border-bottom: 1px solid rgba(255,71,87,0.12); color: #ff4757; text-shadow: 0 0 8px rgba(255,71,87,0.9); }
+  .mood-banner.neutral { background: rgba(153,69,255,0.06); border-top: 1px solid rgba(153,69,255,0.12); border-bottom: 1px solid rgba(153,69,255,0.12); color: #9945FF; text-shadow: 0 0 10px rgba(153,69,255,0.8), 0 0 20px rgba(153,69,255,0.4); }
+  .mood-count { font-family: 'Inter', sans-serif; font-size: 0.71rem; font-weight: 600; opacity: 0.6; letter-spacing: 0; }
+
+  /* ── Spotlight Card ── */
+  .spotlight-wrap { padding: 24px 48px 0; }
+  @keyframes spotlight-pulse {
+    from { box-shadow: 0 0 36px rgba(153,69,255,0.3), inset 0 0 32px rgba(153,69,255,0.06); }
+    to   { box-shadow: 0 0 56px rgba(153,69,255,0.5), inset 0 0 48px rgba(153,69,255,0.12); }
+  }
+  .spotlight-card {
+    position: relative; display: flex; align-items: center; gap: 32px;
+    background: rgba(153,69,255,0.15); animation: spotlight-pulse 2s ease-in-out infinite alternate;
+    border: 1px solid rgba(153,69,255,0.55); border-left: 4px solid #ffd700;
+    border-radius: 14px; padding: 24px 32px 0 32px; overflow: hidden;
+    box-shadow: 0 0 36px rgba(153,69,255,0.3), inset 0 0 32px rgba(153,69,255,0.06);
+  }
+  .spotlight-bull-wrap { position: relative; flex-shrink: 0; align-self: stretch; width: 200px; pointer-events: none; }
+  .bull-frame { position: absolute; bottom: 0; right: 0; height: 120px; width: auto; mix-blend-mode: lighten; }
+  .bull-frame-base   { opacity: 1; }
+  .bull-frame-exhale { opacity: 0; animation: exhale-show 4s ease-in-out infinite; }
+  @keyframes exhale-show {
+    0%    { opacity: 0; } 62.5% { opacity: 0; } 75% { opacity: 1; } 95% { opacity: 1; } 100% { opacity: 0; }
+  }
+  .spotlight-card::before {
+    content: ''; position: absolute; top: -40px; right: -40px; width: 200px; height: 200px;
+    border-radius: 50%; background: radial-gradient(ellipse at center, rgba(255,215,0,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .spotlight-left { flex: 1; min-width: 0; }
+  .spotlight-eyebrow {
+    display: flex; align-items: center; gap: 8px; font-size: 0.65rem; font-weight: 700;
+    color: #ffd700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;
+  }
+  .spotlight-crown { font-size: 1rem; }
+  .spotlight-ticker { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: #fff; letter-spacing: 2px; line-height: 1; }
+  .spotlight-company { font-size: 0.95rem; color: #aaa; font-weight: 500; margin-top: 4px; }
+  .spotlight-sector  { font-size: 0.72rem; color: #9945FF; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  .spotlight-right { text-align: right; flex-shrink: 0; }
+  .spotlight-price { font-size: 2.2rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 8px; text-shadow: 0 0 12px currentColor; }
+  .spotlight-mom { display: inline-block; font-size: 1.1rem; font-weight: 700; padding: 6px 18px; border-radius: 8px; font-variant-numeric: tabular-nums; }
+  .spotlight-mom.pos { color: #00ff87; background: rgba(0,255,135,0.1); border: 1px solid rgba(0,255,135,0.4); box-shadow: 0 0 12px rgba(0,255,135,0.5); text-shadow: 0 0 8px rgba(0,255,135,0.9), 0 0 16px rgba(0,255,135,0.5); }
+  .spotlight-mom.neg { color: #ff4757; background: rgba(255,71,87,0.1); border: 1px solid rgba(255,71,87,0.4); box-shadow: 0 0 12px rgba(255,71,87,0.5); text-shadow: 0 0 8px rgba(255,71,87,0.9); }
+
+  /* ── Sector Tabs + Search ── */
+  .tabs-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 0 48px; height: 50px; background: rgba(8,6,18,0.98); backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(153,69,255,0.25);
+    position: sticky; top: 116px; /* 34px tape + 24px ekg + 58px navbar */ z-index: 100;
+  }
+  .tabs-left { display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .tabs-left::-webkit-scrollbar { display: none; }
+  .tab {
+    display: inline-flex; align-items: center; padding: 5px 15px; border-radius: 20px;
+    font-size: 0.875rem; font-weight: 600; color: #555; text-decoration: none; white-space: nowrap;
+    border: 1px solid transparent; transition: color 0.15s, background 0.15s, border-color 0.15s;
+  }
+  .tab:hover { color: #ccc; background: #1a1a1a; }
+  .tab.active { color: #9945FF; background: rgba(153,69,255,0.1); border-color: rgba(153,69,255,0.3); text-shadow: 0 0 10px rgba(153,69,255,0.8), 0 0 20px rgba(153,69,255,0.4); }
+  .search-wrap { position: relative; flex-shrink: 0; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #444; font-size: 0.85rem; pointer-events: none; }
+  .search-input {
+    background: rgba(100,40,200,0.15); border: 1px solid rgba(153,69,255,0.35); border-radius: 20px;
+    color: #e0e0e0; font-size: 0.79rem; padding: 6px 14px 6px 30px; width: 200px; outline: none;
+    transition: border-color 0.15s, width 0.2s, box-shadow 0.15s;
+  }
+  .search-input::placeholder { color: #555; }
+  .search-input:focus { border-color: #9945FF; width: 240px; box-shadow: 0 0 10px rgba(153,69,255,0.25); }
+
+  /* ── Content + Cards ── */
+  .content { position: relative; padding: 24px 48px 60px; display: flex; flex-direction: column; gap: 20px; }
+  .card {
+    background:
+      linear-gradient(180deg, rgba(153,69,255,0.15) 0%, rgba(0,255,135,0.12) 100%) left / 3px 100% no-repeat,
+      rgba(153,69,255,0.12);
+    border: 1px solid rgba(153,69,255,0.5); border-left: 3px solid transparent;
+    border-radius: 14px; overflow: hidden; transition: box-shadow 0.2s, border-color 0.2s;
+    box-shadow: 0 0 24px rgba(153,69,255,0.2), inset 0 0 24px rgba(153,69,255,0.04);
+  }
+  .card:hover { box-shadow: 0 0 40px rgba(153,69,255,0.38), inset 0 0 24px rgba(153,69,255,0.07); border-color: rgba(153,69,255,0.75); }
+  .card-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 28px 16px; border-bottom: 1px solid rgba(153,69,255,0.15); }
+  .card-header-left { display: flex; align-items: center; gap: 10px; }
+  .card-header h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; font-weight: 400; color: #fff; letter-spacing: 0.5px; }
+  .hot-badge {
+    display: none; align-items: center; gap: 3px; font-size: 0.58rem; font-weight: 700; color: #ff9500;
+    background: rgba(255,149,0,0.12); border: 1px solid rgba(255,149,0,0.28);
+    border-radius: 20px; padding: 2px 8px; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .hot-badge.visible { display: flex; }
+  .hot-fire { animation: fire-flicker 0.6s ease-in-out infinite alternate; display: inline-block; }
+  @keyframes fire-flicker { 0% { transform: scale(1) rotate(-5deg); } 100% { transform: scale(1.2) rotate(5deg); } }
+  .sector-badge {
+    font-size: 0.61rem; font-weight: 700; color: #9945FF;
+    background: rgba(153,69,255,0.1); border: 1px solid rgba(153,69,255,0.28);
+    border-radius: 20px; padding: 3px 10px; letter-spacing: 0.5px;
+    text-transform: uppercase; box-shadow: 0 0 10px rgba(153,69,255,0.2);
+  }
+
+  /* ── Stock Rows ── */
+  .stock-row {
+    display: flex; align-items: center; gap: 14px; padding: 15px 28px;
+    border-bottom: 1px solid #161616; cursor: pointer; transition: background 0.15s; user-select: none;
+  }
+  .stock-row:last-of-type { border-bottom: none; }
+  .stock-row:hover { background: rgba(153,69,255,0.18); }
+  .stock-row:hover .ticker { font-weight: 800; }
+  .stock-row.top-row { background: rgba(153,69,255,0.07); }
+  .rank { font-size: 0.82rem; font-weight: 800; width: 22px; text-align: center; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .rank-1 { color: #ffd700; } .rank-2 { color: #c0c0c0; } .rank-3 { color: #cd7f32; }
+  .rank-4, .rank-5 { color: #383838; }
+  .top-flame { font-size: 1rem; flex-shrink: 0; width: 20px; text-align: center; }
+  .no-flame  { width: 20px; flex-shrink: 0; }
+  .stock-row.top-row .ticker    { color: #ffd700; }
+  .stock-row.top-row .top-flame { text-shadow: 0 0 10px rgba(255,215,0,0.7); }
+  .stock-identity { flex: 1; min-width: 0; }
+  .ticker { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: 0.3px; line-height: 1.2; transition: font-weight 0.1s; }
+  .stock-sublabel { font-size: 13px; color: #454545; font-weight: 500; margin-top: 2px; }
+  .sparkline-wrap { width: 64px; height: 28px; flex-shrink: 0; }
+  .sparkline-wrap svg { display: block; }
+  .stock-price { font-size: 0.93rem; font-weight: 600; color: #666; font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0; }
+  .mom-badge {
+    font-size: 0.87rem; font-weight: 700; font-variant-numeric: tabular-nums;
+    letter-spacing: -0.2px; padding: 5px 13px; border-radius: 8px;
+    white-space: nowrap; flex-shrink: 0; min-width: 76px; text-align: center;
+  }
+  .mom-badge.pos { color: #00ff87; background: rgba(0,255,135,0.09); border: 1px solid rgba(0,255,135,0.4); box-shadow: 0 0 12px rgba(0,255,135,0.5); text-shadow: 0 0 8px rgba(0,255,135,0.9); }
+  .mom-badge.neg { color: #ff4757; background: rgba(255,71,87,0.09); border: 1px solid rgba(255,71,87,0.4); box-shadow: 0 0 12px rgba(255,71,87,0.5); text-shadow: 0 0 8px rgba(255,71,87,0.9); }
+  .mom-badge.pulse-glow { animation: badge-glow 1.6s ease-in-out infinite; }
+  @keyframes badge-glow { 0%, 100% { box-shadow: 0 0 4px rgba(0,255,135,0.3); } 50% { box-shadow: 0 0 14px rgba(0,255,135,0.7), 0 0 24px rgba(0,255,135,0.3); } }
+  .mom-badge.neg.pulse-glow { animation: badge-glow-neg 1.6s ease-in-out infinite; }
+  @keyframes badge-glow-neg { 0%, 100% { box-shadow: 0 0 4px rgba(255,71,87,0.3); } 50% { box-shadow: 0 0 14px rgba(255,71,87,0.7), 0 0 24px rgba(255,71,87,0.3); } }
+  .buy-btn {
+    flex-shrink: 0; font-size: 0.73rem; font-weight: 700; letter-spacing: 0.3px;
+    padding: 5px 12px; border-radius: 6px; border: 1px solid #2a2a2a; color: #555;
+    text-decoration: none; white-space: nowrap; transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .buy-btn:hover { background: rgba(153,69,255,0.12); border-color: #9945FF; color: #9945FF; animation: buy-glow 0.7s ease-in-out infinite; }
+  @keyframes buy-glow { 0%, 100% { box-shadow: 0 0 6px rgba(0,255,135,0.4); } 50% { box-shadow: 0 0 16px rgba(0,255,135,0.9), 0 0 28px rgba(0,255,135,0.3); } }
+  .card-footer { padding: 12px 28px; border-top: 1px solid rgba(153,69,255,0.15); }
+  .picks-btn {
+    display: block; text-align: center; padding: 9px 12px;
+    background: transparent; border: 1px solid #232323; border-radius: 8px;
+    color: #484848; font-size: 0.78rem; font-weight: 600; text-decoration: none;
+    letter-spacing: 0.3px; transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .picks-btn:hover { background: rgba(153,69,255,0.1); border-color: #9945FF; color: #9945FF; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+    z-index: 400; align-items: center; justify-content: center; padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-card {
+    background: rgba(153,69,255,0.14); border: 1px solid rgba(153,69,255,0.55);
+    border-left: 3px solid #9945FF; border-radius: 16px;
+    padding: 28px 28px 24px; width: 100%; max-width: 420px; position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(153,69,255,0.3), inset 0 0 24px rgba(153,69,255,0.05);
+    animation: modal-in 0.18s ease-out;
+    max-height: 90vh; overflow-y: auto;
+  }
+  @keyframes modal-in { from { opacity: 0; transform: translateY(12px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .modal-close { position: absolute; top: 16px; right: 18px; background: none; border: none; color: #555; font-size: 1.4rem; cursor: pointer; line-height: 1; transition: color 0.15s; }
+  .modal-close:hover { color: #fff; }
+  .modal-ticker  { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; color: #fff; letter-spacing: 1px; line-height: 1; margin-bottom: 3px; }
+  .modal-company { font-size: 1rem; font-weight: 500; color: #aaa; margin-bottom: 5px; }
+  .modal-sector  { font-size: 0.71rem; font-weight: 600; color: #9945FF; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 18px; }
+  .modal-price-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .modal-price { font-size: 1.6rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+  .modal-mom { font-size: 1rem; font-weight: 700; padding: 6px 16px; border-radius: 8px; font-variant-numeric: tabular-nums; }
+  .modal-mom.pos { color: #00ff87; background: rgba(0,255,135,0.1); border: 1px solid rgba(0,255,135,0.4); box-shadow: 0 0 10px rgba(0,255,135,0.3); }
+  .modal-mom.neg { color: #ff4757; background: rgba(255,71,87,0.1); border: 1px solid rgba(255,71,87,0.4); box-shadow: 0 0 10px rgba(255,71,87,0.3); }
+  .modal-divider { height: 1px; background: rgba(153,69,255,0.2); margin-bottom: 18px; }
+  .modal-stats { display: flex; flex-direction: column; gap: 11px; margin-bottom: 22px; }
+  .modal-stat { display: flex; align-items: center; justify-content: space-between; }
+  .modal-stat-label { font-size: 0.79rem; color: #555; font-weight: 500; }
+  .modal-stat-value { font-size: 0.88rem; font-weight: 700; color: #ddd; font-variant-numeric: tabular-nums; }
+
+  /* ── Stat tooltips ── */
+  .stat-tip {
+    position: relative; display: inline-flex; align-items: center; gap: 5px;
+  }
+  .tip-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 1px solid rgba(153,69,255,0.35); color: rgba(153,69,255,0.6);
+    font-size: 0.58rem; font-weight: 700; font-style: normal;
+    cursor: default; flex-shrink: 0; line-height: 1; user-select: none;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .tip-icon:hover, .stat-tip.tip-open .tip-icon {
+    border-color: rgba(153,69,255,0.75); color: #9945FF;
+    background: rgba(153,69,255,0.1);
+  }
+  .tip-bubble {
+    position: absolute; bottom: calc(100% + 7px); left: 0;
+    background: #130d20; border: 1px solid rgba(153,69,255,0.3);
+    border-radius: 8px; padding: 8px 11px;
+    width: 210px; font-size: 0.71rem; color: #ccc; line-height: 1.45;
+    font-weight: 400; white-space: normal; pointer-events: none;
+    opacity: 0; transform: translateY(5px);
+    transition: opacity 0.14s ease, transform 0.14s ease;
+    z-index: 20; box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+  }
+  .tip-bubble::after {
+    content: ''; position: absolute; top: 100%; left: 13px;
+    border: 5px solid transparent; border-top-color: rgba(153,69,255,0.3);
+  }
+  .tip-bubble::before {
+    content: ''; position: absolute; top: calc(100% - 1px); left: 14px;
+    border: 4px solid transparent; border-top-color: #130d20;
+  }
+  .stat-tip:hover .tip-bubble,
+  .stat-tip.tip-open .tip-bubble {
+    opacity: 1; transform: translateY(0);
+  }
+  .modal-picks-btn {
+    display: block; text-align: center; padding: 11px;
+    background: #9945FF; border: none; border-radius: 8px;
+    color: #fff; font-size: 0.88rem; font-weight: 700;
+    text-decoration: none; letter-spacing: 0.3px; transition: background 0.15s;
+  }
+  .modal-picks-btn:hover { background: #7c2ee0; }
+
+  /* ── No Results ── */
+  .no-results { display: none; text-align: center; padding: 40px; color: #444; font-size: 0.88rem; }
+
+  @media (max-width: 768px) {
+    .hero { padding: 20px 16px 20px; }
+    .hero-inner { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .hero-pills { justify-content: flex-start; }
+    .hero-text h1 { font-size: 2.4rem; }
+    .mood-banner { padding: 10px 16px; font-size: 1rem; }
+    .spotlight-wrap { padding: 12px 16px 0; }
+    .spotlight-card { padding: 18px 20px 0; gap: 16px; flex-wrap: wrap; }
+    .spotlight-ticker { font-size: 2.2rem; }
+    .spotlight-price  { font-size: 1.6rem; }
+    /* Tabs bar: adjust sticky top — no EKG on mobile (34px tape + 58px navbar = 92px) */
+    .tabs-bar { padding: 0 14px; top: 92px; }
+    .tab { font-size: 0.78rem; padding: 5px 10px; }
+    .search-wrap { flex-shrink: 0; }
+    .search-input { width: 110px; font-size: 0.74rem; }
+    .search-input:focus { width: 130px; }
+    .content { padding: 14px 16px 80px; gap: 14px; }
+    /* Stock rows: compact, hide buy button */
+    .sparkline-wrap { display: none; }
+    .buy-btn { display: none; }
+    .stock-row { padding: 11px 14px; gap: 8px; }
+    .ticker { font-size: 15px; }
+    .stock-sublabel { font-size: 11px; }
+    .stock-price { font-size: 0.82rem; }
+    .mom-badge { font-size: 0.76rem; padding: 4px 9px; min-width: 60px; }
+    .card-header { padding: 14px 18px 12px; }
+    .card-footer { padding: 10px 18px; }
+  }
+  @media (max-width: 600px) {
+    .spotlight-card { flex-direction: column; gap: 10px; }
+    .spotlight-right { text-align: left; }
+    .spotlight-price { font-size: 1.4rem; }
+    .spotlight-mom { font-size: 0.95rem; }
+    .hero-text h1 { font-size: 2rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
   <!-- ══ Hero ══ -->
   <div class="hero">
     <div class="hero-inner">
@@ -749,12 +332,25 @@
         </div>
       </div>
       <div class="hero-pills">
-        <div class="market-close-pill">
-          🕐 <span class="close-val" id="marketClose">—</span>
+        {% if user_profile.current_streak > 0 %}
+        <div class="streak-pill">
+          <svg class="purple-flame" width="18" height="24" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 1C12 1 17 9 17 14C17 14 20 10 18.5 7C22 11 23 16 23 19C23 26.18 18.07 31.5 12 31.5C5.93 31.5 1 26.18 1 19C1 11.5 7.5 5 12 1Z" fill="url(#fg1d)"/>
+            <path d="M12 13C12 13 14.5 17.5 14.5 21C14.5 21 16 19 15.5 17C17.5 19.5 18 22.5 18 24C18 27.866 15.314 31 12 31C8.686 31 6 27.866 6 24C6 19.5 9.5 14.5 12 13Z" fill="url(#fg2d)" opacity="0.85"/>
+            <path d="M12 20C12 20 13 22 13 24C13 25.105 12.552 26 12 26C11.448 26 11 25.105 11 24C11 22 12 20 12 20Z" fill="#e9d5ff" opacity="0.6"/>
+            <defs>
+              <linearGradient id="fg1d" x1="12" y1="1" x2="12" y2="31.5" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#c084fc"/><stop offset="40%" stop-color="#9945FF"/><stop offset="100%" stop-color="#5b21b6"/>
+              </linearGradient>
+              <linearGradient id="fg2d" x1="12" y1="13" x2="12" y2="31" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#f0abfc"/><stop offset="100%" stop-color="#7c3aed"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          {{ user_profile.current_streak }}-day streak
         </div>
-        <div class="countdown-pill">
-          Refreshing in <span class="timer-val" id="timer">60</span>s
-        </div>
+        {% endif %}
+        <div class="market-pill" id="marketPill">—</div>
       </div>
     </div>
   </div>
@@ -767,9 +363,7 @@
   <div class="spotlight-wrap">
     <div class="spotlight-card">
       <div class="spotlight-left">
-        <div class="spotlight-eyebrow">
-          <span class="spotlight-crown">👑</span> Stock of the Day
-        </div>
+        <div class="spotlight-eyebrow"><span class="spotlight-crown">👑</span> Stock of the Day</div>
         <div class="spotlight-ticker">{{ spotlight.ticker }}</div>
         <div class="spotlight-company">{{ spotlight.company_name }}</div>
         <div class="spotlight-sector">{{ spotlight.sector }}</div>
@@ -807,7 +401,7 @@
     <div class="card" id="sect-{{ sector }}" data-sector="{{ sector }}">
       <div class="card-header">
         <div class="card-header-left">
-          <h2>{% if sector == "Technology" %}💻{% elif sector == "Healthcare" %}🩺{% elif sector == "Finance" %}🏦{% elif sector == "Energy" %}⚡{% elif sector == "Consumer" %}🛒{% endif %} {{ sector }}</h2>
+          <h2>{% if sector == "Technology" %}💻{% elif sector == "Healthcare" %}🩺{% elif sector == "Finance" %}🏦{% elif sector == "Energy" %}🔥{% elif sector == "Consumer" %}🛒{% endif %} {{ sector }}</h2>
           <span class="hot-badge" id="hot-{{ forloop.counter }}">
             <span class="hot-fire">🔥</span> HOT
           </span>
@@ -822,38 +416,27 @@
            data-price="{{ stock.price }}"
            data-momentum="{{ stock.momentum }}"
            data-sector="{{ sector }}"
+           data-prev-close="{{ stock.prev_close }}"
            data-week52="{{ stock.week52_high }}"
-           data-volume="{{ stock.volume }}"
-           data-pe="{% if stock.pe_ratio %}{{ stock.pe_ratio }}{% else %}—{% endif %}">
-
+           data-volume="{{ stock.volume }}">
         <div class="rank rank-{{ forloop.counter }}">{{ forloop.counter }}</div>
-
-        {% if forloop.first %}
-          <span class="top-flame">🔥</span>
-        {% else %}
-          <span class="no-flame"></span>
-        {% endif %}
-
+        {% if forloop.first %}<span class="top-flame">🔥</span>{% else %}<span class="no-flame"></span>{% endif %}
         <div class="stock-identity">
           <div class="ticker">{{ stock.ticker }}</div>
           <div class="stock-sublabel">{{ stock.company_name }}</div>
         </div>
-
         <div class="sparkline-wrap" data-ticker="{{ stock.ticker }}" data-momentum="{{ stock.momentum }}"></div>
-
         <div class="stock-price">${{ stock.price }}</div>
-
         <div class="mom-badge {% if stock.momentum >= 0 %}pos{% else %}neg{% endif %}{% if stock.momentum >= 50 %} pulse-glow{% endif %}"
              data-value="{{ stock.momentum }}">
           {% if stock.momentum >= 0 %}+{% endif %}{{ stock.momentum }}%
         </div>
-
         <a href="{% url 'portfolio' %}" class="buy-btn" onclick="event.stopPropagation()">Buy</a>
       </div>
       {% endfor %}
 
       <div class="card-footer">
-        <a href="{% url 'make_picks' %}" class="picks-btn">⚡ Make Your Pick</a>
+        <a href="{% url 'build_parlay' %}" class="picks-btn">Build a Parlay</a>
       </div>
     </div>
     {% endfor %}
@@ -875,314 +458,268 @@
       <div class="modal-divider"></div>
       <div class="modal-stats">
         <div class="modal-stat">
-          <span class="modal-stat-label">52-Week High</span>
+          <span class="modal-stat-label stat-tip">
+            Prev Close
+            <i class="tip-icon">?</i>
+            <span class="tip-bubble">The price this stock closed at yesterday</span>
+          </span>
+          <span class="modal-stat-value" id="modalPrevClose"></span>
+        </div>
+        <div class="modal-stat">
+          <span class="modal-stat-label stat-tip">
+            52-Week High
+            <i class="tip-icon">?</i>
+            <span class="tip-bubble">The highest price this stock has reached in the past year</span>
+          </span>
           <span class="modal-stat-value" id="modal52w"></span>
         </div>
         <div class="modal-stat">
-          <span class="modal-stat-label">Volume</span>
+          <span class="modal-stat-label stat-tip">
+            Volume
+            <i class="tip-icon">?</i>
+            <span class="tip-bubble">How many shares have been traded today</span>
+          </span>
           <span class="modal-stat-value" id="modalVolume"></span>
         </div>
         <div class="modal-stat">
-          <span class="modal-stat-label">P/E Ratio (Trailing)</span>
+          <span class="modal-stat-label stat-tip">
+            P/E Ratio (Trailing)
+            <i class="tip-icon">?</i>
+            <span class="tip-bubble">How expensive the stock is relative to its earnings — higher means investors are paying more for each dollar of profit</span>
+          </span>
           <span class="modal-stat-value" id="modalPE"></span>
         </div>
       </div>
-      <a href="{% url 'make_picks' %}" class="modal-picks-btn">⚡ Make Your Pick</a>
+      <div class="modal-divider"></div>
+      <div style="font-size:0.79rem;color:#555;font-weight:500;margin-bottom:10px;">LATEST NEWS</div>
+      <div id="modalNews"></div>
+      <div style="margin-top:16px;">
+        <a href="{% url 'build_parlay' %}" class="modal-picks-btn">Build a Parlay</a>
+      </div>
     </div>
   </div>
+{% endblock %}
 
-  <script>
-    /* ── Ticker tape: duplicate for seamless loop ── */
-    (function () {
-      const track = document.getElementById('tickerTrack');
-      track.innerHTML += track.innerHTML;
-    })();
+{% block extra_js %}
+<script>
+  /* ── Market status pill + auto-refresh ── */
+  (function () {
+    const pill = document.getElementById('marketPill');
 
-    /* ── Countdown ── */
-    let seconds = 60;
-    const timerEl = document.getElementById('timer');
-    setInterval(() => { timerEl.textContent = Math.max(0, --seconds); }, 1000);
-
-    /* ── Animated momentum counters ── */
-    document.querySelectorAll('.mom-badge[data-value]').forEach(el => {
-      const target = parseFloat(el.dataset.value);
-      const isPos  = target >= 0;
-      const start  = performance.now();
-      const dur    = 900;
-      (function tick(now) {
-        const p = Math.min((now - start) / dur, 1);
-        const v = target * (1 - Math.pow(1 - p, 3));
-        el.textContent = (isPos ? '+' : '') + v.toFixed(2) + '%';
-        if (p < 1) requestAnimationFrame(tick);
-      })(performance.now());
-    });
-
-    /* ── Mood banner ── */
-    const allBadges = document.querySelectorAll('.mom-badge[data-value]');
-    let posCount = 0;
-    allBadges.forEach(el => { if (parseFloat(el.dataset.value) >= 0) posCount++; });
-    const total  = allBadges.length;
-    const banner = document.getElementById('moodBanner');
-    banner.style.display = 'flex';
-    if (posCount > 15) {
-      banner.className = 'mood-banner bullish';
-      banner.innerHTML = '🔥 MARKET IS BULLISH <span class="mood-count">(' + posCount + '/' + total + ' stocks positive)</span>';
-    } else if (posCount < 10) {
-      banner.className = 'mood-banner bearish';
-      banner.innerHTML = '↓ MARKET IS BEARISH <span class="mood-count">(' + posCount + '/' + total + ' stocks positive)</span>';
-    } else {
-      banner.className = 'mood-banner neutral';
-      banner.innerHTML = '◈ MARKET IS MIXED <span class="mood-count">(' + posCount + '/' + total + ' stocks positive)</span>';
+    function isMarketOpen() {
+      const ny = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      const day = ny.getDay(), mins = ny.getHours() * 60 + ny.getMinutes();
+      return day >= 1 && day <= 5 && mins >= 570 && mins < 960;
     }
 
-    /* ── Hot sector badge ── */
-    let hotCard = null, hotAvg = -Infinity;
-    document.querySelectorAll('.card').forEach(card => {
-      const vals = Array.from(card.querySelectorAll('.mom-badge[data-value]'))
-                        .map(el => parseFloat(el.dataset.value));
-      if (!vals.length) return;
-      const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-      if (avg > hotAvg) { hotAvg = avg; hotCard = card; }
-    });
-    if (hotCard) hotCard.querySelector('.hot-badge')?.classList.add('visible');
-
-    /* ── Sector tab active via IntersectionObserver ── */
-    const tabs     = document.querySelectorAll('.tab');
-    const sections = document.querySelectorAll('.card[data-sector]');
-    const tabObs   = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          const s = e.target.dataset.sector;
-          tabs.forEach(t => t.classList.toggle('active', t.dataset.sector === s));
-        }
-      });
-    }, { rootMargin: '-10% 0px -80% 0px' });
-    sections.forEach(s => tabObs.observe(s));
-
-    /* ── Sparklines ── */
-    function seededRand(seed, i) {
-      const x = Math.sin(seed * 9301 + i * 49297 + 233) * 10000;
-      return x - Math.floor(x);
-    }
-
-    function buildSparkline(wrap, ticker, momentum) {
-      const isPos = momentum >= 0;
-      const mag   = Math.min(Math.abs(momentum) / 60, 1);
-      const W = 64, H = 28, steps = 7;
-      const seed  = ticker.split('').reduce((a, c, i) => a + c.charCodeAt(0) * (i + 1), 0);
-      const pts   = [];
-
-      for (let i = 0; i <= steps; i++) {
-        const progress = i / steps;
-        const baseY = isPos
-          ? H * 0.78 - progress * H * (0.38 + mag * 0.34)
-          : H * 0.22 + progress * H * (0.38 + mag * 0.34);
-        const noise = (seededRand(seed, i) - 0.5) * H * 0.28;
-        const y = Math.max(2, Math.min(H - 2, baseY + noise));
-        pts.push((i / steps * W).toFixed(1) + ',' + y.toFixed(1));
-      }
-
-      const NS  = 'http://www.w3.org/2000/svg';
-      const svg = document.createElementNS(NS, 'svg');
-      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-      svg.setAttribute('width', W); svg.setAttribute('height', H);
-      svg.setAttribute('style', 'overflow:visible');
-
-      const color = isPos ? '#00ff87' : '#ff4757';
-
-      // Fill area
-      const fillPts = `0,${H} ` + pts.join(' ') + ` ${W},${H}`;
-      const fill = document.createElementNS(NS, 'polygon');
-      fill.setAttribute('points', fillPts);
-      fill.setAttribute('fill', isPos ? 'rgba(0,255,135,0.08)' : 'rgba(255,71,87,0.08)');
-
-      const line = document.createElementNS(NS, 'polyline');
-      line.setAttribute('points', pts.join(' '));
-      line.setAttribute('fill', 'none');
-      line.setAttribute('stroke', color);
-      line.setAttribute('stroke-width', '1.5');
-      line.setAttribute('stroke-linecap', 'round');
-      line.setAttribute('stroke-linejoin', 'round');
-      line.setAttribute('opacity', '0.75');
-
-      svg.appendChild(fill);
-      svg.appendChild(line);
-      wrap.appendChild(svg);
-    }
-
-    document.querySelectorAll('.sparkline-wrap').forEach(wrap => {
-      buildSparkline(wrap, wrap.dataset.ticker, parseFloat(wrap.dataset.momentum));
-    });
-
-    /* ── Real-time stock search ── */
-    document.getElementById('stockSearch').addEventListener('input', function () {
-      const q = this.value.toLowerCase().trim();
-      let anyVisible = false;
-
-      document.querySelectorAll('.card[data-sector]').forEach(card => {
-        let cardHasMatch = false;
-        card.querySelectorAll('.stock-row').forEach(row => {
-          const match = !q
-            || row.dataset.ticker.toLowerCase().includes(q)
-            || row.dataset.company.toLowerCase().includes(q);
-          row.style.display = match ? '' : 'none';
-          if (match) { cardHasMatch = true; anyVisible = true; }
-        });
-        card.style.display = cardHasMatch ? '' : 'none';
-      });
-
-      document.getElementById('noResults').style.display = anyVisible || !q ? 'none' : 'block';
-    });
-
-    /* ── Stock row modal ── */
-    const overlay  = document.getElementById('modalOverlay');
-    const closeBtn = document.getElementById('modalClose');
-
-    function openModal(row) {
-      const mom   = parseFloat(row.dataset.momentum);
-      const isPos = mom >= 0;
-      document.getElementById('modalTicker').textContent  = row.dataset.ticker;
-      document.getElementById('modalCompany').textContent = row.dataset.company;
-      document.getElementById('modalSector').textContent  = row.dataset.sector;
-      document.getElementById('modalPrice').textContent   = '$' + row.dataset.price;
-      document.getElementById('modal52w').textContent     = '$' + row.dataset.week52;
-      document.getElementById('modalVolume').textContent  = row.dataset.volume;
-      document.getElementById('modalPE').textContent      = row.dataset.pe;
-      const momEl = document.getElementById('modalMom');
-      momEl.textContent = (isPos ? '+' : '') + mom.toFixed(2) + '%';
-      momEl.className   = 'modal-mom ' + (isPos ? 'pos' : 'neg');
-      overlay.classList.add('open');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeModal() {
-      overlay.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-
-    document.querySelectorAll('.stock-row').forEach(row => row.addEventListener('click', () => openModal(row)));
-    closeBtn.addEventListener('click', closeModal);
-    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-    /* ── Background particles ── */
-    (function () {
-      const container = document.getElementById('bgParticles');
-      for (let i = 0; i < 35; i++) {
-        const p = document.createElement('div');
-        p.className = 'bg-particle';
-        const size = 1 + Math.random() * 2;
-        p.style.cssText = [
-          'left:'               + (Math.random() * 100) + 'vw',
-          'bottom:'             + (Math.random() * 100) + 'vh',
-          'width:'              + size + 'px',
-          'height:'             + size + 'px',
-          'opacity:'            + (0.2 + Math.random() * 0.5),
-          'animation-duration:' + (18 + Math.random() * 28) + 's',
-          'animation-delay:'    + (-Math.random() * 30)      + 's',
-        ].join(';');
-        container.appendChild(p);
-      }
-    })();
-
-    /* ── Market close countdown ── */
-    (function () {
-      const closeEl = document.getElementById('marketClose');
-
-      function updateMarketClose() {
-        const nyNow     = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
-        const day       = nyNow.getDay(); // 0=Sun 6=Sat
-        const h         = nyNow.getHours();
-        const m         = nyNow.getMinutes();
-        const s         = nyNow.getSeconds();
-        const nowSec    = h * 3600 + m * 60 + s;
-        const closeSec  = 16 * 3600;           // 4:00 PM
-        const openSec   = 9 * 3600 + 30 * 60;  // 9:30 AM
-
-        if (day === 0 || day === 6) {
-          closeEl.textContent  = 'Weekend — Closed';
-          closeEl.className    = 'close-val closed';
-          return;
-        }
-        if (nowSec >= closeSec) {
-          closeEl.textContent = 'Market Closed';
-          closeEl.className   = 'close-val closed';
-          return;
-        }
-        if (nowSec < openSec) {
-          const rem = openSec - nowSec;
-          const ph  = Math.floor(rem / 3600);
-          const pm  = Math.floor((rem % 3600) / 60);
-          closeEl.textContent = 'Opens in ' + (ph > 0 ? ph + 'h ' : '') + pm + 'm';
-          closeEl.className   = 'close-val';
-          return;
-        }
+    function updateMarketPill() {
+      const ny = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      const day = ny.getDay(), h = ny.getHours(), m = ny.getMinutes(), s = ny.getSeconds();
+      const nowSec = h * 3600 + m * 60 + s;
+      const openSec = 9 * 3600 + 30 * 60, closeSec = 16 * 3600;
+      const isWeekday = day >= 1 && day <= 5;
+      const isOpen = isWeekday && nowSec >= openSec && nowSec < closeSec;
+      if (isOpen) {
         const rem = closeSec - nowSec;
-        const rh  = Math.floor(rem / 3600);
-        const rm  = Math.floor((rem % 3600) / 60);
-        const rs  = rem % 60;
-        closeEl.textContent = rh > 0
-          ? 'Closes in ' + rh + 'h ' + rm + 'm'
-          : 'Closes in ' + rm + 'm ' + rs + 's';
-        closeEl.className = 'close-val open';
+        const rh = Math.floor(rem / 3600), rm = Math.floor((rem % 3600) / 60), rs = rem % 60;
+        pill.textContent = `Closes in ${rh}:${String(rm).padStart(2,'0')}:${String(rs).padStart(2,'0')}`;
+        pill.className = 'market-pill open';
+      } else {
+        let daysAhead = 0, check = day;
+        if (nowSec >= closeSec || !isWeekday) {
+          do { daysAhead++; check = (check + 1) % 7; } while (check === 0 || check === 6);
+        }
+        const nextOpen = new Date(ny);
+        nextOpen.setDate(nextOpen.getDate() + daysAhead);
+        nextOpen.setHours(9, 30, 0, 0);
+        const diff = Math.max(0, Math.floor((nextOpen - ny) / 1000));
+        const dh = Math.floor(diff / 3600), dm = Math.floor((diff % 3600) / 60), ds = diff % 60;
+        pill.textContent = `Opens in ${dh}:${String(dm).padStart(2,'0')}:${String(ds).padStart(2,'0')}`;
+        pill.className = 'market-pill closed';
       }
+    }
 
-      updateMarketClose();
-      setInterval(updateMarketClose, 1000);
-    })();
+    setInterval(updateMarketPill, 1000);
+    updateMarketPill();
+    setInterval(() => { if (isMarketOpen()) location.reload(); }, 60000);
+  })();
 
-    /* ── EKG heartbeat line ── */
-    (function () {
-      const container = document.getElementById('ekgContainer');
-      const ns  = 'http://www.w3.org/2000/svg';
-      const CW  = 200;   // one cycle width in px
-      const H   = 24;
-      const N   = 50;    // enough cycles to fill any screen + buffer
-      // One EKG cycle: flat → P wave → flat → QRS spike → flat → T wave → flat
-      const cycle = [[0,12],[40,12],[48,9],[56,12],[70,12],[76,2],[81,20],[88,12],[104,12],[114,7],[124,12],[200,12]];
+  /* ── Animated momentum counters ── */
+  document.querySelectorAll('.mom-badge[data-value]').forEach(el => {
+    const target = parseFloat(el.dataset.value), isPos = target >= 0;
+    const start = performance.now(), dur = 900;
+    (function tick(now) {
+      const p = Math.min((now - start) / dur, 1);
+      const v = target * (1 - Math.pow(1 - p, 3));
+      el.textContent = (isPos ? '+' : '') + v.toFixed(2) + '%';
+      if (p < 1) requestAnimationFrame(tick);
+    })(performance.now());
+  });
 
-      let pts = '';
-      for (let c = 0; c < N; c++) {
-        cycle.forEach(([x, y]) => { pts += (c * CW + x) + ',' + y + ' '; });
+  /* ── Mood banner ── */
+  const allBadges = document.querySelectorAll('.mom-badge[data-value]');
+  let posCount = 0, momSum = 0;
+  allBadges.forEach(el => {
+    const v = parseFloat(el.dataset.value);
+    if (v >= 0) posCount++;
+    momSum += v;
+  });
+  const total = allBadges.length;
+  const avgDay = total ? momSum / total : 0;
+  const avgStr = (avgDay >= 0 ? '+' : '') + avgDay.toFixed(2) + '%';
+  const banner = document.getElementById('moodBanner');
+  banner.style.display = 'flex';
+  if (posCount > 15) {
+    banner.className = 'mood-banner bullish';
+    banner.innerHTML = '🔥 MARKET IS BULLISH <span class="mood-count">(' + posCount + '/' + total + ' positive · Avg Day Change ' + avgStr + ')</span>';
+  } else if (posCount < 10) {
+    banner.className = 'mood-banner bearish';
+    banner.innerHTML = '↓ MARKET IS BEARISH <span class="mood-count">(' + posCount + '/' + total + ' positive · Avg Day Change ' + avgStr + ')</span>';
+  } else {
+    banner.className = 'mood-banner neutral';
+    banner.innerHTML = '◈ MARKET IS MIXED <span class="mood-count">(' + posCount + '/' + total + ' positive · Avg Day Change ' + avgStr + ')</span>';
+  }
+
+  /* ── Hot sector badge ── */
+  let hotCard = null, hotAvg = -Infinity;
+  document.querySelectorAll('.card').forEach(card => {
+    const vals = Array.from(card.querySelectorAll('.mom-badge[data-value]')).map(el => parseFloat(el.dataset.value));
+    if (!vals.length) return;
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    if (avg > hotAvg) { hotAvg = avg; hotCard = card; }
+  });
+  if (hotCard) hotCard.querySelector('.hot-badge')?.classList.add('visible');
+
+  /* ── Sector tab active via IntersectionObserver ── */
+  const tabs = document.querySelectorAll('.tab');
+  const sections = document.querySelectorAll('.card[data-sector]');
+  const tabObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const s = e.target.dataset.sector;
+        tabs.forEach(t => t.classList.toggle('active', t.dataset.sector === s));
       }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  sections.forEach(s => tabObs.observe(s));
 
-      const svg = document.createElementNS(ns, 'svg');
-      svg.setAttribute('width',  CW * N);
-      svg.setAttribute('height', H);
-      svg.style.cssText = 'display:block;will-change:transform;animation:ekg-scroll 2.8s linear infinite;flex-shrink:0';
+  /* ── Sparklines ── */
+  function seededRand(seed, i) {
+    const x = Math.sin(seed * 9301 + i * 49297 + 233) * 10000;
+    return x - Math.floor(x);
+  }
+  function buildSparkline(wrap, ticker, momentum) {
+    const isPos = momentum >= 0, mag = Math.min(Math.abs(momentum) / 60, 1);
+    const W = 64, H = 28, steps = 7;
+    const seed = ticker.split('').reduce((a, c, i) => a + c.charCodeAt(0) * (i + 1), 0);
+    const pts = [];
+    for (let i = 0; i <= steps; i++) {
+      const progress = i / steps;
+      const baseY = isPos ? H * 0.78 - progress * H * (0.38 + mag * 0.34) : H * 0.22 + progress * H * (0.38 + mag * 0.34);
+      const noise = (seededRand(seed, i) - 0.5) * H * 0.28;
+      pts.push((i / steps * W).toFixed(1) + ',' + Math.max(2, Math.min(H - 2, baseY + noise)).toFixed(1));
+    }
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('width', W); svg.setAttribute('height', H);
+    svg.setAttribute('style', 'overflow:visible');
+    const color = isPos ? '#00ff87' : '#ff4757';
+    const fill = document.createElementNS(NS, 'polygon');
+    fill.setAttribute('points', `0,${H} ` + pts.join(' ') + ` ${W},${H}`);
+    fill.setAttribute('fill', isPos ? 'rgba(0,255,135,0.08)' : 'rgba(255,71,87,0.08)');
+    const line = document.createElementNS(NS, 'polyline');
+    line.setAttribute('points', pts.join(' ')); line.setAttribute('fill', 'none');
+    line.setAttribute('stroke', color); line.setAttribute('stroke-width', '1.5');
+    line.setAttribute('stroke-linecap', 'round'); line.setAttribute('stroke-linejoin', 'round');
+    line.setAttribute('opacity', '0.75');
+    svg.appendChild(fill); svg.appendChild(line); wrap.appendChild(svg);
+  }
+  document.querySelectorAll('.sparkline-wrap').forEach(wrap => {
+    buildSparkline(wrap, wrap.dataset.ticker, parseFloat(wrap.dataset.momentum));
+  });
 
-      const pl = document.createElementNS(ns, 'polyline');
-      pl.setAttribute('points', pts.trim());
-      pl.setAttribute('stroke', '#9945FF');
-      pl.setAttribute('stroke-width', '1.5');
-      pl.setAttribute('fill', 'none');
-      pl.setAttribute('stroke-linecap', 'round');
-      pl.setAttribute('stroke-linejoin', 'round');
-      pl.setAttribute('opacity', '0.65');
+  /* ── Stock search ── */
+  document.getElementById('stockSearch').addEventListener('input', function () {
+    const q = this.value.toLowerCase().trim();
+    let anyVisible = false;
+    document.querySelectorAll('.card[data-sector]').forEach(card => {
+      let cardHasMatch = false;
+      card.querySelectorAll('.stock-row').forEach(row => {
+        const match = !q || row.dataset.ticker.toLowerCase().includes(q) || row.dataset.company.toLowerCase().includes(q);
+        row.style.display = match ? '' : 'none';
+        if (match) { cardHasMatch = true; anyVisible = true; }
+      });
+      card.style.display = cardHasMatch ? '' : 'none';
+    });
+    document.getElementById('noResults').style.display = anyVisible || !q ? 'none' : 'block';
+  });
 
-      svg.appendChild(pl);
-      container.appendChild(svg);
-    })();
+  /* ── Stock news loader ── */
+  function loadStockNews(ticker) {
+    const newsContainer = document.getElementById('modalNews');
+    newsContainer.innerHTML = '<div style="color:#444;font-size:0.75rem;">Loading...</div>';
+    fetch(`/news/${ticker}/`)
+      .then(r => r.json())
+      .then(data => {
+        // P/E
+        document.getElementById('modalPE').textContent =
+          (data.pe_ratio !== null && data.pe_ratio !== undefined) ? data.pe_ratio : 'N/A';
+        // News
+        if (!data.news.length) {
+          newsContainer.innerHTML = '<div style="color:#444;font-size:0.75rem;">No recent news.</div>';
+          return;
+        }
+        newsContainer.innerHTML = data.news.map(a => `
+          <a href="${a.link}" target="_blank" rel="noopener" style="display:block;padding:8px 0;border-bottom:1px solid #1a1a1a;text-decoration:none;">
+            <div style="font-size:0.78rem;color:#ddd;font-weight:500;line-height:1.3;margin-bottom:3px;">${a.title}</div>
+            <div style="font-size:0.68rem;color:#555;">${a.publisher}</div>
+          </a>
+        `).join('');
+      })
+      .catch(() => {
+        document.getElementById('modalPE').textContent = 'N/A';
+        newsContainer.innerHTML = '<div style="color:#444;font-size:0.75rem;">Could not load news.</div>';
+      });
+  }
 
-    /* ── Green arrow particles ── */
-    (function () {
-      const container = document.getElementById('greenParticles');
-      for (let i = 0; i < 22; i++) {
-        const p = document.createElement('div');
-        p.className = 'green-particle';
-        p.textContent = '▲';
-        const size = 8 + Math.random() * 8;
-        p.style.cssText = [
-          'left:'               + (Math.random() * 100) + 'vw',
-          'bottom:'             + (-Math.random() * 15)  + 'vh',
-          'font-size:'          + size + 'px',
-          'animation-duration:' + (14 + Math.random() * 22) + 's',
-          'animation-delay:'    + (-Math.random() * 25)     + 's',
-        ].join(';');
-        container.appendChild(p);
-      }
-    })();
-  </script>
+  /* ── Stock row modal ── */
+  const overlay = document.getElementById('modalOverlay');
+  const closeBtn = document.getElementById('modalClose');
+  function openModal(row) {
+    const mom = parseFloat(row.dataset.momentum), isPos = mom >= 0;
+    document.getElementById('modalTicker').textContent  = row.dataset.ticker;
+    document.getElementById('modalCompany').textContent = row.dataset.company;
+    document.getElementById('modalSector').textContent  = row.dataset.sector;
+    document.getElementById('modalPrice').textContent   = '$' + row.dataset.price;
+    document.getElementById('modalPrevClose').textContent = '$' + row.dataset.prevClose;
+    document.getElementById('modal52w').textContent       = '$' + row.dataset.week52;
+    document.getElementById('modalVolume').textContent  = row.dataset.volume;
+    document.getElementById('modalPE').textContent      = 'Loading…';
+    const momEl = document.getElementById('modalMom');
+    momEl.textContent = (isPos ? '+' : '') + mom.toFixed(2) + '%';
+    momEl.className   = 'modal-mom ' + (isPos ? 'pos' : 'neg');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    loadStockNews(row.dataset.ticker);
+  }
+  function closeModal() { overlay.classList.remove('open'); document.body.style.overflow = ''; }
+  document.querySelectorAll('.stock-row').forEach(row => row.addEventListener('click', () => openModal(row)));
+  closeBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-</body>
-</html>
+  /* ── Stat tooltip click-toggle (touch / mobile) ── */
+  document.querySelectorAll('.tip-icon').forEach(icon => {
+    icon.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const tip = this.closest('.stat-tip');
+      const isOpen = tip.classList.contains('tip-open');
+      document.querySelectorAll('.stat-tip.tip-open').forEach(t => t.classList.remove('tip-open'));
+      if (!isOpen) tip.classList.add('tip-open');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.stat-tip.tip-open').forEach(t => t.classList.remove('tip-open'));
+  });
+</script>
+{% endblock %}

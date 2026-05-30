@@ -1,0 +1,36 @@
+{% extends 'core/base.html' %}
+{% block page_title %}Resolve Summary — StockZone{% endblock %}
+{% block active_nav %}{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div>
+    <h1>Resolve <em>Summary</em></h1>
+    <div class="hero-underline"></div>
+    <p class="page-hero-sub">Results of the resolution run.</p>
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-label">Picks Resolved</div>
+        <div class="stat-value sv-purple">{{ picks }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Parlays Resolved</div>
+        <div class="stat-value sv-purple">{{ parlays }}</div>
+      </div>
+      <div class="stat-card stat-pulse">
+        <div class="stat-label">Future Bets Resolved</div>
+        <div class="stat-value sv-green">{{ bets }}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<main class="page-content">
+  <div class="pcard">
+    <div class="pcard-hd">
+      <span class="pcard-title">Resolution Log</span>
+    </div>
+    <pre style="padding:20px 24px;color:#888;font-family:'Roboto Mono',monospace;font-size:0.8rem;white-space:pre-wrap;line-height:1.6">{{ summary }}</pre>
+  </div>
+</main>
+{% endblock %}

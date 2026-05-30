@@ -1,0 +1,525 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block page_title %}Build Parlay — StockZone{% endblock %}
+{% block active_nav %}parlay{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Warning banner ── */
+  .parlay-warning {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: rgba(255,71,87,0.1); border-top: 1px solid rgba(255,71,87,0.3);
+    border-bottom: 1px solid rgba(255,71,87,0.3);
+    padding: 10px 48px; font-size: 0.78rem; font-weight: 700;
+    color: #ff4757; letter-spacing: 0.8px; text-transform: uppercase;
+    text-shadow: 0 0 8px rgba(255,71,87,0.7);
+  }
+
+  /* ── Hero ── */
+  .page-hero { position: relative; overflow: visible; }
+  .parlay-hero-bull {
+    position: absolute; right: 48px; bottom: 0;
+    height: 200px; width: auto;
+    mix-blend-mode: lighten; opacity: 0.88; pointer-events: none;
+  }
+
+  /* ── Layout ── */
+  .parlay-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* ── Stock cards ── */
+  .stock-card {
+    background: rgba(10,6,24,0.8);
+    border: 1px solid rgba(255,215,0,0.12);
+    border-left: 3px solid rgba(255,215,0,0.5);
+    border-radius: 14px; overflow: hidden; margin-bottom: 12px;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  }
+  .stock-card:hover {
+    border-color: rgba(255,215,0,0.3);
+    box-shadow: 0 0 28px rgba(255,215,0,0.08);
+  }
+  .stock-card-hd {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 22px;
+    border-bottom: 1px solid rgba(255,215,0,0.1);
+    background: rgba(255,215,0,0.03);
+  }
+  .stock-card-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1rem;
+    color: #ffd700; letter-spacing: 1px;
+    text-shadow: 0 0 8px rgba(255,215,0,0.5);
+  }
+  .sector-leg-count {
+    font-size: 0.65rem; font-weight: 700; color: #555;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  .stock-leg-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 22px; border-bottom: 1px solid rgba(255,215,0,0.06);
+    transition: background 0.12s;
+  }
+  .stock-leg-row:last-child { border-bottom: none; }
+  .stock-leg-row:hover { background: rgba(255,215,0,0.04); }
+  .stock-leg-row.is-selected { background: rgba(255,215,0,0.06); }
+
+  .leg-id { flex: 1; min-width: 0; }
+  .leg-ticker { font-size: 0.93rem; font-weight: 700; color: #fff; }
+  .leg-company { font-size: 0.7rem; color: #444; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stock-col-hd {
+    display: flex; align-items: center; gap: 12px;
+    padding: 6px 22px; border-bottom: 1px solid rgba(255,215,0,0.06);
+    background: rgba(255,215,0,0.02);
+  }
+  .stock-col-hd span {
+    font-size: 0.6rem; font-weight: 700; color: #444;
+    text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .leg-price { font-family: 'Roboto Mono', monospace; font-size: 0.8rem; color: #555; flex-shrink: 0; min-width: 64px; text-align: right; }
+  .leg-mom {
+    font-family: 'Roboto Mono', monospace; font-size: 0.76rem; font-weight: 600;
+    padding: 2px 8px; border-radius: 5px; white-space: nowrap; flex-shrink: 0;
+  }
+  .leg-mom.pos { color: #00ff87; background: rgba(0,255,135,0.07); border: 1px solid rgba(0,255,135,0.2); text-shadow: 0 0 6px rgba(0,255,135,0.8); }
+  .leg-mom.neg { color: #ff4757; background: rgba(255,71,87,0.07); border: 1px solid rgba(255,71,87,0.2); text-shadow: 0 0 6px rgba(255,71,87,0.8); }
+
+  .btn-group { display: flex; gap: 5px; flex-shrink: 0; }
+  .leg-btn {
+    padding: 5px 13px; border-radius: 5px; font-size: 0.72rem; font-weight: 700;
+    cursor: pointer; border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04); color: #444;
+    font-family: inherit; transition: all 0.12s; display: flex; align-items: center; gap: 4px;
+  }
+  .leg-btn.up:hover   { border-color: rgba(0,255,135,0.4); color: #00ff87; background: rgba(0,255,135,0.07); }
+  .leg-btn.down:hover { border-color: rgba(255,71,87,0.4); color: #ff4757; background: rgba(255,71,87,0.07); }
+  .leg-btn.up.selected   { border-color: rgba(0,255,135,0.6); color: #00ff87; background: rgba(0,255,135,0.12); box-shadow: 0 0 10px rgba(0,255,135,0.4); text-shadow: 0 0 8px rgba(0,255,135,0.9); }
+  .leg-btn.down.selected { border-color: rgba(255,71,87,0.6); color: #ff4757; background: rgba(255,71,87,0.12); box-shadow: 0 0 10px rgba(255,71,87,0.4); text-shadow: 0 0 8px rgba(255,71,87,0.9); }
+  .odds-tag { font-family: 'Roboto Mono', monospace; font-size: 0.65rem; font-weight: 600; opacity: 0.85; }
+  .odds-tag-up   { color: #00ff87; }
+  .odds-tag-down { color: #ff4757; }
+
+  /* ── Parlay Slip (right panel) ── */
+  .parlay-slip {
+    position: sticky; top: 80px;
+    background: #07050f;
+    border: 1px solid rgba(255,215,0,0.4);
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 0 20px rgba(255,215,0,0.15), 0 0 60px rgba(0,0,0,0.6);
+  }
+  .slip-header {
+    background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,215,0,0.04));
+    border-bottom: 1px solid rgba(255,215,0,0.3);
+    padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .slip-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem;
+    color: #ffd700; letter-spacing: 2px;
+    text-shadow: 0 0 12px rgba(255,215,0,0.6);
+  }
+  .slip-badge {
+    font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+    color: #ffd700; background: rgba(255,215,0,0.12);
+    border: 1px solid rgba(255,215,0,0.3); border-radius: 20px; padding: 2px 8px;
+  }
+
+  /* Multiplier display */
+  .slip-mult-wrap {
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid rgba(255,215,0,0.1);
+    text-align: center;
+  }
+  .slip-mult-label { font-size: 0.6rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .slip-mult-val {
+    font-family: 'Roboto Mono', monospace; font-size: 3rem; font-weight: 600;
+    color: #ffd700; line-height: 1;
+    text-shadow: 0 0 16px rgba(255,215,0,0.8), 0 0 32px rgba(255,215,0,0.4);
+    transition: all 0.3s;
+  }
+  .slip-legs-label { font-size: 0.7rem; color: #555; margin-top: 4px; }
+
+  /* Leg list */
+  .slip-legs { min-height: 80px; padding: 10px 0; border-bottom: 1px solid rgba(255,215,0,0.1); }
+  .slip-empty {
+    display: flex; align-items: center; justify-content: center;
+    height: 80px; font-size: 0.75rem; color: #333;
+    font-style: italic;
+  }
+  .slip-leg-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 18px; border-bottom: 1px solid rgba(255,215,0,0.06);
+    animation: slip-in 0.2s ease;
+  }
+  .slip-leg-item:last-child { border-bottom: none; }
+  @keyframes slip-in {
+    from { opacity: 0; transform: translateX(8px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .slip-leg-ticker { font-size: 0.85rem; font-weight: 700; color: #fff; }
+  .slip-leg-dir {
+    font-size: 0.68rem; font-weight: 700; padding: 2px 7px;
+    border-radius: 4px; text-transform: uppercase;
+  }
+  .slip-leg-dir.up   { color: #00ff87; background: rgba(0,255,135,0.1); border: 1px solid rgba(0,255,135,0.3); }
+  .slip-leg-dir.down { color: #ff4757; background: rgba(255,71,87,0.1); border: 1px solid rgba(255,71,87,0.3); }
+  .slip-leg-odds { font-family: 'Roboto Mono', monospace; font-size: 0.72rem; color: #ffd700; }
+
+  /* Wager + payout */
+  .slip-wager-section { padding: 14px 18px; border-bottom: 1px solid rgba(255,215,0,0.1); }
+  .slip-field-label { font-size: 0.6rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .slip-balance-hint { font-size: 0.65rem; color: #444; margin-bottom: 6px; }
+  .slip-balance-hint span { color: #ffd700; font-weight: 700; }
+  .slip-wager-input {
+    width: 100%; background: rgba(255,215,0,0.05);
+    border: 1px solid rgba(255,215,0,0.3); border-radius: 8px;
+    color: #ffd700; font-size: 1rem; font-family: 'Roboto Mono', monospace;
+    font-weight: 600; padding: 9px 12px; outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -moz-appearance: textfield; box-sizing: border-box;
+  }
+  .slip-wager-input::-webkit-outer-spin-button,
+  .slip-wager-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .slip-wager-input::placeholder { color: #333; font-weight: 400; }
+  .slip-wager-input:focus { border-color: rgba(255,215,0,0.6); box-shadow: 0 0 12px rgba(255,215,0,0.2); }
+
+  .slip-payout-section { padding: 12px 18px; border-bottom: 1px solid rgba(255,215,0,0.1); }
+  .slip-payout-row { display: flex; justify-content: space-between; align-items: center; }
+  .slip-payout-label { font-size: 0.65rem; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+  .slip-payout-val {
+    font-family: 'Roboto Mono', monospace; font-size: 1.4rem; font-weight: 600;
+    color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.7);
+    transition: all 0.2s;
+  }
+
+  /* Validation */
+  .slip-validation {
+    padding: 8px 18px; font-size: 0.7rem; font-weight: 600; color: #ff4757;
+    min-height: 26px;
+  }
+
+  /* Submit */
+  .slip-submit-section { padding: 14px 18px; }
+  .slip-submit-btn {
+    width: 100%; padding: 13px; border-radius: 10px;
+    font-size: 0.9rem; font-weight: 800; letter-spacing: 1.5px;
+    text-transform: uppercase; font-family: inherit; cursor: pointer; border: none;
+    background: linear-gradient(135deg, #ffd700, #f59e0b);
+    color: #07050f;
+    box-shadow: 0 0 20px rgba(255,215,0,0.5), 0 4px 12px rgba(0,0,0,0.4);
+    transition: all 0.15s;
+  }
+  .slip-submit-btn:hover:not(:disabled) {
+    box-shadow: 0 0 32px rgba(255,215,0,0.8), 0 4px 20px rgba(0,0,0,0.5);
+    transform: translateY(-1px);
+  }
+  .slip-submit-btn:disabled {
+    background: #1a1a1a; color: #333; cursor: not-allowed; box-shadow: none; transform: none;
+  }
+
+  @media (max-width: 900px) {
+    .parlay-layout { grid-template-columns: 1fr; }
+    .parlay-slip { position: static; }
+  }
+  @media (max-width: 768px) {
+    .parlay-warning { padding: 9px 14px; font-size: 0.68rem; }
+    .parlay-layout { gap: 0; }
+    /* Parlay slip: fixed at bottom of screen */
+    .parlay-slip {
+      position: fixed !important;
+      bottom: 0; left: 0; right: 0; z-index: 150;
+      border-radius: 14px 14px 0 0;
+      border-left: none; border-right: none; border-bottom: none;
+      max-height: 55vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.85), 0 0 20px rgba(255,215,0,0.15);
+    }
+    /* Extra bottom padding on stock list so fixed slip doesn't cover last rows */
+    .page-content { padding-bottom: 360px !important; }
+    /* Stock leg rows: compact */
+    .stock-leg-row { padding: 10px 14px; gap: 7px; }
+    .leg-ticker { font-size: 0.88rem; }
+    .leg-company { font-size: 0.63rem; }
+    .leg-price { font-size: 0.73rem; min-width: 46px; }
+    .leg-mom { font-size: 0.7rem; padding: 2px 6px; }
+    /* Leg buttons: bigger touch targets */
+    .leg-btn { min-height: 40px; padding: 5px 10px; font-size: 0.68rem; }
+    .btn-group { gap: 4px; }
+    /* Slip: compact sections */
+    .slip-mult-val { font-size: 2.4rem; }
+    .slip-wager-section, .slip-payout-section, .slip-submit-section { padding: 10px 14px; }
+    .slip-header { padding: 11px 14px; }
+    .slip-leg-item { padding: 6px 14px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Warning banner -->
+<div class="parlay-warning">
+  ALL LEGS MUST WIN — ONE MISS ENDS IT ALL
+</div>
+
+<section class="page-hero">
+  <div>
+    <h1>Build a <em>Parlay</em></h1>
+    <div class="hero-underline"></div>
+    <p class="page-hero-sub">Chain 2–5 picks · odds based on beta & daily change · price locked at submission</p>
+  </div>
+  <img src="{% static 'core/pick.png' %}" class="parlay-hero-bull" alt="" style="mix-blend-mode: lighten;">
+</section>
+
+<div class="page-content">
+  {% if messages %}
+  <div class="msg-list">
+    {% for msg in messages %}<div class="msg {% if msg.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">{{ msg }}</div>{% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="POST" id="parlayForm">
+    {% csrf_token %}
+    <input type="hidden" name="wager" id="wagerHidden" value="0">
+    <input type="hidden" name="adj_multiplier" id="adjMultiplierHidden" value="">
+
+    <div class="parlay-layout">
+      <!-- Left: stock picker -->
+      <div>
+        {% for sector, stocks in sectors.items %}
+        <div class="stock-card">
+          <div class="stock-card-hd">
+            <span class="stock-card-title">
+              {% if sector == "Technology" %}💻{% elif sector == "Healthcare" %}🩺{% elif sector == "Finance" %}🏦{% elif sector == "Energy" %}🔥{% elif sector == "Consumer" %}🛒{% endif %}
+              {{ sector }}
+            </span>
+            <span class="sector-leg-count" id="sectorCount_{{ sector|slugify }}">0 selected</span>
+          </div>
+          <div class="stock-col-hd">
+            <span style="flex:1">Stock</span>
+            <span style="min-width:64px;text-align:right">Price</span>
+            <span style="min-width:60px;text-align:center">Day %</span>
+            <span>Direction</span>
+          </div>
+          {% for stock in stocks %}
+          <div class="stock-leg-row" id="row_{{ stock.ticker }}"
+               data-up-odds="{{ stock.odds_up|default:'1.50' }}"
+               data-down-odds="{{ stock.odds_down|default:'1.50' }}">
+            <div class="leg-id">
+              <div class="leg-ticker">{{ stock.ticker }}</div>
+              <div class="leg-company">{{ stock.company_name }}</div>
+            </div>
+            <div class="leg-price">${{ stock.price }}</div>
+            <div class="leg-mom {% if stock.momentum >= 0 %}pos{% else %}neg{% endif %}">
+              {% if stock.momentum >= 0 %}+{% endif %}{{ stock.momentum }}%
+            </div>
+            <div class="btn-group">
+              <button type="button" class="leg-btn up" data-ticker="{{ stock.ticker }}" data-dir="UP" data-sector="{{ sector }}" data-odds="{{ stock.odds_up|default:'1.50' }}">▲ UP <span class="odds-tag odds-tag-up">{{ stock.odds_up|default:'1.50' }}×</span></button>
+              <button type="button" class="leg-btn down" data-ticker="{{ stock.ticker }}" data-dir="DOWN" data-sector="{{ sector }}" data-odds="{{ stock.odds_down|default:'1.50' }}">▼ DOWN <span class="odds-tag odds-tag-down">{{ stock.odds_down|default:'1.50' }}×</span></button>
+            </div>
+            <input type="hidden" name="leg_{{ stock.ticker }}" id="input_{{ stock.ticker }}" value="">
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Right: parlay slip -->
+      <div class="parlay-slip">
+        <div class="slip-header">
+          <span class="slip-title">Parlay Slip</span>
+          <span class="slip-badge" id="slipLegCount">0 / 5 Legs</span>
+        </div>
+
+        <div class="slip-mult-wrap">
+          <div class="slip-mult-label">Payout Multiplier</div>
+          <div class="slip-mult-val" id="slipMult">—</div>
+          <div class="slip-legs-label" id="slipLegsLabel">Add 2 legs to start</div>
+        </div>
+
+        <div class="slip-legs" id="slipLegs">
+          <div class="slip-empty" id="slipEmpty">No legs selected yet</div>
+        </div>
+
+        <div class="slip-wager-section">
+          <div class="slip-field-label">Wager</div>
+          <div class="slip-balance-hint">Balance: <span>${{ paper.balance|floatformat:2 }}</span></div>
+          <input type="number" class="slip-wager-input" id="wagerInput"
+                 placeholder="Enter amount" min="1" max="{{ paper.balance|floatformat:0 }}" step="1">
+        </div>
+
+        <div class="slip-payout-section">
+          <div class="slip-payout-row">
+            <span class="slip-payout-label">Potential Payout</span>
+            <span class="slip-payout-val" id="slipPayout">—</span>
+          </div>
+        </div>
+
+        <div class="slip-validation" id="slipValidation"></div>
+
+        <div class="slip-submit-section">
+          <button type="submit" form="parlayForm" class="slip-submit-btn" id="submitBtn" disabled>
+            🔒 Lock In Parlay
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const MAX_LEGS = 5;
+  const MAX_BAL  = parseFloat("{{ paper.balance }}") || 0;
+  const DIFFICULTY_BONUS = { 2: 1.0, 3: 1.25, 4: 1.6, 5: 2.2 };
+
+  // Build odds map from data attributes: { ticker: { UP: 1.18, DOWN: 1.63 } }
+  const oddsMap = {};
+  document.querySelectorAll('.stock-leg-row').forEach(row => {
+    const ticker = row.querySelector('.leg-btn').dataset.ticker;
+    oddsMap[ticker] = {
+      UP:   parseFloat(row.dataset.upOdds)   || 1.50,
+      DOWN: parseFloat(row.dataset.downOdds) || 1.50,
+    };
+  });
+
+  const selections = {}; // ticker -> { dir, sector, odds }
+
+  function calcMultiplier() {
+    const tickers = Object.keys(selections);
+    const count   = tickers.length;
+    if (count === 0) return 1;
+    const legProduct = tickers.reduce((acc, t) => acc * selections[t].odds, 1);
+    return legProduct * (DIFFICULTY_BONUS[count] || 1.0);
+  }
+
+  function fmt(n) {
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function rebuildSlip() {
+    const tickers = Object.keys(selections);
+    const count   = tickers.length;
+
+    document.getElementById('slipLegCount').textContent = count + ' / ' + MAX_LEGS + ' Legs';
+
+    const multEl = document.getElementById('slipMult');
+    if (count >= 2) {
+      multEl.textContent = calcMultiplier().toFixed(2) + '×';
+    } else {
+      multEl.textContent = count === 1 ? (oddsMap[tickers[0]] ? Object.values(selections)[0].odds.toFixed(2) + '×' : '—') : '—';
+    }
+
+    const lbl = document.getElementById('slipLegsLabel');
+    if (count === 0) lbl.textContent = 'Add 2 legs to start';
+    else if (count === 1) lbl.textContent = 'Add 1 more leg';
+    else {
+      const bonus = DIFFICULTY_BONUS[count] || 1.0;
+      const bonusStr = bonus > 1.0 ? ' · ' + bonus + '× ' + count + '-leg bonus' : '';
+      const addMore  = count < MAX_LEGS ? ' · add up to ' + (MAX_LEGS - count) + ' more' : ' · max reached';
+      lbl.textContent = count + '-leg parlay' + bonusStr + addMore;
+    }
+
+    const container = document.getElementById('slipLegs');
+    const empty     = document.getElementById('slipEmpty');
+    container.querySelectorAll('.slip-leg-item').forEach(el => el.remove());
+    if (count === 0) {
+      empty.style.display = 'flex';
+    } else {
+      empty.style.display = 'none';
+      tickers.forEach(ticker => {
+        const { dir, odds } = selections[ticker];
+        const item = document.createElement('div');
+        item.className = 'slip-leg-item';
+        item.id = 'slipLeg_' + ticker;
+        item.innerHTML =
+          '<span class="slip-leg-ticker">' + ticker + '</span>' +
+          '<span class="slip-leg-dir ' + dir.toLowerCase() + '">' + (dir === 'UP' ? '▲ UP' : '▼ DOWN') + '</span>' +
+          '<span class="slip-leg-odds">' + odds.toFixed(2) + '×</span>';
+        container.appendChild(item);
+      });
+    }
+
+    updatePayout();
+    validate();
+  }
+
+  function updatePayout() {
+    const count = Object.keys(selections).length;
+    const wager = parseFloat(document.getElementById('wagerInput').value) || 0;
+    const payEl = document.getElementById('slipPayout');
+    if (count >= 2 && wager > 0) {
+      payEl.textContent = fmt(wager * calcMultiplier());
+    } else {
+      payEl.textContent = '—';
+    }
+  }
+
+  function validate() {
+    const count = Object.keys(selections).length;
+    const wager = parseFloat(document.getElementById('wagerInput').value) || 0;
+    const msg   = document.getElementById('slipValidation');
+    const btn   = document.getElementById('submitBtn');
+
+    let err = '';
+    if (count < 2)          err = 'Select at least 2 legs.';
+    else if (count > MAX_LEGS) err = 'Maximum 5 legs.';
+    else if (wager <= 0)    err = 'Enter a wager amount.';
+    else if (wager > MAX_BAL) err = 'Exceeds your balance.';
+
+    msg.textContent = err;
+    btn.disabled = !!err;
+
+    document.getElementById('wagerHidden').value = wager > 0 ? wager : 0;
+    document.getElementById('adjMultiplierHidden').value = !err ? calcMultiplier().toFixed(4) : '';
+  }
+
+  document.querySelectorAll('.leg-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const ticker = this.dataset.ticker;
+      const dir    = this.dataset.dir;
+      const sector = this.dataset.sector;
+      const odds   = parseFloat(this.dataset.odds) || 1.50;
+      const row    = document.getElementById('row_' + ticker);
+      const allBtns = row.querySelectorAll('.leg-btn');
+      const alreadySelected = this.classList.contains('selected');
+      const count  = Object.keys(selections).length;
+
+      if (!alreadySelected && !selections[ticker] && count >= MAX_LEGS) return;
+
+      allBtns.forEach(b => b.classList.remove('selected'));
+
+      if (alreadySelected) {
+        delete selections[ticker];
+        document.getElementById('input_' + ticker).value = '';
+        row.classList.remove('is-selected');
+      } else {
+        this.classList.add('selected');
+        selections[ticker] = { dir, sector, odds };
+        document.getElementById('input_' + ticker).value = dir;
+        row.classList.add('is-selected');
+      }
+
+      rebuildSlip();
+    });
+  });
+
+  document.getElementById('wagerInput').addEventListener('input', function () {
+    updatePayout();
+    validate();
+  });
+
+  rebuildSlip();
+
+  // Double-submit guard — disable button immediately on form submit
+  document.getElementById('parlayForm').addEventListener('submit', function () {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Locking In...';
+    btn.style.opacity = '0.7';
+  });
+</script>
+{% endblock %}

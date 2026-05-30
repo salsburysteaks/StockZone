@@ -1,0 +1,96 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block page_title %}My Parlays — StockZone{% endblock %}
+{% block active_nav %}parlay{% endblock %}
+
+{% block extra_css %}
+<style>
+  .parlay-card {
+    background: rgba(153,69,255,0.12);
+    border: 1px solid rgba(153,69,255,0.5);
+    border-left: 3px solid #9945FF; border-radius: 14px;
+    overflow: hidden; margin-bottom: 14px; transition: box-shadow 0.2s, border-color 0.2s;
+    box-shadow: 0 0 24px rgba(153,69,255,0.2), inset 0 0 24px rgba(153,69,255,0.04);
+  }
+  .parlay-card:hover {
+    box-shadow: 0 0 40px rgba(153,69,255,0.38), inset 0 0 24px rgba(153,69,255,0.07);
+    border-color: rgba(153,69,255,0.75);
+  }
+  .parlay-hd {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px; border-bottom: 1px solid rgba(153,69,255,0.15);
+  }
+  .parlay-hd-left { display: flex; align-items: center; gap: 14px; }
+  .mult-chip {
+    font-family: 'Roboto Mono', monospace; font-size: 1rem; font-weight: 600;
+    color: #9945FF; background: rgba(153,69,255,0.1); border: 1px solid rgba(153,69,255,0.25);
+    border-radius: 6px; padding: 3px 10px;
+  }
+  .parlay-date { font-size: 0.73rem; color: #444; }
+
+  .leg-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 24px; border-bottom: 1px solid rgba(153,69,255,0.1);
+  }
+  .leg-row:last-child { border-bottom: none; }
+  .leg-ticker { font-size: 0.9rem; font-weight: 700; color: #fff; min-width: 55px; }
+  .leg-sector { font-size: 0.72rem; color: #444; flex: 1; }
+  .leg-price { font-family: 'Roboto Mono', monospace; font-size: 0.72rem; color: #444; }
+  .leg-result { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; min-width: 54px; text-align: right; }
+  .leg-result.WIN { color: #00ff87; text-shadow: 0 0 8px rgba(0,255,135,0.9), 0 0 16px rgba(0,255,135,0.5); } .leg-result.LOSS { color: #ff4757; text-shadow: 0 0 8px rgba(255,71,87,0.9); } .leg-result.PENDING { color: #555; }
+
+  .top-actions { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero" style="position:relative;overflow:visible;min-height:220px;padding:40px 48px;">
+  <div>
+    <h1>My <em>Parlays</em></h1>
+    <div class="hero-underline"></div>
+    <p class="page-hero-sub">All your parlay chains — pending, won, and lost.</p>
+  </div>
+  <img src="{% static 'core/my_portfolio.png' %}" alt="" style="position:absolute;right:24px;top:50%;transform:translateY(-50%);height:240px;width:auto;mix-blend-mode:lighten;opacity:0.9;pointer-events:none;">
+</section>
+
+<div class="page-content">
+  <div class="top-actions">
+    <a href="{% url 'build_parlay' %}" class="btn-purple">+ Build New Parlay</a>
+  </div>
+
+  {% if parlays %}
+    {% for parlay in parlays %}
+    <div class="parlay-card">
+      <div class="parlay-hd">
+        <div class="parlay-hd-left">
+          <span class="mult-chip">{{ parlay.payout_multiplier }}x</span>
+          <span class="parlay-date">{{ parlay.created_at|date:"M j, Y" }} · {{ parlay.leg_count }} leg{{ parlay.leg_count|pluralize }}</span>
+        </div>
+        <span class="chip chip-{{ parlay.result }}">{{ parlay.get_result_display }}</span>
+      </div>
+      {% for leg in parlay.legs.all %}
+      <div class="leg-row">
+        <span class="leg-ticker">{{ leg.ticker }}</span>
+        <span class="leg-sector">{{ leg.sector }}</span>
+        {% if leg.direction == "UP" %}
+          <span class="dir-up">▲ UP</span>
+        {% else %}
+          <span class="dir-dn">▼ DOWN</span>
+        {% endif %}
+        {% if leg.price_at_pick %}<span class="leg-price">${{ leg.price_at_pick }}</span>{% endif %}
+        <span class="leg-result {{ leg.result }}">{{ leg.result }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="pcard">
+      <div class="empty-state">
+        <div class="empty-title">No Parlays Yet</div>
+        <p class="empty-sub">Chain 2–5 picks together for multiplied payouts.</p>
+        <a href="{% url 'build_parlay' %}" class="btn-purple">Build Your First Parlay</a>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

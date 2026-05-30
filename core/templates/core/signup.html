@@ -3,507 +3,406 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign Up — StockZone</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { height: 100%; }
+    html, body { height: 100%; }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #0d0d0d;
-      color: #e0e0e0;
-      min-height: 100%;
-      display: flex;
-      align-items: stretch;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(180deg, #080612 0%, #0a0818 100%);
+      background-attachment: fixed;
+      color: #e0e0e0; min-height: 100vh; overflow-x: hidden;
     }
+
+    /* ── Background ── */
+    .bg-layer { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .bg-grid {
+      position: absolute; inset: 0;
+      background-image:
+        repeating-linear-gradient(rgba(153,69,255,0.05) 0px, rgba(153,69,255,0.05) 1px, transparent 1px, transparent 40px),
+        repeating-linear-gradient(90deg, rgba(153,69,255,0.05) 0px, rgba(153,69,255,0.05) 1px, transparent 1px, transparent 40px);
+      animation: grid-pulse 4s ease-in-out infinite;
+    }
+    @keyframes grid-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+    .bg-left-border {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+      background: linear-gradient(180deg, transparent 0%, #9945FF 15%, #9945FF 85%, transparent 100%);
+      box-shadow: 0 0 8px rgba(153,69,255,0.6), 0 0 20px rgba(153,69,255,0.2);
+    }
+    .bg-particle {
+      position: absolute; border-radius: 50%; background: #9945FF;
+      animation: particle-rise linear infinite;
+    }
+    @keyframes particle-rise {
+      0%   { transform: translateY(0); opacity: 0; }
+      8%   { opacity: 1; }
+      90%  { opacity: 0.6; }
+      100% { transform: translateY(-100vh); opacity: 0; }
+    }
+    .tri-particle {
+      position: absolute; color: rgba(0,255,135,0.28); line-height: 1;
+      pointer-events: none; user-select: none;
+      animation: tri-rise linear infinite;
+    }
+    @keyframes tri-rise {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+      8%   { opacity: 1; }
+      90%  { opacity: 0.45; }
+      100% { transform: translateY(-105vh) rotate(15deg); opacity: 0; }
+    }
+
+    /* ── EKG bar ── */
+    .ekg-bar {
+      position: sticky; top: 0; z-index: 200;
+      height: 24px; background: #080612;
+      border-bottom: 1px solid rgba(153,69,255,0.2); overflow: hidden;
+    }
+    .ekg-bar::before, .ekg-bar::after {
+      content: ''; position: absolute; top: 0; bottom: 0;
+      width: 80px; z-index: 1; pointer-events: none;
+    }
+    .ekg-bar::before { left: 0;  background: linear-gradient(90deg, #080612, transparent); }
+    .ekg-bar::after  { right: 0; background: linear-gradient(90deg, transparent, #080612); }
+    #ekgContainer { overflow: hidden; width: 100%; height: 24px; }
+    @keyframes ekg-scroll { from { transform: translateX(0); } to { transform: translateX(-200px); } }
+
+    /* ── Page layout ── */
+    .page { position: relative; z-index: 1; display: flex; min-height: calc(100vh - 24px); }
 
     /* ── Left panel ── */
     .left {
-      flex: 1;
-      height: 100vh;
-      overflow-y: auto;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      padding: 40px 56px;
-      background: linear-gradient(160deg, #0d0d0d 60%, #1a0a2e 100%);
-      border-right: 1px solid #1e1e1e;
+      flex: 1; min-height: 100vh; padding: 48px 56px 56px;
+      display: flex; flex-direction: column;
+      border-right: 1px solid rgba(153,69,255,0.2);
+      position: relative; overflow: hidden;
+      background: linear-gradient(160deg, rgba(21,8,50,0.6) 0%, rgba(8,6,18,0.3) 100%);
     }
 
-    .logo {
-      font-family: 'Syne', sans-serif;
-      font-size: 42px;
-      font-weight: 900;
-      color: #fff;
-      letter-spacing: -1px;
-      margin-bottom: 32px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      line-height: 1;
+    @keyframes bull-float {
+      0%, 100% { transform: translateY(0) scale(1);       filter: drop-shadow(0 0 12px rgba(153,69,255,0.4)); }
+      50%       { transform: translateY(-12px) scale(1.02); filter: drop-shadow(0 0 28px rgba(153,69,255,0.8)); }
+    }
+    .bull-bg {
+      position: absolute; bottom: 0; right: -40px;
+      height: 85vh; width: auto;
+      mix-blend-mode: lighten; opacity: 0.9; pointer-events: none; z-index: 0;
+      animation: bull-float 3s ease-in-out infinite;
     }
 
-    .logo-icon {
-      width: 38px;
-      height: 38px;
-      background: #9945FF;
-      border-radius: 8px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      flex-shrink: 0;
+    .left > *:not(.bull-bg) { position: relative; z-index: 1; }
+
+    .logo-link {
+      display: inline-flex; align-items: center; gap: 10px;
+      text-decoration: none; margin-bottom: 44px;
     }
+    .logo-link img { height: 40px; mix-blend-mode: lighten; }
+    .logo-text { font-size: 1.15rem; font-weight: 700; color: #fff; }
+    .logo-text em { font-style: normal; color: #9945FF; }
 
-    .logo span { color: #9945FF; }
-
-    .headline {
+    .left-headline {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 3.25rem;
-      font-weight: 400;
-      color: #fff;
-      line-height: 1.05;
-      margin-bottom: 16px;
-      letter-spacing: 1px;
+      font-size: clamp(2.6rem, 4.5vw, 3.8rem);
+      font-weight: 400; color: #fff; line-height: 0.95;
+      letter-spacing: 2px; margin-bottom: 14px;
+    }
+    .left-headline em { font-style: normal; color: #9945FF; }
+
+    .hero-underline {
+      width: 60px; height: 4px; background: #9945FF; border-radius: 2px;
+      margin-bottom: 28px;
+      box-shadow: 0 0 16px rgba(153,69,255,0.7), 0 0 36px rgba(153,69,255,0.3);
     }
 
-    .headline em {
-      font-style: normal;
-      color: #9945FF;
+    .features { display: flex; flex-direction: column; gap: 10px; max-width: 400px; margin-bottom: 36px; }
+    .feat {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(153,69,255,0.08); border: 1px solid rgba(153,69,255,0.25);
+      border-radius: 10px; padding: 13px 18px;
+      transition: border-color 0.15s, background 0.15s;
     }
-
-    .subheading {
-      font-size: 1.05rem;
-      color: #888;
-      line-height: 1.6;
-      margin-bottom: 20px;
-      max-width: 380px;
+    .feat:hover { background: rgba(153,69,255,0.14); border-color: rgba(153,69,255,0.45); }
+    .feat-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+      background: #9945FF; box-shadow: 0 0 10px rgba(153,69,255,0.8), 0 0 20px rgba(153,69,255,0.4);
     }
+    .feat-dot.green { background: #00ff87; box-shadow: 0 0 10px rgba(0,255,135,0.8), 0 0 20px rgba(0,255,135,0.4); }
+    .feat-dot.gold  { background: #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.8), 0 0 20px rgba(255,215,0,0.4); }
+    .feat p { font-size: 0.86rem; color: #888; font-weight: 500; line-height: 1.4; }
 
-    .stat-cards {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      max-width: 380px;
-      margin-bottom: 24px;
+    /* ── Leaderboard preview ── */
+    .lb-wrap { max-width: 420px; }
+    .lb-head-row {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
     }
-
-    .stat-card {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      background: #111;
-      border: 1px solid #1e1e1e;
-      border-radius: 10px;
-      padding: 14px 18px;
+    .lb-title { font-size: 0.68rem; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: 1.2px; }
+    .live-pill {
+      font-size: 0.62rem; font-weight: 700;
+      background: rgba(153,69,255,0.15); color: #9945FF;
+      border: 1px solid rgba(153,69,255,0.35); padding: 2px 9px;
+      border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;
+      box-shadow: 0 0 8px rgba(153,69,255,0.2);
     }
-
-    .stat-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      background: #1e0a3c;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
-      flex-shrink: 0;
+    .lb-table-wrap {
+      background: rgba(153,69,255,0.1);
+      border: 1px solid rgba(153,69,255,0.4);
+      border-left: 3px solid #9945FF; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 0 20px rgba(153,69,255,0.15), inset 0 0 20px rgba(153,69,255,0.03);
     }
-
-    .stat-card p {
-      font-size: 0.95rem;
-      color: #ccc;
-      font-weight: 500;
+    .lb-table { width: 100%; border-collapse: collapse; }
+    .lb-table th {
+      text-align: left; padding: 9px 16px;
+      font-size: 0.63rem; font-weight: 700; color: #555;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      border-bottom: 1px solid rgba(153,69,255,0.2);
+      background: rgba(153,69,255,0.07);
     }
-
-    /* ── Mock leaderboard preview ── */
-    .preview {
-      margin-top: 32px;
-      max-width: 380px;
-    }
-
-    .preview-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .preview-header h3 {
-      font-family: 'Syne', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #aaa;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .live-badge {
-      font-size: 0.65rem;
-      font-weight: 700;
-      background: #9945FF;
-      color: #fff;
-      padding: 2px 7px;
-      border-radius: 20px;
-      letter-spacing: 0.5px;
-    }
-
-    .preview-table {
-      width: 100%;
-      border-collapse: collapse;
-      border-radius: 10px;
-      overflow: hidden;
-      border: 1px solid #1e1e1e;
-    }
-
-    .preview-table th {
-      background: #0f0f0f;
-      color: #555;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 8px 12px;
-      text-align: left;
-    }
-
-    .preview-table td {
-      padding: 10px 12px;
-      font-size: 0.92rem;
-      background: #111;
-      border-top: 1px solid #1a1a1a;
-    }
-
-    .preview-table tr:last-child td { border-bottom: none; }
-
-    .rank-num { color: #555; font-weight: 700; width: 28px; }
-    .rank-num.gold { color: #ffd700; }
-    .rank-num.silver { color: #c0c0c0; }
-    .rank-num.bronze { color: #cd7f32; }
-    .fake-name { color: #ddd; font-weight: 600; }
-    .fake-value { color: #fff; font-weight: 700; text-align: right; }
-    .fake-gain { color: #4caf50; font-weight: 600; text-align: right; font-size: 0.8rem; }
-
-    .preview-cta {
-      text-align: center;
-      margin-top: 10px;
-      font-size: 0.75rem;
-      color: #555;
-    }
-
-    .preview-cta span { color: #9945FF; font-weight: 600; }
-
-    /* ── Bull mascot ── */
-    .bull-wrap {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      display: inline-block;
-      pointer-events: none;
-      mix-blend-mode: lighten;
-    }
-
-    .bull-body {
-      position: relative;
-      transform-origin: bottom center;
-      animation: bull-snort 4s ease-in-out infinite;
-    }
-
-    .bull-img {
-      display: block;
-    }
-
-    @keyframes bull-snort {
-      0%   { transform: scale(1);    }
-      5%   { transform: scale(1.04); }
-      12%  { transform: scale(1);    }
-      18%  { transform: scale(1.04); }
-      26%  { transform: scale(1);    }
-      100% { transform: scale(1);    }
-    }
-
-    .bull-glow {
-      position: absolute;
-      top: 2%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 220px;
-      height: 220px;
-      border-radius: 50%;
-      background: radial-gradient(ellipse at center, rgba(153, 69, 255, 0.28) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    /* ── Nostril particle streams ── */
-    .particle {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: rgba(200, 170, 255, 0.85);
-      filter: blur(2px);
-      animation-duration: 2s;
-      animation-timing-function: ease-out;
-      animation-iteration-count: infinite;
-    }
-
-    /* Left nostril — 8 particles, stagger 0.25s each */
-    .p-l { top: 21%; left: 57.5%; animation-name: stream-left; }
-    .p-l-1 { animation-delay: 0s;    } .p-l-2 { animation-delay: 0.25s; }
-    .p-l-3 { animation-delay: 0.5s;  } .p-l-4 { animation-delay: 0.75s; }
-    .p-l-5 { animation-delay: 1.0s;  } .p-l-6 { animation-delay: 1.25s; }
-    .p-l-7 { animation-delay: 1.5s;  } .p-l-8 { animation-delay: 1.75s; }
-
-    /* Right nostril — 8 particles, stagger 0.25s each */
-    .p-r { top: 21%; left: 64%; animation-name: stream-right; }
-    .p-r-1 { animation-delay: 0s;    } .p-r-2 { animation-delay: 0.25s; }
-    .p-r-3 { animation-delay: 0.5s;  } .p-r-4 { animation-delay: 0.75s; }
-    .p-r-5 { animation-delay: 1.0s;  } .p-r-6 { animation-delay: 1.25s; }
-    .p-r-7 { animation-delay: 1.5s;  } .p-r-8 { animation-delay: 1.75s; }
-
-    @keyframes stream-left {
-      0%   { opacity: 0;   transform: translate(0,    0)    scale(0.3); }
-      10%  { opacity: 0.8;                                              }
-      100% { opacity: 0;   transform: translate(-70px, -15px) scale(2.5); }
-    }
-
-    @keyframes stream-right {
-      0%   { opacity: 0;   transform: translate(0,   0)    scale(0.3); }
-      10%  { opacity: 0.8;                                             }
-      100% { opacity: 0;   transform: translate(70px, -15px) scale(2.5); }
-    }
+    .lb-table td { padding: 12px 16px; font-size: 0.84rem; border-bottom: 1px solid rgba(153,69,255,0.1); color: #bbb; }
+    .lb-table tbody tr { background: rgba(153,69,255,0.06); }
+    .lb-table tbody tr:nth-child(even) { background: rgba(153,69,255,0.09); }
+    .lb-table tbody tr:hover { background: rgba(153,69,255,0.16) !important; }
+    .lb-table tbody tr:last-child td { border-bottom: none; }
+    .rk { font-family: 'Roboto Mono', monospace; font-weight: 700; font-size: 0.95rem; }
+    .rk.g { color: #ffd700; } .rk.s { color: #c0c0c0; } .rk.b { color: #cd7f32; }
+    .pname { font-weight: 700; color: #fff; }
+    .pval { font-family: 'Roboto Mono', monospace; font-weight: 600; color: #fff; }
+    .pgain { font-family: 'Roboto Mono', monospace; color: #00ff87; font-size: 0.8rem; }
+    .lb-cta { padding: 10px 16px; border-top: 1px solid rgba(153,69,255,0.1); font-size: 0.73rem; color: #444; text-align: center; }
+    .lb-cta em { font-style: normal; color: #9945FF; }
 
     /* ── Right panel ── */
     .right {
-      width: 460px;
-      min-height: 100vh;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 480px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
       padding: 48px 40px;
-      background: #0d0d0d;
+      background: rgba(8,6,18,0.4);
     }
 
-    .form-box {
-      width: 100%;
-      max-width: 360px;
+    .form-card {
+      width: 100%; max-width: 380px;
+      background: rgba(120,50,220,0.15);
+      border: 1px solid rgba(153,69,255,0.5); border-radius: 18px;
+      padding: 36px 32px;
+      box-shadow: 0 0 30px rgba(153,69,255,0.2), inset 0 0 30px rgba(153,69,255,0.04);
+      transition: box-shadow 0.3s;
     }
+    .form-card:hover { box-shadow: 0 0 48px rgba(153,69,255,0.32), inset 0 0 30px rgba(153,69,255,0.06); }
 
-    .form-box h2 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 6px;
+    .form-logo { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; }
+    .form-logo img { height: 34px; mix-blend-mode: lighten; }
+    .form-logo-text { font-size: 1rem; font-weight: 700; color: #fff; }
+    .form-logo-text em { font-style: normal; color: #9945FF; }
+
+    .form-title { font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .form-sub { font-size: 0.82rem; color: #555; margin-bottom: 26px; }
+
+    .form-card label {
+      display: block; font-size: 0.68rem; font-weight: 700; color: #555;
+      text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 6px; margin-top: 16px;
     }
+    .form-card label:first-of-type { margin-top: 0; }
 
-    .form-box .form-sub {
-      font-size: 0.85rem;
-      color: #666;
-      margin-bottom: 28px;
+    .form-card input[type="text"],
+    .form-card input[type="password"] {
+      width: 100%; padding: 10px 14px;
+      background: rgba(100,40,200,0.15); border: 1px solid rgba(153,69,255,0.35);
+      border-radius: 8px; color: #e0e0e0; font-size: 0.9rem; font-family: inherit;
+      outline: none; transition: border-color 0.15s, box-shadow 0.15s;
     }
-
-    .form-box label {
-      display: block;
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: #aaa;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-top: 16px;
-      margin-bottom: 5px;
+    .form-card input[type="text"]:focus,
+    .form-card input[type="password"]:focus {
+      border-color: #9945FF; box-shadow: 0 0 14px rgba(153,69,255,0.35);
     }
-
-    .form-box input {
-      width: 100%;
-      padding: 10px 12px;
-      background: #111;
-      border: 1px solid #3a3a3a;
-      border-radius: 6px;
-      color: #e0e0e0;
-      font-size: 0.9rem;
-      transition: border-color 0.15s;
-    }
-
-    .form-box input:focus {
-      outline: none;
-      border-color: #9945FF;
-      box-shadow: 0 0 0 3px rgba(153, 69, 255, 0.15);
-    }
-
-    /* Prevent browser autofill from overriding the dark background */
-    .form-box input:-webkit-autofill,
-    .form-box input:-webkit-autofill:hover,
-    .form-box input:-webkit-autofill:focus {
-      -webkit-box-shadow: 0 0 0 1000px #111 inset;
+    .form-card input:-webkit-autofill {
+      -webkit-box-shadow: 0 0 0 1000px rgba(80,30,180,0.25) inset;
       -webkit-text-fill-color: #e0e0e0;
-      border-color: #3a3a3a;
-      transition: background-color 5000s ease-in-out 0s;
     }
 
-    .helptext {
-      font-size: 0.72rem;
-      color: #555;
-      margin-top: 4px;
-      line-height: 1.4;
-    }
-
-    .errorlist {
-      list-style: none;
-      color: #ff5252;
-      font-size: 0.78rem;
-      margin-top: 4px;
-    }
+    .helptext { font-size: 0.7rem; color: #444; margin-top: 5px; line-height: 1.45; }
+    .errorlist { list-style: none; color: #ff4757; font-size: 0.74rem; margin-top: 5px; }
+    .errorlist li::before { content: '⚠ '; }
 
     .submit-btn {
-      margin-top: 24px;
-      width: 100%;
-      padding: 11px;
-      background: #9945FF;
-      color: #fff;
-      font-weight: 700;
-      font-size: 0.95rem;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      letter-spacing: 0.3px;
-      transition: background 0.15s;
+      margin-top: 26px; width: 100%; padding: 12px;
+      background: #00ff87; color: #040210;
+      font-weight: 800; font-size: 0.9rem; font-family: inherit;
+      border: none; border-radius: 8px; cursor: pointer;
+      letter-spacing: 0.3px; transition: background 0.15s, box-shadow 0.15s;
+      box-shadow: 0 0 20px rgba(0,255,135,0.45);
     }
+    .submit-btn:hover { background: #00e876; box-shadow: 0 0 34px rgba(0,255,135,0.65); }
 
-    .submit-btn:hover { background: #7c2ee0; }
+    .form-footer { text-align: center; margin-top: 18px; font-size: 0.82rem; color: #555; }
+    .form-footer a { color: #9945FF; text-decoration: none; font-weight: 600; }
+    .form-footer a:hover { text-decoration: underline; color: #b76fff; }
 
-    .form-footer {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 0.83rem;
-      color: #555;
-    }
-
-    .form-footer a {
-      color: #9945FF;
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    .form-footer a:hover { text-decoration: underline; }
-
-    /* ── Responsive: stack on small screens ── */
-    @media (max-width: 768px) {
-      body { flex-direction: column; }
-      .left { padding: 40px 24px; border-right: none; border-bottom: 1px solid #1e1e1e; }
-      .headline { font-size: 1.8rem; }
-      .right { width: 100%; padding: 40px 24px; }
+    @media (max-width: 960px) {
+      .page { flex-direction: column; }
+      .left { border-right: none; border-bottom: 1px solid rgba(153,69,255,0.2); padding: 36px 28px; }
+      .right { width: 100%; padding: 36px 24px; }
+      .bull-bg { height: 260px; opacity: 0.5; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Left: branding panel -->
-  <div class="left">
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 32px;">
-      <img src="{% static 'core/logo.png' %}" alt="StockZone" style="height: 80px; width: auto; object-fit: contain; mix-blend-mode: lighten;">
-      <span style="font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; line-height: 1; color: #fff;">Stock<span style="color: #9945FF;">Zone</span></span>
-    </div>
-
-    <h1 class="headline">Stocks With<br><em>Sportsbook</em> Energy</h1>
-    <p class="subheading">Pick direction. Build your portfolio. Chase the leaderboard.</p>
-
-    <div class="bull-wrap" aria-hidden="true">
-      <div class="bull-glow"></div>
-      <div class="bull-body">
-        <img class="bull-img" src="{% static 'core/bull.png' %}" alt="" style="height: 750px; width: auto; opacity: 0.85; mix-blend-mode: lighten;">
-        <div class="particle p-l p-l-1"></div><div class="particle p-l p-l-2"></div>
-        <div class="particle p-l p-l-3"></div><div class="particle p-l p-l-4"></div>
-        <div class="particle p-l p-l-5"></div><div class="particle p-l p-l-6"></div>
-        <div class="particle p-l p-l-7"></div><div class="particle p-l p-l-8"></div>
-        <div class="particle p-r p-r-1"></div><div class="particle p-r p-r-2"></div>
-        <div class="particle p-r p-r-3"></div><div class="particle p-r p-r-4"></div>
-        <div class="particle p-r p-r-5"></div><div class="particle p-r p-r-6"></div>
-        <div class="particle p-r p-r-7"></div><div class="particle p-r p-r-8"></div>
-      </div>
-    </div>
-
-    <div class="stat-cards">
-      <div class="stat-card">
-        <div class="stat-icon">💰</div>
-        <p>$10,000 starting balance — no real money, full-on competition.</p>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">📈</div>
-        <p>Top 5 picks per sector daily — call UP or DOWN on live stocks.</p>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">🏆</div>
-        <p>Compete on the leaderboard — see who's running the best portfolio.</p>
-      </div>
-    </div>
-
-    <!-- Mock leaderboard preview -->
-    <div class="preview">
-      <div class="preview-header">
-        <h3>Leaderboard Preview</h3>
-        <span class="live-badge">LIVE</span>
-      </div>
-      <table class="preview-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Player</th>
-            <th style="text-align:right">Portfolio</th>
-            <th style="text-align:right">Gain</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="rank-num gold">1</td>
-            <td class="fake-name">trader_88</td>
-            <td class="fake-value">$14,320.50</td>
-            <td class="fake-gain">+43.2%</td>
-          </tr>
-          <tr>
-            <td class="rank-num silver">2</td>
-            <td class="fake-name">stonkmaster</td>
-            <td class="fake-value">$12,890.00</td>
-            <td class="fake-gain">+28.9%</td>
-          </tr>
-          <tr>
-            <td class="rank-num bronze">3</td>
-            <td class="fake-name">bullrun99</td>
-            <td class="fake-value">$11,450.75</td>
-            <td class="fake-gain">+14.5%</td>
-          </tr>
-        </tbody>
-      </table>
-      <p class="preview-cta">Sign up to claim your spot — <span>could #1 be you?</span></p>
-    </div>
+  <!-- ══ Background ══ -->
+  <div class="bg-layer" aria-hidden="true">
+    <div class="bg-grid"></div>
+    <div class="bg-left-border"></div>
+    <div id="bgParticles"></div>
+    <div id="triParticles"></div>
   </div>
 
-  <!-- Right: signup form -->
-  <div class="right">
-    <div class="form-box">
-      <h2>Create your account</h2>
-      <p class="form-sub">Free to join. Start trading in seconds.</p>
-
-      <form method="post">
-        {% csrf_token %}
-        {% for field in form %}
-          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-          {% if field.help_text %}<p class="helptext">{{ field.help_text }}</p>{% endif %}
-          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-        {% endfor %}
-        <button type="submit" class="submit-btn">Create Account</button>
-      </form>
-
-      <p class="form-footer">Already have an account? <a href="{% url 'login' %}">Log in</a></p>
-    </div>
+  <!-- ══ EKG Bar ══ -->
+  <div class="ekg-bar" aria-hidden="true">
+    <div id="ekgContainer"></div>
   </div>
 
+  <!-- ══ Main layout ══ -->
+  <div class="page">
+
+    <!-- Left: brand + features + leaderboard preview -->
+    <div class="left">
+      <img src="{% static 'core/bull.png' %}" alt="" class="bull-bg">
+
+      <a href="{% url 'landing' %}" class="logo-link">
+        <img src="{% static 'core/logo.png' %}" alt="StockZone">
+        <span class="logo-text">Stock<em>Zone</em></span>
+      </a>
+
+      <h1 class="left-headline">Stocks With<br><em>Sportsbook</em> Energy</h1>
+      <div class="hero-underline"></div>
+
+      <div class="features">
+        <div class="feat">
+          <div class="feat-dot"></div>
+          <p>$10,000 starting balance — no real money, full competition.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-dot green"></div>
+          <p>Pick UP or DOWN on 25 live stocks every day across 5 sectors.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-dot gold"></div>
+          <p>Build parlays, place future bets, and compete on the leaderboard.</p>
+        </div>
+      </div>
+
+      <div class="lb-wrap">
+        <div class="lb-head-row">
+          <span class="lb-title">Leaderboard Preview</span>
+          <span class="live-pill">Live</span>
+        </div>
+        <div class="lb-table-wrap">
+          <table class="lb-table">
+            <thead>
+              <tr>
+                <th style="width:36px">#</th>
+                <th>Player</th>
+                <th style="text-align:right">Portfolio</th>
+                <th style="text-align:right">Gain</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="rk g">1</span></td>
+                <td><span class="pname">trader_88</span></td>
+                <td style="text-align:right"><span class="pval">$14,320</span></td>
+                <td style="text-align:right"><span class="pgain">+43.2%</span></td>
+              </tr>
+              <tr>
+                <td><span class="rk s">2</span></td>
+                <td><span class="pname">stonkmaster</span></td>
+                <td style="text-align:right"><span class="pval">$12,890</span></td>
+                <td style="text-align:right"><span class="pgain">+28.9%</span></td>
+              </tr>
+              <tr>
+                <td><span class="rk b">3</span></td>
+                <td><span class="pname">bullrun99</span></td>
+                <td style="text-align:right"><span class="pval">$11,450</span></td>
+                <td style="text-align:right"><span class="pgain">+14.5%</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lb-cta">Sign up to claim your spot — <em>could #1 be you?</em></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: signup form -->
+    <div class="right">
+      <div class="form-card">
+        <div class="form-logo">
+          <img src="{% static 'core/logo.png' %}" alt="StockZone">
+          <span class="form-logo-text">Stock<em>Zone</em></span>
+        </div>
+        <div class="form-title">Create your account</div>
+        <p class="form-sub">Free to join. Start trading in seconds.</p>
+        <form method="post">
+          {% csrf_token %}
+          {% for field in form %}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="helptext">{{ field.help_text }}</p>{% endif %}
+            {% if field.errors %}
+              <ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+          {% endfor %}
+          <button type="submit" class="submit-btn">Create Account</button>
+        </form>
+        <p class="form-footer">Already have an account? <a href="{% url 'login' %}">Log in</a> &nbsp;·&nbsp; <a href="{% url 'how_to_play' %}">How to Play</a></p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ── EKG heartbeat ── */
+    (function () {
+      const container = document.getElementById('ekgContainer');
+      const ns = 'http://www.w3.org/2000/svg';
+      const CW = 200, H = 24, N = 50;
+      const cycle = [[0,12],[40,12],[48,9],[56,12],[70,12],[76,2],[81,20],[88,12],[104,12],[114,7],[124,12],[200,12]];
+      let pts = '';
+      for (let c = 0; c < N; c++) cycle.forEach(([x,y]) => { pts += (c * CW + x) + ',' + y + ' '; });
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('width', CW * N); svg.setAttribute('height', H);
+      svg.style.cssText = 'display:block;will-change:transform;animation:ekg-scroll 2.8s linear infinite;flex-shrink:0';
+      const pl = document.createElementNS(ns, 'polyline');
+      pl.setAttribute('points', pts.trim()); pl.setAttribute('stroke', '#9945FF');
+      pl.setAttribute('stroke-width', '1.5'); pl.setAttribute('fill', 'none');
+      pl.setAttribute('stroke-linecap', 'round'); pl.setAttribute('stroke-linejoin', 'round');
+      pl.setAttribute('opacity', '0.65');
+      svg.appendChild(pl); container.appendChild(svg);
+    })();
+
+    /* ── Purple rising particles ── */
+    (function () {
+      const c = document.getElementById('bgParticles');
+      for (let i = 0; i < 30; i++) {
+        const p = document.createElement('div'); p.className = 'bg-particle';
+        const s = 1 + Math.random() * 2;
+        p.style.cssText = 'left:' + (Math.random()*100) + 'vw;bottom:' + (Math.random()*100) + 'vh;width:' + s + 'px;height:' + s + 'px;opacity:' + (0.15+Math.random()*0.4) + ';animation-duration:' + (20+Math.random()*28) + 's;animation-delay:' + (-Math.random()*30) + 's';
+        c.appendChild(p);
+      }
+    })();
+
+    /* ── Green triangle particles ── */
+    (function () {
+      const c = document.getElementById('triParticles');
+      for (let i = 0; i < 22; i++) {
+        const p = document.createElement('div'); p.className = 'tri-particle';
+        p.textContent = '▲';
+        const s = 7 + Math.random() * 9;
+        p.style.cssText = 'left:' + (Math.random()*100) + 'vw;bottom:' + (-Math.random()*15) + 'vh;font-size:' + s + 'px;animation-duration:' + (14+Math.random()*22) + 's;animation-delay:' + (-Math.random()*28) + 's';
+        c.appendChild(p);
+      }
+    })();
+  </script>
 </body>
 </html>

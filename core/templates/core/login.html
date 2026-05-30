@@ -1,36 +1,520 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Log In — StockZone</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; background: #0f1117; color: #e0e0e0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-    .card { background: #1a1a2a; padding: 40px; border-radius: 8px; width: 100%; max-width: 400px; }
-    h1 { font-size: 1.4rem; color: #fff; margin-bottom: 24px; }
-    label { display: block; font-size: 0.8rem; color: #aaa; margin-bottom: 4px; margin-top: 16px; }
-    input { width: 100%; padding: 8px 10px; background: #0f1117; border: 1px solid #2a2a3a; border-radius: 4px; color: #e0e0e0; font-size: 0.9rem; }
-    input:focus { outline: none; border-color: #90caf9; }
-    .errorlist { list-style: none; color: #f44336; font-size: 0.8rem; margin-top: 4px; }
-    button { margin-top: 24px; width: 100%; padding: 10px; background: #90caf9; color: #0f1117; font-weight: 700; border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem; }
-    button:hover { background: #bbdefb; }
-    .footer { text-align: center; margin-top: 16px; font-size: 0.85rem; color: #888; }
-    .footer a { color: #90caf9; text-decoration: none; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #080612;
+      color: #e0e0e0; min-height: 100vh; overflow: hidden;
+    }
+
+    /* ── Background particles (fixed layer) ── */
+    .bg-layer { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .bg-particle {
+      position: absolute; border-radius: 50%; background: #9945FF;
+      animation: particle-rise linear infinite;
+    }
+    @keyframes particle-rise {
+      0%   { transform: translateY(0); opacity: 0; }
+      8%   { opacity: 1; }
+      90%  { opacity: 0.5; }
+      100% { transform: translateY(-100vh); opacity: 0; }
+    }
+    .tri-particle {
+      position: absolute; color: rgba(0,255,135,0.22); line-height: 1;
+      pointer-events: none; user-select: none;
+      animation: tri-rise linear infinite;
+    }
+    @keyframes tri-rise {
+      0%   { transform: translateY(0); opacity: 0; }
+      8%   { opacity: 1; }
+      90%  { opacity: 0.4; }
+      100% { transform: translateY(-105vh); opacity: 0; }
+    }
+
+    /* ── EKG bar (full width, top) ── */
+    .ekg-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+      height: 24px; background: #080612;
+      border-bottom: 1px solid rgba(153,69,255,0.25); overflow: hidden;
+    }
+    .ekg-bar::before, .ekg-bar::after {
+      content: ''; position: absolute; top: 0; bottom: 0;
+      width: 80px; z-index: 1; pointer-events: none;
+    }
+    .ekg-bar::before { left: 0;  background: linear-gradient(90deg, #080612, transparent); }
+    .ekg-bar::after  { right: 0; background: linear-gradient(90deg, transparent, #080612); }
+    #ekgContainer { overflow: hidden; width: 100%; height: 24px; }
+    @keyframes ekg-scroll { from { transform: translateX(0); } to { transform: translateX(-200px); } }
+
+    /* ── Split layout ── */
+    .page {
+      position: relative; z-index: 1;
+      display: flex; height: calc(100vh - 24px);
+      margin-top: 24px;
+    }
+
+    /* ════════════════════════════════════
+       LEFT PANEL — cinematic visual side
+    ════════════════════════════════════ */
+    .left-panel {
+      flex: 1; position: relative; overflow: hidden;
+      background: linear-gradient(145deg, #1a0840 0%, #0f0628 40%, #080612 100%);
+      border-right: 1px solid rgba(153,69,255,0.2);
+    }
+
+    /* Watermark */
+    .watermark {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18vw;
+      font-weight: 400; letter-spacing: 8px;
+      color: rgba(153,69,255,0.08);
+      white-space: nowrap; pointer-events: none; z-index: 0;
+      user-select: none;
+    }
+
+    /* Chart container */
+    .chart-wrap {
+      position: absolute; left: 0; right: 0;
+      bottom: 80px; height: 200px;
+      overflow: hidden; z-index: 1;
+    }
+    .chart-wrap::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 80px;
+      background: linear-gradient(90deg, #0f0628, transparent); z-index: 2;
+    }
+    .chart-wrap::after {
+      content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
+      background: linear-gradient(90deg, transparent, #080612); z-index: 2;
+    }
+    @keyframes chart-scroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* Radial glow behind chart */
+    .chart-glow {
+      position: absolute; left: 50%; bottom: 60px;
+      transform: translateX(-50%);
+      width: 70%; height: 200px; border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(153,69,255,0.12) 0%, transparent 70%);
+      z-index: 0; pointer-events: none;
+    }
+
+    /* Grid lines on left panel */
+    .left-grid {
+      position: absolute; inset: 0; z-index: 0;
+      background-image:
+        repeating-linear-gradient(rgba(153,69,255,0.04) 0px, rgba(153,69,255,0.04) 1px, transparent 1px, transparent 60px),
+        repeating-linear-gradient(90deg, rgba(153,69,255,0.04) 0px, rgba(153,69,255,0.04) 1px, transparent 1px, transparent 60px);
+    }
+
+    /* Left content (logo + tagline) */
+    .left-content {
+      position: absolute; inset: 0; z-index: 2;
+      display: flex; flex-direction: column;
+      padding: 40px 48px;
+    }
+
+    .left-logo {
+      display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+    }
+    .left-logo img { height: 40px; mix-blend-mode: lighten; background: transparent; }
+    .left-logo-text { font-size: 1.1rem; font-weight: 700; color: rgba(255,255,255,0.9); }
+    .left-logo-text em { font-style: normal; color: #9945FF; }
+
+    .left-tagline-wrap { margin-top: auto; }
+    .left-tagline {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.4rem, 4.5vw, 4rem);
+      color: #fff; letter-spacing: 3px; line-height: 1.05;
+      text-shadow: 0 0 40px rgba(153,69,255,0.4);
+      margin-bottom: 14px;
+    }
+    .left-tagline em { font-style: normal; color: #9945FF; }
+    .tagline-underline {
+      width: 64px; height: 4px; background: #9945FF; border-radius: 2px;
+      box-shadow: 0 0 16px rgba(153,69,255,0.8), 0 0 40px rgba(153,69,255,0.4);
+      margin-bottom: 20px;
+    }
+    .left-sub {
+      font-size: 0.82rem; color: rgba(255,255,255,0.35); letter-spacing: 0.5px;
+      font-family: 'Roboto Mono', monospace;
+    }
+
+    /* ════════════════════════════════════
+       RIGHT PANEL — form side
+    ════════════════════════════════════ */
+    @keyframes bull-float {
+      0%, 100% { transform: translateY(0) scale(1);        filter: drop-shadow(0 0 12px rgba(153,69,255,0.4)); }
+      50%       { transform: translateY(-12px) scale(1.02); filter: drop-shadow(0 0 28px rgba(153,69,255,0.8)); }
+    }
+    .page-bull {
+      display: block; height: 520px; width: auto;
+      margin: 0 auto 32px;
+      mix-blend-mode: screen; opacity: 0.85; pointer-events: none; position: relative; z-index: 1;
+      filter: drop-shadow(0 0 20px rgba(153,69,255,0.6));
+      animation: bull-float 3s ease-in-out infinite;
+      border: none; background: transparent; box-shadow: none; border-radius: 0;
+    }
+    .right-panel {
+      width: 440px; flex-shrink: 0;
+      background: linear-gradient(180deg, #0e0822 0%, #080612 100%);
+      display: flex; flex-direction: column; justify-content: center;
+      position: relative; overflow: hidden; min-height: 100vh;
+    }
+
+    .form-logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; margin-bottom: 36px;
+    }
+    .form-logo img { height: 36px; mix-blend-mode: lighten; background: transparent; }
+    .form-logo-text { font-size: 1rem; font-weight: 700; color: #fff; }
+    .form-logo-text em { font-style: normal; color: #9945FF; }
+
+    .form-headline {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem; font-weight: 400; color: #fff;
+      letter-spacing: 3px; line-height: 1; margin-bottom: 12px;
+    }
+    .form-headline em { font-style: normal; color: #9945FF; }
+
+    .form-underline {
+      width: 48px; height: 4px; background: #9945FF; border-radius: 2px;
+      margin-bottom: 32px;
+      box-shadow: 0 0 14px rgba(153,69,255,0.7), 0 0 30px rgba(153,69,255,0.3);
+    }
+
+    /* Form field labels */
+    .right-inner label {
+      display: block; font-size: 0.67rem; font-weight: 700; color: #555;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      margin-bottom: 7px; margin-top: 18px;
+    }
+    .right-inner form > label:first-of-type,
+    .field-group:first-child label { margin-top: 0; }
+
+    /* Inputs */
+    .right-inner input[type="text"],
+    .right-inner input[type="password"] {
+      width: 100%; padding: 12px 16px;
+      background: rgba(80,30,160,0.25) !important; border: 1px solid rgba(153,69,255,0.5) !important;
+      border-radius: 8px; color: #fff !important; -webkit-text-fill-color: #fff !important;
+      font-size: 0.92rem; font-family: inherit;
+      outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .right-inner input[type="text"]:focus,
+    .right-inner input[type="password"]:focus {
+      border-color: #9945FF !important;
+      box-shadow: 0 0 12px rgba(153,69,255,0.2), 0 0 0 3px rgba(153,69,255,0.12);
+    }
+    .right-inner input:-webkit-autofill,
+    .right-inner input:-webkit-autofill:hover,
+    .right-inner input:-webkit-autofill:focus {
+      -webkit-box-shadow: 0 0 0 1000px rgba(80,30,160,0.4) inset !important;
+      -webkit-text-fill-color: #fff !important;
+      background: rgba(80,30,160,0.25) !important;
+    }
+
+    .errorlist { list-style: none; color: #ff4757; font-size: 0.74rem; margin-top: 6px; }
+    .errorlist li::before { content: '⚠ '; }
+
+    /* Submit button */
+    .submit-btn {
+      margin-top: 28px; width: 100%; padding: 13px;
+      background: #9945FF; color: #fff;
+      font-weight: 800; font-size: 0.92rem; font-family: inherit;
+      border: none; border-radius: 9px; cursor: pointer;
+      letter-spacing: 0.4px; transition: background 0.15s, box-shadow 0.15s;
+      box-shadow: 0 0 22px rgba(153,69,255,0.55);
+    }
+    .submit-btn:hover { background: #7c2ee0; box-shadow: 0 0 36px rgba(153,69,255,0.8); }
+
+    /* Divider */
+    .divider {
+      border: none; height: 1px; margin: 28px 0;
+      background: linear-gradient(90deg, transparent, rgba(153,69,255,0.25), transparent);
+    }
+
+    /* Sign-up CTA */
+    .signup-section { text-align: center; }
+    .signup-note { font-size: 0.8rem; color: #444; margin-bottom: 12px; }
+    .btn-green {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 24px; border-radius: 9px; font-size: 0.85rem; font-weight: 800;
+      background: #00ff87; color: #040210;
+      border: none; cursor: pointer; font-family: inherit; text-decoration: none;
+      letter-spacing: 0.3px; transition: background 0.15s, box-shadow 0.15s;
+      box-shadow: 0 0 18px rgba(0,255,135,0.4);
+    }
+    .btn-green:hover { background: #00e876; box-shadow: 0 0 30px rgba(0,255,135,0.65); }
+
+    /* ── Bull zone (left panel) ── */
+    .bull-zone {
+      position: relative; display: flex; justify-content: center;
+      flex: 1; min-height: 0; align-items: center;
+      background: transparent; border: none;
+    }
+    .bull-glow {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%; height: 85%;
+      background: radial-gradient(ellipse 60% 70% at 50% 50%, rgba(153,69,255,0.15) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+    @keyframes pill-pulse {
+      0%, 100% { box-shadow: 0 0 8px rgba(153,69,255,0.2); }
+      50%       { box-shadow: 0 0 18px rgba(153,69,255,0.55); }
+    }
+    .stat-pill {
+      position: absolute; z-index: 2;
+      background: rgba(153,69,255,0.15); border: 1px solid rgba(153,69,255,0.4);
+      border-radius: 20px; padding: 6px 14px;
+      font-size: 0.75rem; color: #fff; font-weight: 600;
+      white-space: nowrap; backdrop-filter: blur(4px);
+      animation: pill-pulse 3s ease-in-out infinite;
+    }
+    .stat-pill .pill-dot {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: #9945FF; box-shadow: 0 0 6px rgba(153,69,255,0.8);
+      margin-right: 6px; vertical-align: middle;
+    }
+    .stat-pill .pill-dot.green { background: #00ff87; box-shadow: 0 0 6px rgba(0,255,135,0.8); }
+    .stat-pill-1 { top: 12%; left: 4%; animation-delay: 0s; }
+    .stat-pill-2 { top: 22%; right: 2%; animation-delay: 1s; }
+    .stat-pill-3 { bottom: 18%; left: 6%; animation-delay: 2s; }
+
+    /* ── Right panel header (logo pinned top) ── */
+    .right-header { padding: 32px 44px 0; flex-shrink: 0; }
+    .right-inner {
+      flex: 1; display: flex; flex-direction: column;
+      justify-content: center; padding: 24px 44px 40px;
+      position: relative; z-index: 1;
+    }
+
+    @media (max-width: 900px) {
+      body { overflow: auto; }
+      .page { flex-direction: column; height: auto; }
+      .left-panel { height: 280px; }
+      .right-panel { width: 100%; }
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Log in to StockZone</h1>
-    <form method="post">
-      {% csrf_token %}
-      {% for field in form %}
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {{ field }}
-        {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-      {% endfor %}
-      <button type="submit">Log In</button>
-    </form>
-    <p class="footer">Don't have an account? <a href="{% url 'signup' %}">Sign up</a></p>
+
+  <!-- ══ Background particles ══ -->
+  <div class="bg-layer" aria-hidden="true">
+    <div id="bgParticles"></div>
+    <div id="triParticles"></div>
   </div>
+
+  <!-- ══ EKG Bar ══ -->
+  <div class="ekg-bar" aria-hidden="true">
+    <div id="ekgContainer"></div>
+  </div>
+
+  <!-- ══ Split layout ══ -->
+  <div class="page">
+
+    <!-- ── Left: cinematic panel ── -->
+    <div class="left-panel">
+      <div class="left-grid"></div>
+      <div class="watermark">STOCKZONE</div>
+      <div class="chart-glow"></div>
+      <div class="chart-wrap"><div id="chartContainer"></div></div>
+
+      <div class="left-content">
+        <a href="{% url 'landing' %}" class="left-logo">
+          <img src="{% static 'core/logo.png' %}" alt="StockZone">
+          <span class="left-logo-text">Stock<em>Zone</em></span>
+        </a>
+
+        <div class="bull-zone">
+          <div class="bull-glow"></div>
+          <img src="{% static 'core/coin_bull.png' %}" alt="" class="page-bull">
+          <div class="stat-pill stat-pill-1"><span class="pill-dot"></span>847 picking today</div>
+          <div class="stat-pill stat-pill-2"><span class="pill-dot green"></span>Avg Win Rate 61%</div>
+          <div class="stat-pill stat-pill-3"><span class="pill-dot green"></span>$10K Starting Balance</div>
+        </div>
+
+        <div class="left-tagline-wrap">
+          <div class="left-tagline">The Market<br>Doesn't <em>Wait.</em></div>
+          <div class="tagline-underline"></div>
+          <div class="left-sub">Paper trade · Pick stocks · Compete daily</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Right: form panel ── -->
+    <div class="right-panel">
+      <div class="right-header">
+        <a href="{% url 'landing' %}" class="form-logo">
+          <img src="{% static 'core/logo.png' %}" alt="StockZone">
+          <span class="form-logo-text">Stock<em>Zone</em></span>
+        </a>
+      </div>
+      <div class="right-inner">
+        <div class="form-headline">Welcome <em>Back</em></div>
+        <div class="form-underline"></div>
+
+        <form method="post">
+          {% csrf_token %}
+          {% for field in form %}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+              <ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+          {% endfor %}
+          <button type="submit" class="submit-btn">Log In</button>
+        </form>
+
+        <hr class="divider">
+
+        <div class="signup-section">
+          <p class="signup-note">New to StockZone?</p>
+          <a href="{% url 'signup' %}" class="btn-green">Create Free Account</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ── EKG heartbeat ── */
+    (function () {
+      const c = document.getElementById('ekgContainer');
+      const ns = 'http://www.w3.org/2000/svg';
+      const CW = 200, H = 24, N = 50;
+      const cycle = [[0,12],[40,12],[48,9],[56,12],[70,12],[76,2],[81,20],[88,12],[104,12],[114,7],[124,12],[200,12]];
+      let pts = '';
+      for (let i = 0; i < N; i++) cycle.forEach(([x,y]) => { pts += (i * CW + x) + ',' + y + ' '; });
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('width', CW * N); svg.setAttribute('height', H);
+      svg.style.cssText = 'display:block;animation:ekg-scroll 2.8s linear infinite;flex-shrink:0';
+      const pl = document.createElementNS(ns, 'polyline');
+      pl.setAttribute('points', pts.trim()); pl.setAttribute('stroke', '#9945FF');
+      pl.setAttribute('stroke-width', '1.5'); pl.setAttribute('fill', 'none');
+      pl.setAttribute('stroke-linecap', 'round'); pl.setAttribute('stroke-linejoin', 'round');
+      pl.setAttribute('opacity', '0.65');
+      svg.appendChild(pl); c.appendChild(svg);
+    })();
+
+    /* ── Animated stock chart ── */
+    (function () {
+      const container = document.getElementById('chartContainer');
+      const W = 900, H = 200, N = 70;
+      const ns = 'http://www.w3.org/2000/svg';
+
+      // Generate one segment of chart data with smooth random walk
+      function makePts(offsetX) {
+        const pts = [];
+        let y = H * 0.58, v = 0;
+        for (let i = 0; i <= N; i++) {
+          v = v * 0.78 + (Math.random() - 0.46) * H * 0.11;
+          y = Math.max(H * 0.08, Math.min(H * 0.88, y + v));
+          pts.push((offsetX + (W / N) * i).toFixed(1) + ',' + y.toFixed(1));
+        }
+        return pts;
+      }
+
+      // Two segments for seamless scroll
+      const seg1 = makePts(0);
+      const seg2 = makePts(W);
+      const allPts = [...seg1, ...seg2];
+      const totalW = W * 2;
+
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('width', totalW);
+      svg.setAttribute('height', H);
+      svg.style.cssText = 'display:block;animation:chart-scroll 22s linear infinite;will-change:transform;';
+
+      const defs = document.createElementNS(ns, 'defs');
+
+      // Glow filter
+      const filt = document.createElementNS(ns, 'filter');
+      filt.setAttribute('id', 'chartGlow');
+      filt.setAttribute('x', '-20%'); filt.setAttribute('y', '-20%');
+      filt.setAttribute('width', '140%'); filt.setAttribute('height', '140%');
+      const blur = document.createElementNS(ns, 'feGaussianBlur');
+      blur.setAttribute('in', 'SourceGraphic'); blur.setAttribute('stdDeviation', '3.5');
+      blur.setAttribute('result', 'blurred');
+      const merge = document.createElementNS(ns, 'feMerge');
+      const mn1 = document.createElementNS(ns, 'feMergeNode'); mn1.setAttribute('in', 'blurred');
+      const mn2 = document.createElementNS(ns, 'feMergeNode'); mn2.setAttribute('in', 'SourceGraphic');
+      merge.appendChild(mn1); merge.appendChild(mn2);
+      filt.appendChild(blur); filt.appendChild(merge);
+
+      // Fill gradient
+      const grad = document.createElementNS(ns, 'linearGradient');
+      grad.setAttribute('id', 'chartFill');
+      grad.setAttribute('x1', '0'); grad.setAttribute('y1', '0');
+      grad.setAttribute('x2', '0'); grad.setAttribute('y2', '1');
+      const s1 = document.createElementNS(ns, 'stop');
+      s1.setAttribute('offset', '0%'); s1.setAttribute('stop-color', 'rgba(153,69,255,0.35)');
+      const s2 = document.createElementNS(ns, 'stop');
+      s2.setAttribute('offset', '100%'); s2.setAttribute('stop-color', 'rgba(153,69,255,0)');
+      grad.appendChild(s1); grad.appendChild(s2);
+
+      defs.appendChild(filt); defs.appendChild(grad);
+      svg.appendChild(defs);
+
+      // Fill area
+      const fillPts = allPts.join(' ') + ' ' + (totalW) + ',' + H + ' 0,' + H;
+      const fill = document.createElementNS(ns, 'polygon');
+      fill.setAttribute('points', fillPts);
+      fill.setAttribute('fill', 'url(#chartFill)');
+      fill.setAttribute('opacity', '0.6');
+      svg.appendChild(fill);
+
+      // Chart line (glowing)
+      const line = document.createElementNS(ns, 'polyline');
+      line.setAttribute('points', allPts.join(' '));
+      line.setAttribute('stroke', '#9945FF');
+      line.setAttribute('stroke-width', '2.2');
+      line.setAttribute('fill', 'none');
+      line.setAttribute('filter', 'url(#chartGlow)');
+      line.setAttribute('stroke-linecap', 'round');
+      line.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(line);
+
+      container.appendChild(svg);
+    })();
+
+    /* ── Purple rising particles ── */
+    (function () {
+      const c = document.getElementById('bgParticles');
+      for (let i = 0; i < 25; i++) {
+        const p = document.createElement('div'); p.className = 'bg-particle';
+        const s = 1 + Math.random() * 2;
+        p.style.cssText = 'left:' + (Math.random()*100) + 'vw;bottom:' + (Math.random()*100) + 'vh;width:' + s + 'px;height:' + s + 'px;opacity:' + (0.12+Math.random()*0.35) + ';animation-duration:' + (22+Math.random()*28) + 's;animation-delay:' + (-Math.random()*32) + 's';
+        c.appendChild(p);
+      }
+    })();
+
+    /* ── Green triangle particles ── */
+    (function () {
+      const c = document.getElementById('triParticles');
+      for (let i = 0; i < 16; i++) {
+        const p = document.createElement('div'); p.className = 'tri-particle';
+        p.textContent = '▲';
+        const s = 7 + Math.random() * 8;
+        p.style.cssText = 'left:' + (Math.random()*100) + 'vw;bottom:' + (-Math.random()*15) + 'vh;font-size:' + s + 'px;animation-duration:' + (16+Math.random()*22) + 's;animation-delay:' + (-Math.random()*28) + 's';
+        c.appendChild(p);
+      }
+    })();
+  </script>
 </body>
 </html>

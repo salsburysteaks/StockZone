@@ -1,0 +1,349 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block page_title %}Future Bet — StockZone{% endblock %}
+{% block active_nav %}future_bets{% endblock %}
+
+{% block extra_css %}
+<style>
+  .bet-layout { display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
+
+  .form-card {
+    background: rgba(153,69,255,0.12);
+    border: 1px solid rgba(153,69,255,0.5); border-radius: 14px;
+    padding: 28px; transition: box-shadow 0.2s, border-color 0.2s;
+    box-shadow: 0 0 24px rgba(153,69,255,0.2), inset 0 0 24px rgba(153,69,255,0.04);
+  }
+  .form-card:hover {
+    box-shadow: 0 0 40px rgba(153,69,255,0.38), inset 0 0 24px rgba(153,69,255,0.07);
+    border-color: rgba(153,69,255,0.75);
+  }
+  .form-section-title {
+    font-size: 0.66rem; font-weight: 700; color: #555;
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 20px;
+  }
+
+  .dir-group { display: flex; gap: 10px; }
+  .dir-radio { display: none; }
+  .dir-label {
+    flex: 1; text-align: center; padding: 12px; border-radius: 8px;
+    cursor: pointer; font-size: 0.85rem; font-weight: 700;
+    border: 1px solid rgba(153,69,255,0.25); color: #555;
+    background: rgba(100,40,200,0.12); transition: all 0.15s;
+  }
+  .dir-radio[value="UP"]:checked   + .dir-label { border-color: rgba(0,255,135,0.6); color: #00ff87; background: rgba(0,255,135,0.08); box-shadow: 0 0 12px rgba(0,255,135,0.15); }
+  .dir-radio[value="DOWN"]:checked + .dir-label { border-color: rgba(255,71,87,0.6); color: #ff4757; background: rgba(255,71,87,0.08); box-shadow: 0 0 12px rgba(255,71,87,0.15); }
+  .dir-label:hover { color: #888; border-color: #333; }
+
+  .tf-group { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .tf-radio { display: none; }
+  .tf-label {
+    text-align: center; padding: 10px 6px; border-radius: 8px; cursor: pointer;
+    font-size: 0.78rem; font-weight: 700;
+    border: 1px solid rgba(153,69,255,0.25); color: #555;
+    background: rgba(100,40,200,0.12); transition: all 0.15s;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+  }
+  .tf-radio:checked + .tf-label { border-color: rgba(153,69,255,0.6); color: #9945FF; background: rgba(153,69,255,0.08); box-shadow: 0 0 10px rgba(153,69,255,0.2); }
+  .tf-label:hover { color: #888; border-color: #333; }
+  .tf-odds-badge {
+    font-family: 'Roboto Mono', monospace; font-size: 0.65rem; font-weight: 700;
+    color: #ffd700; opacity: 0.7; transition: opacity 0.2s;
+  }
+  .tf-radio:checked + .tf-label .tf-odds-badge { opacity: 1; text-shadow: 0 0 8px rgba(255,215,0,0.6); }
+
+  .quick-label { font-size: 0.66rem; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+  .quick-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+  .quick-btn {
+    padding: 4px 11px; border-radius: 6px; font-size: 0.73rem; font-weight: 700;
+    background: rgba(100,40,200,0.12); border: 1px solid rgba(153,69,255,0.2); color: #555;
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+  }
+  .quick-btn:hover { border-color: #9945FF; color: #9945FF; background: rgba(153,69,255,0.15); }
+
+  .balance-note { color: #9945FF; font-family: 'Roboto Mono', monospace; font-size: 0.78rem; }
+  .view-link { display: inline-block; margin-top: 16px; font-size: 0.82rem; color: #9945FF; text-decoration: none; }
+  .view-link:hover { text-decoration: underline; }
+
+  /* Right panel */
+  .odds-panel {
+    background: rgba(10,6,24,0.9);
+    border: 1px solid rgba(255,215,0,0.35);
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 0 20px rgba(255,215,0,0.1), 0 0 60px rgba(0,0,0,0.5);
+    margin-bottom: 12px;
+  }
+  .odds-panel-hd {
+    background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,215,0,0.03));
+    border-bottom: 1px solid rgba(255,215,0,0.25);
+    padding: 12px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .odds-panel-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+    color: #ffd700; letter-spacing: 1.5px;
+    text-shadow: 0 0 10px rgba(255,215,0,0.5);
+  }
+  .odds-panel-ticker {
+    font-family: 'Roboto Mono', monospace; font-size: 0.72rem;
+    color: #555; font-weight: 600;
+  }
+  .odds-tf-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 18px; border-bottom: 1px solid rgba(255,215,0,0.08);
+    transition: background 0.12s;
+  }
+  .odds-tf-row:last-of-type { border-bottom: none; }
+  .odds-tf-row.active { background: rgba(255,215,0,0.05); }
+  .odds-tf-label { font-size: 0.8rem; color: #555; }
+  .odds-tf-val {
+    font-family: 'Roboto Mono', monospace; font-size: 1rem; font-weight: 700;
+    color: #ffd700; transition: all 0.2s;
+  }
+  .odds-tf-row.active .odds-tf-val { text-shadow: 0 0 10px rgba(255,215,0,0.8); }
+  .odds-tf-row.active .odds-tf-label { color: #999; }
+  .odds-no-stock {
+    padding: 24px 18px; text-align: center;
+    font-size: 0.78rem; color: #333; font-style: italic;
+  }
+
+  .payout-preview {
+    padding: 14px 18px;
+    border-top: 1px solid rgba(255,215,0,0.2);
+    background: rgba(255,215,0,0.03);
+  }
+  .payout-preview-label { font-size: 0.6rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .payout-preview-val {
+    font-family: 'Roboto Mono', monospace; font-size: 1.5rem; font-weight: 700;
+    color: #ffd700; text-shadow: 0 0 12px rgba(255,215,0,0.6);
+  }
+  .payout-preview-sub { font-size: 0.68rem; color: #444; margin-top: 3px; }
+
+  .vol-note { padding: 10px 18px; font-size: 0.68rem; color: #333; border-top: 1px solid rgba(255,215,0,0.08); }
+  .vol-note span { color: #666; font-family: 'Roboto Mono', monospace; }
+
+  @media (max-width: 900px) { .bet-layout { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div>
+    <h1>Future <em>Bet</em></h1>
+    <div class="hero-underline"></div>
+    <p class="page-hero-sub">Call a stock's direction over 3 days to 1 month. Odds based on realized volatility — more volatile stocks pay more.</p>
+  </div>
+</section>
+
+<div class="page-content">
+  {% if messages %}
+  <div class="msg-list">
+    {% for msg in messages %}<div class="msg {% if msg.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">{{ msg }}</div>{% endfor %}
+  </div>
+  {% endif %}
+
+  {# Embed future_odds data for all stocks as a JS object #}
+  <script>
+    const FUTURE_ODDS = {
+      {% for sector, stocks in sectors.items %}{% for stock in stocks %}
+      "{{ stock.ticker }}": {
+        "3D": {{ stock.future_odds.3D|default:"2.0" }},
+        "1W": {{ stock.future_odds.1W|default:"3.0" }},
+        "2W": {{ stock.future_odds.2W|default:"5.0" }},
+        "1M": {{ stock.future_odds.1M|default:"10.0" }},
+        "vol": {{ stock.realized_vol|default:"1.0" }}
+      }{% if not forloop.last or not forloop.parentloop.last %},{% endif %}
+      {% endfor %}{% endfor %}
+    };
+    const TF_LABELS = {"3D": "3 Days", "1W": "1 Week", "2W": "2 Weeks", "1M": "1 Month"};
+    const TF_ORDER  = ["3D", "1W", "2W", "1M"];
+    const MAX_BAL   = parseFloat("{{ paper.balance|default:'0' }}") || 0;
+  </script>
+
+  <div class="bet-layout">
+    <div class="form-card">
+      <div class="form-section-title">Place Your Bet</div>
+
+      <div class="quick-label">Quick-fill ticker</div>
+      <div class="quick-grid">
+        {% for sector, stocks in sectors.items %}
+          {% for stock in stocks %}
+          <button type="button" class="quick-btn" data-ticker="{{ stock.ticker }}" onclick="quickFill('{{ stock.ticker }}')">{{ stock.ticker }}</button>
+          {% endfor %}
+        {% endfor %}
+      </div>
+
+      <form method="POST" id="betForm">
+        {% csrf_token %}
+        <div class="field">
+          <label for="tickerInput">Ticker Symbol</label>
+          <input type="text" name="ticker" id="tickerInput" placeholder="e.g. AAPL" autocomplete="off" required>
+        </div>
+
+        <div class="field">
+          <label>Direction</label>
+          <div class="dir-group">
+            <input type="radio" name="direction" id="dir_up"   value="UP"   class="dir-radio" required>
+            <label for="dir_up"   class="dir-label">▲ UP</label>
+            <input type="radio" name="direction" id="dir_down" value="DOWN" class="dir-radio">
+            <label for="dir_down" class="dir-label">▼ DOWN</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Timeframe</label>
+          <div class="tf-group">
+            {% for code, label in timeframe_choices %}
+            <input type="radio" name="timeframe" id="tf_{{ code }}" value="{{ code }}" class="tf-radio" {% if forloop.first %}required{% endif %}>
+            <label for="tf_{{ code }}" class="tf-label" id="tflabel_{{ code }}">
+              <span>{{ label }}</span>
+              <span class="tf-odds-badge" id="tfbadge_{{ code }}">—</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="wagerInput">
+            Wager
+            {% if paper %}<span class="balance-note">Balance: ${{ paper.balance }}</span>{% endif %}
+          </label>
+          <input type="number" name="wager" id="wagerInput" step="0.01" min="1" placeholder="e.g. 100.00" required {% if paper %}max="{{ paper.balance }}"{% endif %}>
+        </div>
+
+        <button type="submit" class="btn-purple" style="width:100%;justify-content:center;padding:12px">Lock In Bet</button>
+      </form>
+      <a href="{% url 'my_future_bets' %}" class="view-link">View my future bets →</a>
+    </div>
+
+    <!-- Right: dynamic odds panel -->
+    <div>
+      <div class="odds-panel">
+        <div class="odds-panel-hd">
+          <span class="odds-panel-title">Payout Odds</span>
+          <span class="odds-panel-ticker" id="oddsTickerLabel">Select a stock</span>
+        </div>
+
+        <div id="oddsNoStock" class="odds-no-stock">Enter a ticker to see live odds</div>
+
+        <div id="oddsTfRows" style="display:none">
+          {% for code, label in timeframe_choices %}
+          <div class="odds-tf-row" id="oddsrow_{{ code }}">
+            <span class="odds-tf-label">{{ label }}</span>
+            <span class="odds-tf-val" id="oddsval_{{ code }}">—</span>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="payout-preview" id="payoutPreview" style="display:none">
+          <div class="payout-preview-label">Potential Payout</div>
+          <div class="payout-preview-val" id="payoutVal">—</div>
+          <div class="payout-preview-sub" id="payoutSub"></div>
+        </div>
+
+        <div class="vol-note" id="volNote" style="display:none">
+          5-day realized vol: <span id="volVal">—</span>
+        </div>
+      </div>
+
+      <a href="{% url 'my_future_bets' %}" class="btn-outline" style="width:100%;justify-content:center;display:flex">View All My Bets</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let currentTicker = null;
+  let currentTf     = null;
+
+  function fmt(n) {
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function updateOddsPanel(ticker) {
+    const data = FUTURE_ODDS[ticker.toUpperCase()];
+    if (!data) {
+      document.getElementById('oddsNoStock').style.display = 'block';
+      document.getElementById('oddsTfRows').style.display  = 'none';
+      document.getElementById('payoutPreview').style.display = 'none';
+      document.getElementById('volNote').style.display = 'none';
+      document.getElementById('oddsTickerLabel').textContent = ticker ? ticker.toUpperCase() + ' — not in universe' : 'Select a stock';
+      TF_ORDER.forEach(tf => {
+        document.getElementById('tfbadge_' + tf).textContent = '—';
+      });
+      currentTicker = null;
+      return;
+    }
+
+    currentTicker = ticker.toUpperCase();
+    document.getElementById('oddsTickerLabel').textContent = currentTicker;
+    document.getElementById('oddsNoStock').style.display  = 'none';
+    document.getElementById('oddsTfRows').style.display   = 'block';
+    document.getElementById('volNote').style.display      = 'block';
+    document.getElementById('volVal').textContent         = data.vol.toFixed(2) + '%';
+
+    TF_ORDER.forEach(tf => {
+      const val = data[tf];
+      document.getElementById('oddsval_' + tf).textContent   = val.toFixed(2) + '×';
+      document.getElementById('tfbadge_' + tf).textContent   = val.toFixed(2) + '×';
+      const row = document.getElementById('oddsrow_' + tf);
+      row.classList.toggle('active', tf === currentTf);
+    });
+
+    updatePayout();
+  }
+
+  function updatePayout() {
+    const wager = parseFloat(document.getElementById('wagerInput').value) || 0;
+    const preview = document.getElementById('payoutPreview');
+    if (currentTicker && currentTf && FUTURE_ODDS[currentTicker]) {
+      const odds   = FUTURE_ODDS[currentTicker][currentTf];
+      const payout = wager > 0 ? wager * odds : null;
+      preview.style.display = 'block';
+      document.getElementById('payoutVal').textContent = payout ? fmt(payout) : odds.toFixed(2) + '×';
+      document.getElementById('payoutSub').textContent = payout
+        ? fmt(wager) + ' × ' + odds.toFixed(2) + '× = ' + fmt(payout)
+        : 'Enter a wager to see payout';
+    } else {
+      preview.style.display = 'none';
+    }
+  }
+
+  function quickFill(ticker) {
+    document.getElementById('tickerInput').value = ticker;
+    updateOddsPanel(ticker);
+  }
+
+  // Ticker input with debounce
+  let tickerTimer;
+  document.getElementById('tickerInput').addEventListener('input', function () {
+    clearTimeout(tickerTimer);
+    const val = this.value.trim();
+    tickerTimer = setTimeout(() => updateOddsPanel(val), 200);
+  });
+
+  // Timeframe selection
+  document.querySelectorAll('.tf-radio').forEach(radio => {
+    radio.addEventListener('change', function () {
+      currentTf = this.value;
+      if (currentTicker && FUTURE_ODDS[currentTicker]) {
+        TF_ORDER.forEach(tf => {
+          document.getElementById('oddsrow_' + tf).classList.toggle('active', tf === currentTf);
+        });
+      }
+      updatePayout();
+    });
+  });
+
+  // Wager input
+  document.getElementById('wagerInput').addEventListener('input', updatePayout);
+
+  // Double-submit guard
+  document.getElementById('betForm').addEventListener('submit', function () {
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Locking In...';
+    btn.style.opacity = '0.7';
+  });
+</script>
+{% endblock %}

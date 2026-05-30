@@ -1,0 +1,432 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block page_title %}How to Play — StockZone{% endblock %}
+{% block active_nav %}how_to_play{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Card body padding ── */
+  .htp-body { padding: 24px 28px 28px; }
+
+  /* ── Body text ── */
+  .htp-text {
+    font-size: 0.93rem; color: #aaa; line-height: 1.7; margin-bottom: 14px;
+  }
+  .htp-text:last-child { margin-bottom: 0; }
+  .htp-text em { font-style: normal; color: #9945FF; font-weight: 600; }
+  .htp-text strong { color: #fff; font-weight: 700; }
+
+  /* ── Split layout (text + image) ── */
+  .htp-split {
+    display: flex; align-items: center; gap: 40px;
+  }
+  .htp-split-text { flex: 1; min-width: 0; }
+  .htp-split-img  { flex-shrink: 0; display: flex; align-items: flex-end; }
+  .htp-bull-img {
+    height: 220px; width: auto;
+    mix-blend-mode: lighten; opacity: 0.9; pointer-events: none;
+  }
+
+  /* ── Bullet list ── */
+  .htp-bullets { list-style: none; margin: 16px 0; display: flex; flex-direction: column; gap: 10px; }
+  .htp-bullets li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 0.9rem; color: #aaa; line-height: 1.55;
+  }
+  .htp-bullet-dot {
+    flex-shrink: 0; margin-top: 5px;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #9945FF; box-shadow: 0 0 6px rgba(153,69,255,0.8);
+  }
+  .htp-bullets li strong { color: #fff; }
+
+  /* ── Callout box ── */
+  .htp-callout {
+    background: rgba(153,69,255,0.08); border: 1px solid rgba(153,69,255,0.28);
+    border-left: 3px solid #9945FF; border-radius: 10px;
+    padding: 14px 18px; margin: 18px 0; font-size: 0.88rem; color: #bbb; line-height: 1.6;
+  }
+  .htp-callout strong { color: #fff; }
+  .htp-callout em { font-style: normal; color: #9945FF; font-weight: 600; }
+
+  /* ── Inline stat chips ── */
+  .htp-chip-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; }
+  .htp-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(153,69,255,0.1); border: 1px solid rgba(153,69,255,0.3);
+    border-radius: 20px; padding: 7px 16px;
+    font-size: 0.82rem; color: #ccc; font-weight: 500;
+  }
+  .htp-chip-val { font-family: 'Roboto Mono', monospace; font-weight: 700; color: #9945FF; }
+  .htp-chip-val.green { color: #00ff87; }
+  .htp-chip-val.gold  { color: #ffd700; }
+
+  /* ── Payout table ── */
+  .htp-table-wrap { margin: 18px 0; overflow: hidden; border-radius: 10px; border: 1px solid rgba(153,69,255,0.25); }
+  .htp-table { width: 100%; border-collapse: collapse; }
+  .htp-table th {
+    padding: 9px 18px; text-align: left; font-size: 0.64rem; font-weight: 700;
+    color: #555; text-transform: uppercase; letter-spacing: 0.7px;
+    background: rgba(153,69,255,0.08); border-bottom: 1px solid rgba(153,69,255,0.2);
+  }
+  .htp-table td {
+    padding: 11px 18px; font-size: 0.87rem; color: #bbb;
+    border-bottom: 1px solid rgba(153,69,255,0.1);
+  }
+  .htp-table tr:last-child td { border-bottom: none; }
+  .htp-table tr:nth-child(even) td { background: rgba(153,69,255,0.05); }
+  .htp-table .td-payout {
+    font-family: 'Roboto Mono', monospace; font-weight: 700; color: #00ff87;
+    font-size: 0.95rem;
+  }
+  .htp-table .td-label { font-weight: 600; color: #fff; }
+  .htp-table .td-desc { font-size: 0.78rem; color: #555; }
+
+  /* ── Direction badge (reuse from base styles) ── */
+  .htp-dir-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0; }
+  .htp-dir-up {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(0,255,135,0.08); border: 1px solid rgba(0,255,135,0.35);
+    color: #00ff87; border-radius: 8px; padding: 8px 18px;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .htp-dir-dn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,71,87,0.08); border: 1px solid rgba(255,71,87,0.35);
+    color: #ff4757; border-radius: 8px; padding: 8px 18px;
+    font-size: 0.85rem; font-weight: 700;
+  }
+
+  /* ── Section number badge ── */
+  .htp-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #9945FF; color: #fff; font-size: 0.72rem; font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  /* ── CTA section ── */
+  .htp-cta {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, rgba(153,69,255,0.2) 0%, rgba(153,69,255,0.08) 100%);
+    border: 1px solid rgba(153,69,255,0.55); border-left: 3px solid #9945FF;
+    border-radius: 16px; padding: 44px 48px;
+    margin-top: 8px;
+    box-shadow: 0 0 48px rgba(153,69,255,0.22), inset 0 0 40px rgba(153,69,255,0.06);
+    display: flex; align-items: center; justify-content: space-between; gap: 32px;
+  }
+  .htp-cta-content { position: relative; z-index: 1; }
+  .htp-cta-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.8rem; color: #fff; letter-spacing: 2px; line-height: 1; margin-bottom: 8px;
+  }
+  .htp-cta-headline em { font-style: normal; color: #9945FF; }
+  .htp-cta-sub { font-size: 0.9rem; color: #666; margin-bottom: 28px; }
+  .htp-cta-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .htp-cta-bull {
+    height: 320px; width: auto; flex-shrink: 0;
+    mix-blend-mode: lighten; opacity: 0.88; pointer-events: none;
+    position: relative; z-index: 1;
+  }
+
+  @media (max-width: 768px) {
+    .htp-split { flex-direction: column; gap: 20px; }
+    .htp-split-img { display: none; }
+    .htp-cta { flex-direction: column; padding: 32px 24px; }
+    .htp-cta-bull { height: 160px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ Hero ══ -->
+<section class="page-hero">
+  <div class="page-hero-inner">
+    <div>
+      <h1>How to <em>Play</em></h1>
+      <div class="hero-underline"></div>
+      <p class="page-hero-sub">StockZone turns the stock market into a game. No real money. All the competition.</p>
+    </div>
+  </div>
+</section>
+
+<div class="page-content" style="display:flex; flex-direction:column; gap:16px;">
+
+  <!-- ══ Section 1 — The Basics ══ -->
+  <div class="pcard">
+    <div class="pcard-hd">
+      <div class="pcard-hd-left">
+        <span class="htp-num">1</span>
+        <span class="pcard-title">The Basics</span>
+      </div>
+      <span class="pcard-badge">Start Here</span>
+    </div>
+    <div class="htp-body">
+      <div class="htp-split">
+        <div class="htp-split-text">
+          <p class="htp-text">
+            StockZone gives every player <strong>$10,000 in paper money</strong> to start.
+            You use that balance to make picks, place wagers, and compete with everyone else on the leaderboard —
+            all without risking a single real dollar.
+          </p>
+          <ul class="htp-bullets">
+            <li><span class="htp-bullet-dot"></span><span><strong>Pick stocks to go UP or DOWN</strong> each day. If you're right, your win rate climbs. Build a streak and your multiplier grows.</span></li>
+            <li><span class="htp-bullet-dot"></span><span><strong>Wager your paper balance</strong> on your picks. Win and your balance grows. Lose and it shrinks. Keep it above zero.</span></li>
+            <li><span class="htp-bullet-dot"></span><span><strong>Compete on the leaderboard.</strong> Every player is ranked by win rate. The best picker in the game sits at #1.</span></li>
+            <li><span class="htp-bullet-dot"></span><span><strong>Trade the paper portfolio.</strong> Buy and sell real stocks at real prices — no risk, but real market conditions.</span></li>
+          </ul>
+          <div class="htp-callout">
+            Results are resolved at <em>4:00 PM ET</em> each weekday when US markets close.
+            Picks lock in the moment you submit — you can resubmit and your latest picks replace the previous ones.
+          </div>
+        </div>
+        <div class="htp-split-img">
+          <img src="{% static 'core/portfolio_bul.png' %}" class="htp-bull-img" alt="StockZone bull">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Section 2 — Daily Picks ══ -->
+  <div class="pcard">
+    <div class="pcard-hd">
+      <div class="pcard-hd-left">
+        <span class="htp-num">2</span>
+        <span class="pcard-title">Daily Picks</span>
+      </div>
+      <span class="pcard-badge">Core Feature</span>
+    </div>
+    <div class="htp-body">
+      <p class="htp-text">
+        Every day the market is open, StockZone shows you the <em>top 5 movers</em> in five sectors —
+        Technology, Healthcare, Finance, Energy, and Consumer. That's 25 stocks to pick from.
+      </p>
+
+      <p class="htp-text" style="margin-bottom:6px"><strong>What is momentum?</strong></p>
+      <div class="htp-callout">
+        Momentum is how much a stock's price moved <em>today</em> compared to yesterday.
+        A stock up <strong>+3%</strong> today has strong positive momentum. A stock down <strong>-1.5%</strong> has negative momentum.
+        We rank each sector's stocks by momentum so you always see the biggest movers first.
+      </div>
+
+      <p class="htp-text" style="margin-bottom:10px"><strong>Your pick: UP or DOWN?</strong></p>
+      <div class="htp-dir-row">
+        <span class="htp-dir-up">▲ UP — you think it closes higher today</span>
+        <span class="htp-dir-dn">▼ DOWN — you think it closes lower today</span>
+      </div>
+
+      <p class="htp-text">
+        You can pick anywhere from <em>1 to 25 stocks</em> per day. The more you pick correctly, the higher your multiplier — but your odds per pick depend on each stock's momentum.
+      </p>
+
+      <p class="htp-text" style="margin-bottom:6px"><strong>The multiplier &amp; wager system:</strong></p>
+      <div class="htp-callout">
+        Each stock has its own odds based on how much it moved today.
+        <strong>High momentum stocks are favorites — they pay less</strong> because everyone expects them to keep moving in the same direction.
+        <strong>Low momentum stocks are underdogs — they pay more</strong> because their direction is harder to call.
+        <br><br>
+        It works exactly like a sportsbook: the house sets odds based on probability.
+        Pick more underdogs correctly and your multiplier compounds fast.
+        Your total multiplier is the <em>product</em> of every individual stock's odds — capped at <em>100×</em>.
+      </div>
+
+      <div class="htp-chip-row">
+        <div class="htp-chip">High momentum (&gt;50%) <span class="htp-chip-val">1.1× – 1.3× per pick</span></div>
+        <div class="htp-chip">Mid momentum (20–50%) <span class="htp-chip-val">1.4× – 1.6× per pick</span></div>
+        <div class="htp-chip">Low momentum (&lt;20%) <span class="htp-chip-val green">1.7× – 2.2× per pick</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Section 3 — Parlays ══ -->
+  <div class="pcard">
+    <div class="pcard-hd">
+      <div class="pcard-hd-left">
+        <span class="htp-num">3</span>
+        <span class="pcard-title">Parlays</span>
+      </div>
+      <span class="pcard-badge">High Risk · High Reward</span>
+    </div>
+    <div class="htp-body">
+      <p class="htp-text">
+        A parlay <em>chains multiple picks together</em> into a single high-stakes bet.
+        Every leg of the parlay must win for you to collect. Miss even one and the whole parlay loses.
+      </p>
+      <div class="htp-callout">
+        Think of it like a 4-team NFL parlay — one upset kills it. But if you nail all four,
+        your payout multiplies at <em>1.5× per correct leg</em>. The more legs, the higher the ceiling and the higher the risk.
+      </div>
+      <p class="htp-text">Each correct leg multiplies your payout by <strong>1.5×</strong>:</p>
+      <div class="htp-table-wrap">
+        <table class="htp-table">
+          <thead>
+            <tr>
+              <th>Legs</th>
+              <th>Formula</th>
+              <th>Multiplier</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-label">2 Legs</td>
+              <td class="td-desc">1.5 × 1.5</td>
+              <td class="td-payout">2.25×</td>
+            </tr>
+            <tr>
+              <td class="td-label">3 Legs</td>
+              <td class="td-desc">1.5³</td>
+              <td class="td-payout">3.38×</td>
+            </tr>
+            <tr>
+              <td class="td-label">4 Legs</td>
+              <td class="td-desc">1.5⁴</td>
+              <td class="td-payout">5.06×</td>
+            </tr>
+            <tr>
+              <td class="td-label">5 Legs</td>
+              <td class="td-desc">1.5⁵</td>
+              <td class="td-payout gold" style="color:#ffd700">7.59×</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="htp-text">
+        Parlays resolve the same time as daily picks — <em>4:00 PM ET</em> on the pick date.
+        Build your parlay on the Parlay page before the market closes.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══ Section 4 — Future Bets ══ -->
+  <div class="pcard">
+    <div class="pcard-hd">
+      <div class="pcard-hd-left">
+        <span class="htp-num">4</span>
+        <span class="pcard-title">Future Bets</span>
+      </div>
+      <span class="pcard-badge">Long-Term Calls</span>
+    </div>
+    <div class="htp-body">
+      <p class="htp-text">
+        Instead of calling today's movement, a future bet asks you to predict a stock's direction
+        over a <em>longer timeframe</em> — 3 days, 1 week, 2 weeks, or a full month.
+      </p>
+      <div class="htp-callout">
+        The longer the timeframe, the harder it is to be right — and the more you get paid if you are.
+        A 1-month call on a volatile stock is a bold prediction, and the <em>10× payout</em> reflects that.
+      </div>
+      <p class="htp-text">Payout multipliers by timeframe:</p>
+      <div class="htp-table-wrap">
+        <table class="htp-table">
+          <thead>
+            <tr>
+              <th>Timeframe</th>
+              <th>Description</th>
+              <th>Payout</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-label">3 Days</td>
+              <td class="td-desc">Short-term momentum call</td>
+              <td class="td-payout">2×</td>
+            </tr>
+            <tr>
+              <td class="td-label">1 Week</td>
+              <td class="td-desc">Weekly direction bet</td>
+              <td class="td-payout">3×</td>
+            </tr>
+            <tr>
+              <td class="td-label">2 Weeks</td>
+              <td class="td-desc">Mid-term swing trade</td>
+              <td class="td-payout">5×</td>
+            </tr>
+            <tr>
+              <td class="td-label">1 Month</td>
+              <td class="td-desc">Long-term conviction play</td>
+              <td class="td-payout gold" style="color:#ffd700">10×</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="htp-text">
+        Your wager is locked in when you place the bet. If your direction is right when the bet resolves,
+        <em>wager × multiplier</em> is credited to your paper portfolio balance.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══ Section 5 — Paper Portfolio ══ -->
+  <div class="pcard">
+    <div class="pcard-hd">
+      <div class="pcard-hd-left">
+        <span class="htp-num">5</span>
+        <span class="pcard-title">Paper Portfolio</span>
+      </div>
+      <span class="pcard-badge">Zero Risk · Real Prices</span>
+    </div>
+    <div class="htp-body">
+      <p class="htp-text">
+        Paper trading means you're investing with <em>fake money at real prices</em>.
+        Every price you see in StockZone is a live market price — but no real money ever changes hands.
+      </p>
+      <ul class="htp-bullets">
+        <li><span class="htp-bullet-dot"></span><span><strong>$10,000 starting balance</strong> — enough to build a diversified portfolio from day one.</span></li>
+        <li><span class="htp-bullet-dot"></span><span><strong>Buy and sell any stock</strong> in the StockZone universe at real-time prices.</span></li>
+        <li><span class="htp-bullet-dot"></span><span><strong>Track your holdings</strong> — see unrealized gains, losses, and total portfolio value update live.</span></li>
+        <li><span class="htp-bullet-dot"></span><span><strong>Learn without losing.</strong> Paper trading is how professional traders test strategies before going live. Now it's your training ground.</span></li>
+      </ul>
+      <div class="htp-callout">
+        Your paper balance is also used for daily pick wagers, parlays, and future bets.
+        Everything flows through the same account — picks well and your balance grows,
+        giving you more firepower for bigger plays.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Section 6 — Leaderboard ══ -->
+  <div class="pcard">
+    <div class="pcard-hd">
+      <div class="pcard-hd-left">
+        <span class="htp-num">6</span>
+        <span class="pcard-title">Leaderboard</span>
+      </div>
+      <span class="pcard-badge">Compete</span>
+    </div>
+    <div class="htp-body">
+      <p class="htp-text">
+        Every player is ranked by <em>win rate</em> — the percentage of daily picks you've called correctly across all time.
+        The more you play, the more meaningful your ranking becomes.
+      </p>
+      <div class="htp-chip-row">
+        <div class="htp-chip">🥇 <span class="htp-chip-val gold">#1</span> Highest win rate</div>
+        <div class="htp-chip">🔥 <span class="htp-chip-val">Streak</span> Consecutive correct picks</div>
+        <div class="htp-chip">📊 <span class="htp-chip-val green">Win Rate</span> Your all-time accuracy</div>
+      </div>
+      <p class="htp-text">
+        There are two leaderboards: the <strong>Portfolio Leaderboard</strong> ranks players by paper balance,
+        and the <strong>Picks Leaderboard</strong> ranks by win rate. Dominate both to cement yourself as the top player.
+      </p>
+      <div class="htp-callout">
+        Your win rate only counts resolved picks — <em>PENDING</em> picks don't affect your ranking until 4 PM ET.
+        Check back after market close each day to see how you climbed (or fell).
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CTA ══ -->
+  <div class="htp-cta">
+    <div class="htp-cta-content">
+      <div class="htp-cta-headline">Ready to <em>Play?</em></div>
+      <p class="htp-cta-sub">Jump in with $10,000 in paper money. No risk, all competition.</p>
+      <div class="htp-cta-btns">
+        <a href="{% url 'landing' %}" class="btn-purple">Start Playing</a>
+        <a href="{% url 'build_parlay' %}" class="btn-outline">Build a Parlay →</a>
+      </div>
+    </div>
+    <img src="{% static 'core/hype_bull.png' %}" class="htp-cta-bull" alt="">
+  </div>
+
+</div>
+{% endblock %}

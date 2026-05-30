@@ -1,6 +1,9 @@
-import yfinance as yf
+import time
 from datetime import datetime, timedelta
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import yfinance as yf
+
+_cache = {"data": None, "timestamp": 0}
+CACHE_TTL = 60
 
 SECTOR_TICKERS = {
     "Technology": ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMD", "INTC", "CRM", "AVGO", "QCOM", "TXN", "ADBE", "MU", "AMAT", "ORCL"],
@@ -43,6 +46,14 @@ COMPANY_NAMES = {
     "DLTR": "Dollar Tree", "CL": "Colgate-Palmolive", "PM": "Philip Morris",
 }
 
+# (scale_factor, floor_minimum) per timeframe
+TIMEFRAME_FACTORS = {
+    "3D": (1.5, 2.0),
+    "1W": (2.2, 3.0),
+    "2W": (3.5, 5.0),
+    "1M": (6.0, 10.0),
+}
+
 
 def _fmt_volume(v):
     if v >= 1_000_000_000:
@@ -54,17 +65,42 @@ def _fmt_volume(v):
     return str(v)
 
 
-def _fetch_pe(ticker):
-    try:
-        pe = yf.Ticker(ticker).info.get("trailingPE")
-        return ticker, round(float(pe), 1) if pe else None
-    except Exception:
-        return ticker, None
+def _calc_odds(momentum, realized_vol, vol_spike, direction):
+    base = 1.1 + (realized_vol * 0.08)
+    base = max(1.1, min(base, 2.8))
+
+    if vol_spike > 2.0:
+        base *= 1.2
+    elif vol_spike > 1.5:
+        base *= 1.1
+
+    if momentum > 0 and direction == "UP":
+        odds = base * 0.8
+    elif momentum > 0 and direction == "DOWN":
+        odds = base * 1.3
+    elif momentum < 0 and direction == "DOWN":
+        odds = base * 0.8
+    elif momentum < 0 and direction == "UP":
+        odds = base * 1.3
+    else:
+        odds = base
+
+    return round(max(1.05, min(odds, 4.0)), 2)
+
+
+def calculate_future_odds(realized_vol, timeframe):
+    """Return payout multiplier for a future bet: realized_vol × factor, floored at minimum."""
+    factor, minimum = TIMEFRAME_FACTORS.get(timeframe, (2.2, 3.0))
+    return round(max(minimum, min(realized_vol * factor, 20.0)), 2)
 
 
 def get_top_stocks_by_sector(top_n=5):
+    global _cache
+    if _cache["data"] and time.time() - _cache["timestamp"] < CACHE_TTL:
+        return _cache["data"]
+
     end   = datetime.today()
-    start = end - timedelta(days=400)  # ~1 year + buffer for trading days
+    start = end - timedelta(days=7)
 
     all_results = []
 
@@ -91,20 +127,41 @@ def get_top_stocks_by_sector(top_n=5):
                 vs = volume[ticker].dropna()
                 if len(cs) < 2:
                     continue
+
                 price_now   = float(cs.iloc[-1])
-                price_30d   = float(cs.iloc[-22]) if len(cs) >= 22 else float(cs.iloc[0])
-                momentum    = round((price_now - price_30d) / price_30d * 100, 2)
+                price_prev  = float(cs.iloc[-2])
+                momentum    = round((price_now - price_prev) / price_prev * 100, 2)
                 week52_high = round(float(cs.max()), 2)
                 vol_raw     = int(vs.iloc[-1]) if len(vs) else 0
+
+                returns      = cs.pct_change().dropna().tail(5)
+                realized_vol = float(returns.std() * 100) if len(returns) >= 2 else 1.0
+
+                avg_volume = float(vs.tail(5).mean()) if len(vs) >= 5 else float(vs.mean())
+                vol_spike  = float(vs.iloc[-1]) / avg_volume if avg_volume > 0 else 1.0
+
+                odds_up   = _calc_odds(momentum, realized_vol, vol_spike, "UP")
+                odds_down = _calc_odds(momentum, realized_vol, vol_spike, "DOWN")
+
+                future_odds = {
+                    tf: calculate_future_odds(realized_vol, tf)
+                    for tf in TIMEFRAME_FACTORS
+                }
+
                 sector_stocks.append({
                     "ticker":       ticker,
                     "company_name": COMPANY_NAMES.get(ticker, ticker),
                     "sector":       sector,
                     "price":        round(price_now, 2),
+                    "prev_close":   round(price_prev, 2),
                     "momentum":     momentum,
                     "week52_high":  week52_high,
                     "volume":       _fmt_volume(vol_raw),
-                    "pe_ratio":     None,
+                    "realized_vol": round(realized_vol, 2),
+                    "vol_spike":    round(vol_spike, 2),
+                    "odds_up":      odds_up,
+                    "odds_down":    odds_down,
+                    "future_odds":  future_odds,
                 })
             except Exception:
                 continue
@@ -112,12 +169,5 @@ def get_top_stocks_by_sector(top_n=5):
         sector_stocks.sort(key=lambda x: x["momentum"], reverse=True)
         all_results.extend(sector_stocks[:top_n])
 
-    # Parallel PE fetch for all 25 selected stocks at once
-    ticker_map = {s["ticker"]: s for s in all_results}
-    with ThreadPoolExecutor(max_workers=10) as ex:
-        futures = {ex.submit(_fetch_pe, t): t for t in ticker_map}
-        for future in as_completed(futures):
-            ticker, pe = future.result()
-            ticker_map[ticker]["pe_ratio"] = pe
-
+    _cache = {"data": all_results, "timestamp": time.time()}
     return all_results
