@@ -3,11 +3,11 @@ import yfinance as yf
 from django.core.cache import cache
 
 SECTOR_TICKERS = {
-    "Technology": ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMD", "INTC", "CRM", "AVGO", "QCOM", "TXN", "ADBE", "MU", "AMAT", "ORCL"],
-    "Healthcare": ["JNJ", "UNH", "PFE", "ABBV", "MRK", "TMO", "ABT", "LLY", "DHR", "BMY", "AMGN", "GILD", "CVS", "CI", "HUM"],
-    "Finance":    ["JPM", "BAC", "WFC", "GS", "MS", "C", "BLK", "AXP", "USB", "PNC", "TFC", "COF", "SCHW", "MET", "PRU"],
-    "Energy":     ["XOM", "CVX", "COP", "EOG", "SLB", "MPC", "PSX", "VLO", "OXY", "HAL", "DVN", "HES", "MRO", "BKR", "CTRA"],
-    "Consumer":   ["WMT", "HD", "PG", "KO", "PEP", "COST", "TGT", "MCD", "NKE", "SBUX", "LOW", "DG", "DLTR", "CL", "PM"],
+    "Technology": ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMD", "AVGO", "QCOM"],
+    "Healthcare": ["JNJ", "UNH", "PFE", "ABBV", "MRK", "LLY", "DHR", "AMGN"],
+    "Finance":    ["JPM", "BAC", "WFC", "GS", "MS", "C", "BLK", "AXP"],
+    "Energy":     ["XOM", "CVX", "COP", "EOG", "SLB", "MPC", "PSX", "VLO"],
+    "Consumer":   ["WMT", "HD", "PG", "KO", "PEP", "COST", "MCD", "NKE"],
 }
 
 COMPANY_NAMES = {
@@ -102,20 +102,21 @@ def get_top_stocks_by_sector(top_n=5):
     all_results = []
 
     for sector, tickers in SECTOR_TICKERS.items():
-        raw = yf.download(
-            tickers,
-            start=start.strftime("%Y-%m-%d"),
-            end=end.strftime("%Y-%m-%d"),
-            auto_adjust=True,
-            progress=False,
-        )
-
-        close  = raw["Close"]
-        volume = raw["Volume"]
-
-        if close.ndim == 1:
-            close  = close.to_frame(name=tickers[0])
-            volume = volume.to_frame(name=tickers[0])
+        try:
+            raw = yf.download(
+                tickers,
+                start=start.strftime("%Y-%m-%d"),
+                end=end.strftime("%Y-%m-%d"),
+                auto_adjust=True,
+                progress=False,
+            )
+            close  = raw["Close"]
+            volume = raw["Volume"]
+            if close.ndim == 1:
+                close  = close.to_frame(name=tickers[0])
+                volume = volume.to_frame(name=tickers[0])
+        except Exception:
+            continue
 
         sector_stocks = []
         for ticker in tickers:
