@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-q_$bu8$ca9+gs(q3&fczox2#mz_a!m3px&=@ag3q+7=i)ee4#^"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 
@@ -127,4 +127,4 @@ LOGIN_REDIRECT_URL = "dashboard"
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-CSRF_TRUSTED_ORIGINS = ['https://web-production-a1930.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://web-production-d35ac.up.railway.app']
