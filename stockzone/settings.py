@@ -29,7 +29,7 @@ SECRET_KEY = "django-insecure-q_$bu8$ca9+gs(q3&fczox2#mz_a!m3px&=@ag3q+7=i)ee4#^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['web-production-a1930.up.railway.app', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['stockzone-cf4k.onrender.com', '127.0.0.1', 'localhost']
 
 
 # Application definition
