@@ -1,0 +1,260 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block page_title %}Stock 101 — StockZone{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Page spacing overrides ── */
+  .page-hero   { padding-bottom: 20px; }
+  .page-content { padding-top: 24px; }
+
+  /* ── Search bar ── */
+  .glossary-search-wrap {
+    max-width: 480px; margin: 0 auto 28px; position: relative;
+  }
+  .glossary-search {
+    width: 100%; padding: 12px 16px 12px 44px;
+    background: rgba(153,69,255,0.08);
+    border: 1px solid rgba(153,69,255,0.3);
+    border-radius: 12px;
+    color: #e0e0e0; font-size: 0.9rem; font-family: 'Inter', sans-serif;
+    outline: none; box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .glossary-search:focus {
+    border-color: #9945FF;
+    box-shadow: 0 0 16px rgba(153,69,255,0.22);
+  }
+  .glossary-search::placeholder { color: #555; }
+  .glossary-search-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: #555; pointer-events: none;
+  }
+
+  /* ── Grid ── */
+  .glossary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
+
+  /* ── Card ── */
+  .gcard {
+    background: rgba(153,69,255,0.06);
+    border: 1px solid rgba(153,69,255,0.18);
+    border-left: 3px solid #9945FF;
+    border-radius: 12px;
+    padding: 18px 20px;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  }
+  .gcard:hover {
+    background: rgba(153,69,255,0.11);
+    border-color: rgba(153,69,255,0.45);
+    border-left-color: #b97aff;
+    transform: translateY(-2px);
+  }
+  .gcard-term {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.25rem; letter-spacing: 1.5px;
+    color: #fff; margin-bottom: 8px;
+  }
+  .gcard-def {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.87rem; color: #ccc; line-height: 1.55;
+    margin-bottom: 10px;
+  }
+  .gcard-analogy {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem; color: #7a5fa8;
+    font-style: italic; line-height: 1.5;
+    border-top: 1px solid rgba(153,69,255,0.12);
+    padding-top: 10px; margin-bottom: 0;
+  }
+  .gcard-why {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.79rem; color: #9d7cc9; line-height: 1.5;
+    border-top: 1px solid rgba(153,69,255,0.1);
+    margin-top: 10px; padding-top: 10px;
+  }
+  .gcard-why-label {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.62rem; font-weight: 700;
+    letter-spacing: 1.4px; text-transform: uppercase;
+    color: #6b3fa8; margin-bottom: 5px;
+  }
+
+  /* ── No results ── */
+  .glossary-empty {
+    text-align: center; padding: 48px 24px;
+    color: #555; font-size: 0.9rem;
+    display: none;
+  }
+  .glossary-empty.visible { display: block; }
+
+  /* ── Hero bull ── */
+  .glossary-hero-bull {
+    height: 180px; width: auto;
+    pointer-events: none;
+    mix-blend-mode: lighten; opacity: 0.9;
+  }
+
+  @media (max-width: 600px) {
+    .glossary-grid { grid-template-columns: 1fr; }
+    .glossary-hero-bull { height: 130px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ Hero ══ -->
+<section class="page-hero">
+  <div class="page-hero-inner">
+    <div>
+      <h1>Stock <em>101</em></h1>
+      <div class="hero-underline"></div>
+      <p class="page-hero-sub">Every term explained like a sports analyst would</p>
+    </div>
+    <img src="{% static 'core/hype_bull.png' %}" class="glossary-hero-bull bull-mascot" alt="">
+  </div>
+</section>
+
+<div class="page-content">
+
+  <!-- ══ Search ══ -->
+  <div class="glossary-search-wrap">
+    <svg class="glossary-search-icon" width="16" height="16" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2.5"
+         stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" class="glossary-search" id="glossarySearch"
+           placeholder="Search terms…" autocomplete="off" spellcheck="false">
+  </div>
+
+  <!-- ══ Cards ══ -->
+  <div class="glossary-grid" id="glossaryGrid">
+
+    <div class="gcard" data-term="stock">
+      <div class="gcard-term">Stock</div>
+      <div class="gcard-def">A slice of ownership in a company</div>
+      <div class="gcard-analogy">Like buying a share of a sports franchise</div>
+      <div class="gcard-why"><span class="gcard-why-label">Why It Matters</span>Knowing what you own helps you understand why a price moves</div>
+    </div>
+
+    <div class="gcard" data-term="market cap">
+      <div class="gcard-term">Market Cap</div>
+      <div class="gcard-def">The total value of a company</div>
+      <div class="gcard-analogy">Think total franchise valuation</div>
+      <div class="gcard-why"><span class="gcard-why-label">Why It Matters</span>Bigger companies are more stable, smaller ones are more volatile and risky</div>
+    </div>
+
+    <div class="gcard" data-term="p/e ratio pe ratio price earnings">
+      <div class="gcard-term">P/E Ratio</div>
+      <div class="gcard-def">How much investors pay per dollar of earnings</div>
+      <div class="gcard-analogy">Like paying $40 for every $1 of points scored</div>
+      <div class="gcard-why"><span class="gcard-why-label">Why It Matters</span>A very high P/E means investors expect big future growth, or the stock is overpriced</div>
+    </div>
+
+    <div class="gcard" data-term="volume">
+      <div class="gcard-term">Volume</div>
+      <div class="gcard-def">How many shares traded today</div>
+      <div class="gcard-analogy">The crowd size at the game</div>
+      <div class="gcard-why"><span class="gcard-why-label">Why It Matters</span>High volume confirms a big price move is real, low volume means it might not last</div>
+    </div>
+
+    <div class="gcard" data-term="52 week high 52-week high yearly high">
+      <div class="gcard-term">52 Week High</div>
+      <div class="gcard-def">The highest price the stock has hit in the past year</div>
+      <div class="gcard-analogy">The season record</div>
+      <div class="gcard-why"><span class="gcard-why-label">Why It Matters</span>Hitting a new high can signal momentum, or signal the stock is running out of room</div>
+    </div>
+
+    <div class="gcard" data-term="previous close prev close yesterday closing price">
+      <div class="gcard-term">Previous Close</div>
+      <div class="gcard-def">What the stock closed at yesterday</div>
+      <div class="gcard-analogy">Last game's final score</div>
+      <div class="gcard-why"><span class="gcard-why-label">Why It Matters</span>Gives you a baseline to judge whether today is actually a big move or just noise</div>
+    </div>
+
+    <div class="gcard" data-term="day % day change daily change percent">
+      <div class="gcard-term">Day %</div>
+      <div class="gcard-def">How much the stock moved today vs yesterday</div>
+      <div class="gcard-analogy">Today's performance vs last game</div>
+      <div class="gcard-why"><span class="gcard-why-label">Why It Matters</span>The raw score for today, the number that determines if your pick wins or loses</div>
+    </div>
+
+    <div class="gcard" data-term="volatility volatile swing">
+      <div class="gcard-term">Volatility</div>
+      <div class="gcard-def">How wildly a stock swings in price</div>
+      <div class="gcard-analogy">A boom or bust player with huge highs and lows</div>
+      <div class="gcard-why"><span class="gcard-why-label">Why It Matters</span>High volatility means bigger potential wins on parlays but also bigger risk of losing</div>
+    </div>
+
+    <div class="gcard" data-term="parlay chain picks multiplier">
+      <div class="gcard-term">Parlay</div>
+      <div class="gcard-def">Chaining multiple picks together for a multiplied payout</div>
+      <div class="gcard-analogy">Win them all or walk away empty</div>
+      <div class="gcard-why"><span class="gcard-why-label">Why It Matters</span>One miss kills the whole chain, high risk but the payout can be massive</div>
+    </div>
+
+    <div class="gcard" data-term="odds payout risk reward">
+      <div class="gcard-term">Odds</div>
+      <div class="gcard-def">The potential payout on a pick</div>
+      <div class="gcard-analogy">Higher odds mean higher risk and higher reward</div>
+      <div class="gcard-why"><span class="gcard-why-label">Why It Matters</span>Always check the odds before locking in, they tell you what the market thinks will happen</div>
+    </div>
+
+    <div class="gcard" data-term="paper trading fake money practice sim simulation">
+      <div class="gcard-term">Paper Trading</div>
+      <div class="gcard-def">Buying and selling stocks with fake money</div>
+      <div class="gcard-analogy">Practice squad reps with no consequences</div>
+      <div class="gcard-why"><span class="gcard-why-label">Why It Matters</span>Use it to test strategies before you ever risk real money</div>
+    </div>
+
+    <div class="gcard" data-term="win rate win percentage record accuracy">
+      <div class="gcard-term">Win Rate</div>
+      <div class="gcard-def">Percentage of picks you got right</div>
+      <div class="gcard-analogy">Your season record as a picker</div>
+      <div class="gcard-why"><span class="gcard-why-label">Why It Matters</span>The true measure of how good your instincts are over time</div>
+    </div>
+
+  </div>
+
+  <p class="glossary-empty" id="glossaryEmpty">No terms match "<span id="glossaryEmptyQuery"></span>".</p>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const input  = document.getElementById('glossarySearch');
+    const cards  = document.querySelectorAll('#glossaryGrid .gcard');
+    const empty  = document.getElementById('glossaryEmpty');
+    const eQuery = document.getElementById('glossaryEmptyQuery');
+
+    input.addEventListener('input', function () {
+      const q = this.value.trim().toLowerCase();
+      let visible = 0;
+
+      cards.forEach(function (card) {
+        const term = card.dataset.term || '';
+        const text = card.textContent.toLowerCase();
+        const match = !q || term.includes(q) || text.includes(q);
+        card.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+
+      if (visible === 0 && q) {
+        eQuery.textContent = this.value.trim();
+        empty.classList.add('visible');
+      } else {
+        empty.classList.remove('visible');
+      }
+    });
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ profile_user.username }} Streak — StockZone</title>
+  <meta property="og:title" content="{{ profile_user.username }} is on a {{ profile.current_streak }}-pick streak on StockZone">
+  <meta property="og:description" content="{{ profile.win_rate }}% win rate. Can you beat them? Play at stockzone.app">
+  <meta property="og:site_name" content="StockZone">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;800&family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; min-height: 100vh;
+      background: #080612;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: 100%; max-width: 420px;
+      background: linear-gradient(160deg, #0e0820 0%, #080612 100%);
+      border: 1px solid rgba(153,69,255,0.45);
+      border-radius: 20px; overflow: hidden;
+      box-shadow: 0 0 60px rgba(153,69,255,0.25), 0 0 120px rgba(153,69,255,0.1);
+      font-family: 'Inter', sans-serif; text-align: center;
+    }
+
+    /* ── Top bar ── */
+    .card-top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 24px 16px;
+      border-bottom: 1px solid rgba(153,69,255,0.2);
+      background: rgba(153,69,255,0.06);
+    }
+    .brand {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem;
+      letter-spacing: 2px; color: #fff;
+    }
+    .brand em { color: #9945FF; font-style: normal; text-shadow: 0 0 12px rgba(153,69,255,0.9); }
+    .card-label {
+      font-size: 0.68rem; font-weight: 700; color: #555;
+      text-transform: uppercase; letter-spacing: 1.5px;
+    }
+
+    /* ── Streak hero ── */
+    .streak-hero {
+      padding: 36px 32px 28px;
+      border-bottom: 1px solid rgba(153,69,255,0.15);
+    }
+    .streak-flame {
+      font-size: 3rem; margin-bottom: 8px; display: block;
+      filter: drop-shadow(0 0 12px rgba(153,69,255,0.8));
+    }
+    .streak-username {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem;
+      color: #fff; letter-spacing: 3px; margin-bottom: 16px;
+      text-shadow: 0 0 20px rgba(255,255,255,0.15);
+    }
+    .streak-number {
+      font-family: 'Bebas Neue', sans-serif; font-size: 8rem;
+      line-height: 0.9; letter-spacing: 2px;
+      color: #9945FF;
+      text-shadow: 0 0 30px rgba(153,69,255,0.9), 0 0 60px rgba(153,69,255,0.5), 0 0 100px rgba(153,69,255,0.25);
+    }
+    .streak-sublabel {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+      letter-spacing: 4px; color: #555; margin-top: 6px;
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: flex; align-items: center; justify-content: center; gap: 0;
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(153,69,255,0.15);
+    }
+    .stat { flex: 1; padding: 0 16px; }
+    .stat + .stat { border-left: 1px solid rgba(153,69,255,0.18); }
+    .stat-lbl {
+      font-size: 0.6rem; font-weight: 700; color: #444;
+      text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px;
+    }
+    .stat-val {
+      font-family: 'Roboto Mono', monospace; font-size: 1.4rem;
+      font-weight: 700; color: #fff;
+    }
+    .stat-val.green { color: #00ff87; text-shadow: 0 0 8px rgba(0,255,135,0.6); }
+    .stat-val.gold  { color: #ffd700; text-shadow: 0 0 8px rgba(255,215,0,0.5); }
+
+    /* ── Footer ── */
+    .card-footer {
+      padding: 14px 24px;
+      background: rgba(8,6,18,0.8);
+    }
+    .footer-tag { font-size: 0.72rem; color: #444; }
+    .footer-tag strong { color: #9945FF; }
+  </style>
+</head>
+<body>
+  <div class="card">
+
+    <!-- Top bar -->
+    <div class="card-top">
+      <div class="brand">Stock<em>Zone</em></div>
+      <div class="card-label">Hot Streak</div>
+    </div>
+
+    <!-- Streak hero -->
+    <div class="streak-hero">
+      <span class="streak-flame">🔥</span>
+      <div class="streak-username">{{ profile_user.username }}</div>
+      <div class="streak-number">{{ profile.current_streak }}</div>
+      <div class="streak-sublabel">Pick Streak</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-lbl">Win Rate</div>
+        <div class="stat-val green">{{ profile.win_rate }}%</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Total Picks</div>
+        <div class="stat-val">{{ profile.total_picks }}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Best Streak</div>
+        <div class="stat-val gold">{{ profile.longest_streak }}</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="card-footer">
+      <div class="footer-tag">Play the market at <strong>stockzone.app</strong></div>
+    </div>
+
+  </div>
+</body>
+</html>

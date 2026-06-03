@@ -1,0 +1,261 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block page_title %}{{ friend.username }} — StockZone{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-content { padding: 32px 20px 80px; max-width: 680px; margin: 0 auto; }
+
+  /* ── Profile hero card ── */
+  .fp-hero {
+    display: flex; align-items: center; gap: 20px;
+    background: rgba(153,69,255,0.08);
+    border: 1px solid rgba(153,69,255,0.28);
+    border-radius: 14px; padding: 24px 26px;
+    margin-bottom: 24px;
+  }
+  .fp-avatar {
+    width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(153,69,255,0.2); border: 2px solid rgba(153,69,255,0.5);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 2rem;
+    color: #c084fc; letter-spacing: 1px;
+    box-shadow: 0 0 20px rgba(153,69,255,0.3);
+  }
+  .fp-hero-info { flex: 1; min-width: 0; }
+  .fp-username {
+    font-family: 'Bebas Neue', sans-serif; font-size: 2rem;
+    color: #fff; letter-spacing: 2px; line-height: 1; margin-bottom: 6px;
+  }
+  .fp-hero-sub { font-size: 0.78rem; color: #555; }
+  .fp-hero-actions { display: flex; gap: 10px; flex-shrink: 0; }
+
+  /* ── Buttons ── */
+  .fp-btn {
+    font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 700;
+    padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer;
+    text-decoration: none; display: inline-flex; align-items: center;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .fp-btn-follow { background: #9945FF; color: #fff; box-shadow: 0 0 14px rgba(153,69,255,0.4); }
+  .fp-btn-follow:hover { background: #7c2ee0; box-shadow: 0 0 22px rgba(153,69,255,0.6); }
+  .fp-btn-unfollow { background: rgba(255,71,87,0.1); color: #ff4757; border: 1px solid rgba(255,71,87,0.28); }
+  .fp-btn-unfollow:hover { background: rgba(255,71,87,0.18); }
+  .fp-btn-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.78rem; font-weight: 600; color: #555;
+    text-decoration: none; margin-bottom: 20px;
+    transition: color 0.15s;
+  }
+  .fp-btn-back:hover { color: #9945FF; }
+
+  /* ── Stats grid ── */
+  .fp-stats-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    margin-bottom: 24px;
+  }
+  .fp-stat-card {
+    background: rgba(153,69,255,0.06);
+    border: 1px solid rgba(153,69,255,0.16);
+    border-radius: 10px; padding: 14px 16px;
+    text-align: center;
+  }
+  .fp-stat-label {
+    font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.2px; color: #444; margin-bottom: 6px;
+  }
+  .fp-stat-val {
+    font-family: 'Roboto Mono', monospace; font-size: 1.4rem;
+    font-weight: 700; color: #fff; line-height: 1;
+  }
+  .fp-stat-val.green { color: #00ff87; text-shadow: 0 0 8px rgba(0,255,135,0.6); }
+  .fp-stat-val.purple { color: #9945FF; text-shadow: 0 0 8px rgba(153,69,255,0.6); }
+
+  /* ── Section heading ── */
+  .fp-section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem; letter-spacing: 2px; color: #9945FF;
+    margin-bottom: 12px; text-transform: uppercase;
+  }
+
+  /* ── Recent picks feed ── */
+  .fp-picks {
+    background: rgba(153,69,255,0.04);
+    border: 1px solid rgba(153,69,255,0.16);
+    border-radius: 12px; overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .fp-pick-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 18px;
+    border-bottom: 1px solid rgba(153,69,255,0.07);
+    transition: background 0.15s;
+  }
+  .fp-pick-row:last-child { border-bottom: none; }
+  .fp-pick-row:hover { background: rgba(153,69,255,0.06); }
+
+  .fp-pick-ticker {
+    font-weight: 800; color: #fff; font-size: 0.92rem;
+    min-width: 52px; font-variant-numeric: tabular-nums;
+  }
+  .fp-pick-dir {
+    font-size: 0.72rem; font-weight: 700; padding: 2px 10px;
+    border-radius: 5px; flex-shrink: 0;
+  }
+  .fp-pick-dir.up   { color: #00ff87; background: rgba(0,255,135,0.08); border: 1px solid rgba(0,255,135,0.3); }
+  .fp-pick-dir.down { color: #ff4757; background: rgba(255,71,87,0.08); border: 1px solid rgba(255,71,87,0.3); }
+
+  .fp-pick-result {
+    font-size: 0.72rem; font-weight: 700; padding: 2px 10px;
+    border-radius: 5px;
+  }
+  .fp-pick-result.win     { color: #00ff87; background: rgba(0,255,135,0.08); }
+  .fp-pick-result.loss    { color: #ff4757; background: rgba(255,71,87,0.08); }
+  .fp-pick-result.pending { color: #555; background: rgba(255,255,255,0.04); }
+
+  .fp-pick-time { margin-left: auto; font-size: 0.68rem; color: #3a3a3a; white-space: nowrap; flex-shrink: 0; }
+
+  /* ── Best parlay ── */
+  .fp-parlay-card {
+    background: rgba(153,69,255,0.08);
+    border: 1px solid rgba(153,69,255,0.22);
+    border-left: 3px solid #9945FF;
+    border-radius: 10px; padding: 14px 18px;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .fp-parlay-mult {
+    font-family: 'Roboto Mono', monospace; font-size: 1.6rem; font-weight: 700;
+    color: #9945FF; text-shadow: 0 0 10px rgba(153,69,255,0.6); flex-shrink: 0;
+  }
+  .fp-parlay-detail { font-size: 0.8rem; color: #666; line-height: 1.5; }
+
+  .fp-empty { text-align: center; padding: 28px 0; color: #3a3a3a; font-size: 0.86rem; }
+
+  @media (max-width: 540px) {
+    .fp-stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .fp-hero { flex-wrap: wrap; }
+    .fp-hero-actions { width: 100%; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-content">
+
+  <a href="{% url 'friends_list' %}" class="fp-btn-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Friends
+  </a>
+
+  <!-- ══ Profile Hero ══ -->
+  <div class="fp-hero">
+    <div class="fp-avatar">{{ friend.username|first|upper }}</div>
+    <div class="fp-hero-info">
+      <div class="fp-username">{{ friend.username }}</div>
+      <div class="fp-hero-sub">StockZone player</div>
+    </div>
+    <div class="fp-hero-actions">
+      <button id="followBtn"
+              class="fp-btn {% if is_following %}fp-btn-unfollow{% else %}fp-btn-follow{% endif %}"
+              data-username="{{ friend.username }}"
+              data-following="{{ is_following|yesno:'true,false' }}">
+        {% if is_following %}Unfollow{% else %}Follow{% endif %}
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ Stats Grid ══ -->
+  <div class="fp-stats-grid">
+    <div class="fp-stat-card">
+      <div class="fp-stat-label">Win Rate</div>
+      <div class="fp-stat-val green">{{ profile.win_rate }}%</div>
+    </div>
+    <div class="fp-stat-card">
+      <div class="fp-stat-label">Total Picks</div>
+      <div class="fp-stat-val purple">{{ profile.total_picks }}</div>
+    </div>
+    <div class="fp-stat-card">
+      <div class="fp-stat-label">Streak</div>
+      <div class="fp-stat-val">{{ profile.current_streak }}</div>
+    </div>
+    <div class="fp-stat-card">
+      <div class="fp-stat-label">Followers</div>
+      <div class="fp-stat-val" id="followerCount">{{ follower_count }}</div>
+    </div>
+    <div class="fp-stat-card">
+      <div class="fp-stat-label">Following</div>
+      <div class="fp-stat-val">{{ following_count }}</div>
+    </div>
+    <div class="fp-stat-card" style="grid-column: span 3;">
+      <div class="fp-stat-label">Paper Balance</div>
+      <div class="fp-stat-val green">{% if portfolio %}${{ portfolio.balance }}{% else %}N/A{% endif %}</div>
+    </div>
+  </div>
+
+  <!-- ══ Best Parlay ══ -->
+  {% if best_parlay %}
+  <div class="fp-section-title">Best Parlay</div>
+  <div class="fp-parlay-card">
+    <div class="fp-parlay-mult">{{ best_parlay.payout_multiplier }}x</div>
+    <div class="fp-parlay-detail">
+      {{ best_parlay.leg_count }} leg parlay<br>
+      Payout: ${{ best_parlay.payout|default:"N/A" }}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══ Recent Activity ══ -->
+  <div class="fp-section-title">Recent Picks</div>
+  {% if recent_picks %}
+  <div class="fp-picks">
+    {% for pick in recent_picks %}
+    <div class="fp-pick-row">
+      <a href="{% url 'stock_detail' pick.ticker %}" class="fp-pick-ticker" style="text-decoration:none;color:inherit;">{{ pick.ticker }}</a>
+      <span class="fp-pick-dir {% if pick.direction == 'UP' %}up{% else %}down{% endif %}">
+        {% if pick.direction == 'UP' %}▲ UP{% else %}▼ DOWN{% endif %}
+      </span>
+      {% if pick.result == 'WIN' %}
+        <span class="fp-pick-result win">WIN</span>
+      {% elif pick.result == 'LOSS' %}
+        <span class="fp-pick-result loss">LOSS</span>
+      {% else %}
+        <span class="fp-pick-result pending">PENDING</span>
+      {% endif %}
+      <div class="fp-pick-time">{{ pick.picked_at|timesince }} ago</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="fp-empty">No picks yet.</div>
+  {% endif %}
+
+</div>
+
+<script>
+const CSRF = document.cookie.split('; ').find(r => r.startsWith('csrftoken=')).split('=')[1];
+const followBtn = document.getElementById('followBtn');
+
+followBtn.addEventListener('click', async () => {
+  const username = followBtn.dataset.username;
+  const res = await fetch(`/friends/follow/${username}/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': CSRF },
+  });
+  if (!res.ok) return;
+  const data = await res.json();
+  document.getElementById('followerCount').textContent = data.follower_count;
+  if (data.following) {
+    followBtn.textContent = 'Unfollow';
+    followBtn.classList.remove('fp-btn-follow');
+    followBtn.classList.add('fp-btn-unfollow');
+    followBtn.dataset.following = 'true';
+  } else {
+    followBtn.textContent = 'Follow';
+    followBtn.classList.remove('fp-btn-unfollow');
+    followBtn.classList.add('fp-btn-follow');
+    followBtn.dataset.following = 'false';
+  }
+});
+</script>
+{% endblock %}

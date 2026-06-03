@@ -21,6 +21,7 @@
     padding: 14px 24px; border-bottom: 1px solid rgba(153,69,255,0.15);
   }
   .parlay-hd-left { display: flex; align-items: center; gap: 14px; }
+  .parlay-hd-right { display: flex; align-items: center; gap: 10px; }
   .mult-chip {
     font-family: 'Roboto Mono', monospace; font-size: 1rem; font-weight: 600;
     color: #9945FF; background: rgba(153,69,255,0.1); border: 1px solid rgba(153,69,255,0.25);
@@ -37,7 +38,93 @@
   .leg-sector { font-size: 0.72rem; color: #444; flex: 1; }
   .leg-price { font-family: 'Roboto Mono', monospace; font-size: 0.72rem; color: #444; }
   .leg-result { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; min-width: 54px; text-align: right; }
-  .leg-result.WIN { color: #00ff87; text-shadow: 0 0 8px rgba(0,255,135,0.9), 0 0 16px rgba(0,255,135,0.5); } .leg-result.LOSS { color: #ff4757; text-shadow: 0 0 8px rgba(255,71,87,0.9); } .leg-result.PENDING { color: #555; }
+  .leg-result.WIN  { color: #00ff87; text-shadow: 0 0 8px rgba(0,255,135,0.9), 0 0 16px rgba(0,255,135,0.5); }
+  .leg-result.LOSS { color: #ff4757; text-shadow: 0 0 8px rgba(255,71,87,0.9); }
+  .leg-result.PENDING { color: #555; }
+
+  /* ── Share button ── */
+  .share-btn {
+    font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 700;
+    padding: 5px 13px; border-radius: 6px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    border: 1px solid rgba(153,69,255,0.35); color: #9945FF;
+    background: rgba(153,69,255,0.08);
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .share-btn:hover { background: rgba(153,69,255,0.18); box-shadow: 0 0 12px rgba(153,69,255,0.3); }
+
+  /* ── Share modal ── */
+  .share-modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
+    z-index: 500; align-items: center; justify-content: center; padding: 20px;
+  }
+  .share-modal-overlay.open { display: flex; }
+  .share-modal {
+    background: #0e0820; border: 1px solid rgba(153,69,255,0.5);
+    border-radius: 18px; width: 100%; max-width: 540px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(153,69,255,0.2);
+    animation: modal-in 0.18s ease-out; overflow: hidden;
+  }
+  @keyframes modal-in { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
+  .share-modal-hd {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 22px; border-bottom: 1px solid rgba(153,69,255,0.2);
+    background: rgba(153,69,255,0.06);
+  }
+  .share-modal-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+    letter-spacing: 2px; color: #fff;
+  }
+  .share-modal-close {
+    background: none; border: none; color: #555; font-size: 1.4rem;
+    cursor: pointer; line-height: 1; padding: 0 4px;
+    transition: color 0.15s;
+  }
+  .share-modal-close:hover { color: #fff; }
+
+  /* Card preview */
+  .share-preview {
+    padding: 20px 22px; border-bottom: 1px solid rgba(153,69,255,0.15);
+    background: #080612;
+  }
+  .share-preview-label {
+    font-size: 0.62rem; font-weight: 700; color: #444;
+    text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 12px;
+  }
+  .share-iframe-wrap {
+    border-radius: 12px; overflow: hidden;
+    border: 1px solid rgba(153,69,255,0.25);
+    height: 420px; position: relative; background: #080612;
+  }
+  .share-iframe-wrap iframe {
+    width: 100%; height: 100%; border: none;
+    transform-origin: top left;
+  }
+
+  /* Actions */
+  .share-actions {
+    display: flex; gap: 10px; padding: 18px 22px; flex-wrap: wrap;
+  }
+  .share-copy-btn {
+    flex: 1; min-width: 120px; padding: 11px 20px;
+    background: rgba(153,69,255,0.12); border: 1px solid rgba(153,69,255,0.4);
+    border-radius: 9px; color: #c084fc; font-size: 0.84rem; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .share-copy-btn:hover { background: rgba(153,69,255,0.22); box-shadow: 0 0 16px rgba(153,69,255,0.35); }
+  .share-copy-btn.copied { color: #00ff87; border-color: rgba(0,255,135,0.4); background: rgba(0,255,135,0.08); }
+  .share-x-btn {
+    flex: 1; min-width: 120px; padding: 11px 20px;
+    background: #000; border: 1px solid #333;
+    border-radius: 9px; color: #fff; font-size: 0.84rem; font-weight: 700;
+    font-family: inherit; cursor: pointer; text-decoration: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .share-x-btn:hover { background: #111; border-color: #555; }
 
   .top-actions { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
 </style>
@@ -66,11 +153,27 @@
           <span class="mult-chip">{{ parlay.payout_multiplier }}x</span>
           <span class="parlay-date">{{ parlay.created_at|date:"M j, Y" }} · {{ parlay.leg_count }} leg{{ parlay.leg_count|pluralize }}</span>
         </div>
-        <span class="chip chip-{{ parlay.result }}">{{ parlay.get_result_display }}</span>
+        <div class="parlay-hd-right">
+          <span class="chip chip-{{ parlay.result }}">{{ parlay.get_result_display }}</span>
+          {% if parlay.result != "PENDING" %}
+          <button class="share-btn"
+                  data-parlay-id="{{ parlay.id }}"
+                  data-leg-count="{{ parlay.leg_count }}"
+                  data-result="{{ parlay.result }}"
+                  data-mult="{{ parlay.payout_multiplier }}"
+                  onclick="openShareModal(this)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            Share
+          </button>
+          {% endif %}
+        </div>
       </div>
       {% for leg in parlay.legs.all %}
       <div class="leg-row">
-        <span class="leg-ticker">{{ leg.ticker }}</span>
+        <a href="{% url 'stock_detail' leg.ticker %}" class="leg-ticker" style="text-decoration:none;color:inherit;">{{ leg.ticker }}</a>
         <span class="leg-sector">{{ leg.sector }}</span>
         {% if leg.direction == "UP" %}
           <span class="dir-up">▲ UP</span>
@@ -87,10 +190,95 @@
     <div class="pcard">
       <div class="empty-state">
         <div class="empty-title">No Parlays Yet</div>
-        <p class="empty-sub">Chain 2–5 picks together for multiplied payouts.</p>
+        <p class="empty-sub">Chain 2 to 5 picks together for multiplied payouts.</p>
         <a href="{% url 'build_parlay' %}" class="btn-purple">Build Your First Parlay</a>
       </div>
     </div>
   {% endif %}
 </div>
+
+<!-- ══ Share Modal ══ -->
+<div class="share-modal-overlay" id="shareModalOverlay">
+  <div class="share-modal">
+    <div class="share-modal-hd">
+      <div class="share-modal-title">Share Your Parlay</div>
+      <button class="share-modal-close" onclick="closeShareModal()">×</button>
+    </div>
+    <div class="share-preview">
+      <div class="share-preview-label">Card Preview</div>
+      <div class="share-iframe-wrap">
+        <iframe id="shareIframe" src="" title="Share card preview" loading="lazy"></iframe>
+      </div>
+    </div>
+    <div class="share-actions">
+      <button class="share-copy-btn" id="copyLinkBtn" onclick="copyShareLink()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        Copy Link
+      </button>
+      <a class="share-x-btn" id="shareXBtn" href="#" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+        </svg>
+        Share to X
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let currentShareUrl = '';
+
+  function openShareModal(btn) {
+    const parlayId  = btn.dataset.parlayId;
+    const legCount  = btn.dataset.legCount;
+    const result    = btn.dataset.result;
+    const mult      = btn.dataset.mult;
+
+    const shareUrl  = `${window.location.origin}/share/parlay/${parlayId}/`;
+    currentShareUrl = shareUrl;
+
+    document.getElementById('shareIframe').src = shareUrl;
+
+    const resultWord = result === 'WIN' ? 'won' : 'lost';
+    const tweetText  = result === 'WIN'
+      ? `I just hit a ${legCount}/${legCount} parlay on StockZone! ${mult}x multiplier. Can you beat my picks? ${shareUrl}`
+      : `Just missed a ${legCount}-leg parlay on StockZone. Back at it. ${shareUrl}`;
+
+    document.getElementById('shareXBtn').href =
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+
+    const copyBtn = document.getElementById('copyLinkBtn');
+    copyBtn.classList.remove('copied');
+    copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Link`;
+
+    document.getElementById('shareModalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeShareModal() {
+    document.getElementById('shareModalOverlay').classList.remove('open');
+    document.getElementById('shareIframe').src = '';
+    document.body.style.overflow = '';
+  }
+
+  async function copyShareLink() {
+    try {
+      await navigator.clipboard.writeText(currentShareUrl);
+      const btn = document.getElementById('copyLinkBtn');
+      btn.classList.add('copied');
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+    } catch (e) {
+      prompt('Copy this link:', currentShareUrl);
+    }
+  }
+
+  document.getElementById('shareModalOverlay').addEventListener('click', function (e) {
+    if (e.target === this) closeShareModal();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeShareModal(); });
+</script>
 {% endblock %}

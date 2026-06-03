@@ -270,7 +270,7 @@
     <div class="hero-underline"></div>
     <p class="page-hero-sub">Chain 2–5 picks · odds based on beta & daily change · price locked at submission</p>
   </div>
-  <img src="{% static 'core/pick.png' %}" class="parlay-hero-bull" alt="" style="mix-blend-mode: lighten;">
+  <img src="{% static 'core/pick.png' %}" class="parlay-hero-bull bull-mascot" alt="" style="mix-blend-mode: lighten;">
 </section>
 
 <div class="page-content">
@@ -308,7 +308,10 @@
                data-up-odds="{{ stock.odds_up|default:'1.50' }}"
                data-down-odds="{{ stock.odds_down|default:'1.50' }}">
             <div class="leg-id">
-              <div class="leg-ticker">{{ stock.ticker }}</div>
+              <div class="leg-ticker">
+                {{ stock.ticker }}
+                <a href="{% url 'stock_detail' stock.ticker %}" onclick="event.stopPropagation()" title="View {{ stock.ticker }} details" style="margin-left:5px;color:#555;font-size:0.65rem;text-decoration:none;vertical-align:middle;transition:color 0.15s;" onmouseover="this.style.color='#9945FF'" onmouseout="this.style.color='#555'">&#8599;</a>
+              </div>
               <div class="leg-company">{{ stock.company_name }}</div>
             </div>
             <div class="leg-price">${{ stock.price }}</div>
@@ -513,6 +516,21 @@
   });
 
   rebuildSlip();
+
+  // Pre-fill: highlight ticker row when arriving from stock detail page
+  (function () {
+    const pick = new URLSearchParams(window.location.search).get('pick');
+    if (!pick) return;
+    const row = document.getElementById('row_' + pick.toUpperCase());
+    if (!row) return;
+    setTimeout(() => {
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      row.style.transition = 'background 0.3s';
+      row.style.background = 'rgba(255,215,0,0.14)';
+      row.style.borderColor = 'rgba(255,215,0,0.45)';
+      setTimeout(() => { row.style.background = ''; row.style.borderColor = ''; }, 2200);
+    }, 350);
+  })();
 
   // Double-submit guard — disable button immediately on form submit
   document.getElementById('parlayForm').addEventListener('submit', function () {

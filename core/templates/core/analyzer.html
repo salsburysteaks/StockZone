@@ -1,0 +1,475 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block page_title %}Stock Analyzer — StockZone{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-hero   { padding-bottom: 20px; }
+  .page-content { padding-top: 24px; }
+
+  /* ── Hero bull ── */
+  .az-hero-bull {
+    height: 180px; width: auto;
+    mix-blend-mode: lighten; opacity: 0.9; pointer-events: none;
+  }
+
+  /* ── Ticker input ── */
+  .az-input-wrap {
+    display: flex; gap: 12px; margin-bottom: 10px;
+  }
+  .az-ticker-input {
+    flex: 1; padding: 14px 18px;
+    background: rgba(153,69,255,0.08);
+    border: 1px solid rgba(153,69,255,0.3); border-radius: 12px;
+    color: #e0e0e0; font-family: 'Roboto Mono', monospace;
+    font-size: 1.05rem; letter-spacing: 2px; text-transform: uppercase;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .az-ticker-input:focus {
+    border-color: #9945FF; box-shadow: 0 0 20px rgba(153,69,255,0.25);
+  }
+  .az-ticker-input::placeholder {
+    color: #444; letter-spacing: 0.5px; text-transform: none;
+    font-size: 0.9rem;
+  }
+  .az-analyze-btn {
+    padding: 14px 30px; background: #9945FF; border: none;
+    border-radius: 12px; color: #fff;
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 2px;
+    cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(153,69,255,0.35);
+    transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+  }
+  .az-analyze-btn:hover {
+    background: #7c2ee0; box-shadow: 0 0 32px rgba(153,69,255,0.55);
+    transform: translateY(-1px);
+  }
+  .az-analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ── Error ── */
+  .az-error {
+    background: rgba(255,60,60,0.07); border: 1px solid rgba(255,80,80,0.28);
+    border-left: 3px solid #ff4444; border-radius: 10px;
+    padding: 12px 16px; color: #ff7777; font-size: 0.88rem;
+    margin-bottom: 20px; display: none;
+  }
+  .az-error.visible { display: block; }
+
+  /* ── Loading ── */
+  .az-loading {
+    display: none; align-items: center; justify-content: center;
+    gap: 10px; padding: 40px 0; color: #555; font-size: 0.88rem;
+  }
+  .az-loading.visible { display: flex; }
+  .az-spin {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid rgba(153,69,255,0.2); border-top-color: #9945FF;
+    animation: az-spin 0.7s linear infinite; flex-shrink: 0;
+  }
+  @keyframes az-spin { to { transform: rotate(360deg); } }
+
+  /* ── Results panel ── */
+  .az-panel { display: none; flex-direction: column; gap: 14px; margin-top: 24px; }
+  .az-panel.visible { display: flex; }
+
+  /* ── Ticker badge ── */
+  .az-badge {
+    display: flex; align-items: baseline; gap: 10px; margin-bottom: 2px;
+  }
+  .az-badge-sym {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.9rem; letter-spacing: 2px; color: #fff;
+  }
+  .az-badge-name { font-size: 0.82rem; color: #555; }
+
+  /* ── Section card ── */
+  .az-section {
+    background: rgba(153,69,255,0.05);
+    border: 1px solid rgba(153,69,255,0.18);
+    border-left: 3px solid #9945FF;
+    border-radius: 12px; padding: 20px 22px;
+  }
+  .az-section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem; letter-spacing: 2.5px; color: #9945FF;
+    text-transform: uppercase; margin-bottom: 16px;
+  }
+
+  /* ── 2-column grid ── */
+  .az-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* ── Price action ── */
+  .az-price-row { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+  .az-price {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 2.5rem; font-weight: 700; color: #fff; line-height: 1;
+  }
+  .az-day-pct {
+    font-family: 'Roboto Mono', monospace; font-size: 1rem; font-weight: 700;
+    padding: 4px 10px; border-radius: 6px;
+  }
+  .az-day-pct.up   { color: #00ff87; background: rgba(0,255,135,0.1); }
+  .az-day-pct.down { color: #ff4d4d; background: rgba(255,77,77,0.1); }
+  .az-day-pct.flat { color: #888;    background: rgba(128,128,128,0.1); }
+
+  /* ── 52-week range bar ── */
+  .az-meta-label {
+    font-size: 0.68rem; color: #555; text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .az-range-track {
+    position: relative; height: 6px;
+    background: rgba(153,69,255,0.12); border-radius: 3px; margin-bottom: 8px;
+  }
+  .az-range-fill {
+    height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg, rgba(153,69,255,0.35), #9945FF);
+    transition: width 0.5s cubic-bezier(0.22,1,0.36,1);
+  }
+  .az-range-marker {
+    position: absolute; top: 50%; transform: translate(-50%, -50%);
+    width: 13px; height: 13px; border-radius: 50%;
+    background: #9945FF; border: 2px solid #0c0720;
+    box-shadow: 0 0 8px rgba(153,69,255,0.7);
+    transition: left 0.5s cubic-bezier(0.22,1,0.36,1);
+  }
+  .az-range-ends {
+    display: flex; justify-content: space-between;
+    font-family: 'Roboto Mono', monospace; font-size: 0.72rem; color: #555;
+  }
+
+  /* ── Sparkline ── */
+  .az-sparkline { margin-top: 20px; }
+  .az-sparkline svg { width: 100%; height: 56px; display: block; overflow: visible; }
+
+  /* ── Stat rows (Momentum / Valuation) ── */
+  .az-stat-group { display: flex; flex-direction: column; gap: 14px; }
+  .az-stat-label {
+    font-size: 0.68rem; color: #555; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 3px;
+  }
+  .az-stat-val {
+    font-family: 'Roboto Mono', monospace; font-size: 1rem; font-weight: 700;
+  }
+  .az-stat-sub { font-size: 0.72rem; color: #555; margin-top: 2px; }
+  .col-up      { color: #00ff87; }
+  .col-down    { color: #ff4d4d; }
+  .col-neutral { color: #ccc; }
+
+  /* ── Momentum verdict chip ── */
+  .az-chip {
+    display: inline-block; margin-top: 2px;
+    padding: 4px 12px; border-radius: 20px;
+    font-family: 'Inter', sans-serif; font-size: 0.76rem; font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .az-chip.hot      { color: #00ff87; background: rgba(0,255,135,0.1);  border: 1px solid rgba(0,255,135,0.25); }
+  .az-chip.pressure { color: #ff4d4d; background: rgba(255,77,77,0.1);  border: 1px solid rgba(255,77,77,0.22); }
+  .az-chip.grind    { color: #c084fc; background: rgba(153,69,255,0.1); border: 1px solid rgba(153,69,255,0.28); }
+  .az-chip.cool     { color: #888;    background: rgba(128,128,128,0.08); border: 1px solid rgba(128,128,128,0.18); }
+  .az-chip.quiet    { color: #888;    background: rgba(128,128,128,0.08); border: 1px solid rgba(128,128,128,0.18); }
+
+  /* ── P/E tag ── */
+  .az-pe-num {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1.9rem; font-weight: 700; color: #fff; margin-bottom: 6px;
+  }
+  .az-pe-tag {
+    display: inline-block; padding: 3px 10px; border-radius: 6px;
+    font-family: 'Inter', sans-serif; font-size: 0.74rem; font-weight: 700;
+    margin-bottom: 18px;
+  }
+  .az-pe-tag.value      { color: #00ff87; background: rgba(0,255,135,0.1); }
+  .az-pe-tag.fair       { color: #c084fc; background: rgba(153,69,255,0.12); }
+  .az-pe-tag.growth     { color: #ffb800; background: rgba(255,184,0,0.1); }
+  .az-pe-tag.perfection { color: #ff4d4d; background: rgba(255,77,77,0.1); }
+
+  .az-mcap {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1.3rem; font-weight: 700; color: #fff;
+  }
+
+  /* ── Analyst verdict ── */
+  .az-verdict-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.97rem; color: #ccc; line-height: 1.75;
+  }
+  .verdict-highlight {
+    color: #9945FF;
+    font-weight: 600;
+    text-shadow: 0 0 8px rgba(153, 69, 255, 0.6);
+  }
+
+  @media (max-width: 640px) {
+    .az-grid-2 { grid-template-columns: 1fr; }
+    .az-price  { font-size: 2rem; }
+    .az-analyze-btn { padding: 14px 18px; font-size: 1rem; }
+    .az-hero-bull { height: 130px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ Hero ══ -->
+<section class="page-hero">
+  <div class="page-hero-inner">
+    <div>
+      <h1>Stock <em>Analyzer</em></h1>
+      <div class="hero-underline"></div>
+      <p class="page-hero-sub">Drop a ticker and get the full breakdown</p>
+    </div>
+    <img src="{% static 'core/hype_bull.png' %}" class="az-hero-bull bull-mascot" alt="">
+  </div>
+</section>
+
+<div class="page-content">
+
+  <!-- ══ Input ══ -->
+  <form class="az-input-wrap" id="azForm" autocomplete="off">
+    {% csrf_token %}
+    <input type="text" class="az-ticker-input" id="azTicker"
+           placeholder="Enter a ticker — AAPL, TSLA, NVDA…"
+           maxlength="10" spellcheck="false">
+    <button type="submit" class="az-analyze-btn" id="azBtn">Analyze</button>
+  </form>
+
+  <div class="az-error" id="azError"></div>
+
+  <div class="az-loading" id="azLoading">
+    <div class="az-spin"></div>
+    <span>Pulling data…</span>
+  </div>
+
+  <!-- ══ Results ══ -->
+  <div class="az-panel" id="azPanel">
+
+    <div class="az-badge">
+      <span class="az-badge-sym" id="azSym"></span>
+      <span class="az-badge-name" id="azName"></span>
+    </div>
+
+    <!-- PRICE ACTION -->
+    <div class="az-section">
+      <div class="az-section-title">Price Action</div>
+
+      <div class="az-price-row">
+        <span class="az-price" id="azPrice"></span>
+        <span class="az-day-pct" id="azDayPct"></span>
+      </div>
+
+      <div class="az-meta-label">52 Week Range</div>
+      <div class="az-range-track">
+        <div class="az-range-fill"   id="azRangeFill"></div>
+        <div class="az-range-marker" id="azRangeMarker"></div>
+      </div>
+      <div class="az-range-ends">
+        <span id="az52Low"></span>
+        <span id="az52High"></span>
+      </div>
+
+      <div class="az-sparkline">
+        <div class="az-meta-label" style="margin-top:16px">5 Day Price</div>
+        <svg id="azSparkline" viewBox="0 0 300 56" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+
+    <!-- MOMENTUM + VALUATION -->
+    <div class="az-grid-2">
+
+      <div class="az-section">
+        <div class="az-section-title">Momentum</div>
+        <div class="az-stat-group">
+
+          <div>
+            <div class="az-stat-label">Direction</div>
+            <div class="az-stat-val" id="azDirection"></div>
+          </div>
+
+          <div>
+            <div class="az-stat-label">Volume vs Average</div>
+            <div class="az-stat-val" id="azVolRatio"></div>
+            <div class="az-stat-sub" id="azVolLabel"></div>
+          </div>
+
+          <div>
+            <div class="az-stat-label">Verdict</div>
+            <span class="az-chip" id="azMomentumChip"></span>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="az-section">
+        <div class="az-section-title">Valuation</div>
+
+        <div class="az-stat-label">P/E Ratio</div>
+        <div class="az-pe-num" id="azPE"></div>
+        <span class="az-pe-tag" id="azPETag"></span>
+
+        <div class="az-stat-label">Market Cap</div>
+        <div class="az-mcap" id="azMCap"></div>
+      </div>
+
+    </div>
+
+    <!-- ANALYST VERDICT -->
+    <div class="az-section">
+      <div class="az-section-title">Analyst Verdict</div>
+      <p class="az-verdict-text" id="azVerdict"></p>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const form    = document.getElementById('azForm');
+  const input   = document.getElementById('azTicker');
+  const btn     = document.getElementById('azBtn');
+  const errBox  = document.getElementById('azError');
+  const loading = document.getElementById('azLoading');
+  const panel   = document.getElementById('azPanel');
+
+  function getCsrf() {
+    const m = document.cookie.match(/csrftoken=([^;]+)/);
+    return m ? m[1] : '';
+  }
+  function show(el) { el.classList.add('visible'); }
+  function hide(el) { el.classList.remove('visible'); }
+  function $t(id, v) { document.getElementById(id).textContent = v; }
+
+  function drawSparkline(history) {
+    const svg = document.getElementById('azSparkline');
+    svg.innerHTML = '';
+    if (!history || history.length < 2) return;
+
+    const W = 300, H = 56, PAD = 4;
+    const prices = history.map(h => h.close);
+    const lo = Math.min(...prices), hi = Math.max(...prices);
+    const range = hi - lo || 1;
+
+    const pts = prices.map((p, i) => [
+      PAD + (i / (prices.length - 1)) * (W - PAD * 2),
+      PAD + (1 - (p - lo) / range) * (H - PAD * 2)
+    ]);
+
+    const line = pts.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(' ');
+    const area = line + ` L${pts.at(-1)[0]},${H} L${pts[0][0]},${H} Z`;
+    const col  = prices.at(-1) >= prices[0] ? '#00ff87' : '#ff4d4d';
+
+    svg.innerHTML = `
+      <defs>
+        <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="${col}" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="${col}" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="${area}" fill="url(#sg)"/>
+      <path d="${line}" fill="none" stroke="${col}" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+
+  function formatVerdict(text) {
+    const esc = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    const pattern = /(\$\d+(?:\.\d+)?|[+-]?\d+(?:\.\d+)?%|\b\d+(?:\.\d+)?x\b|\b\d+\.\d+\b|\bsidelines\b|\bavoid\b|\bstrong buy\b|\bwait\b|\bhold\b|\bconviction\b)/gi;
+    return esc.replace(pattern, '<span class="verdict-highlight">$1</span>');
+  }
+
+  function render(d) {
+    $t('azSym',  d.ticker);
+    $t('azName', d.name || '');
+
+    // Price
+    $t('azPrice', `$${d.price.toFixed(2)}`);
+    const pctEl = document.getElementById('azDayPct');
+    const pct   = d.day_pct;
+    pctEl.textContent = pct !== null ? `${pct > 0 ? '+' : ''}${pct.toFixed(2)}%` : 'N/A';
+    pctEl.className   = 'az-day-pct ' + (pct > 0.05 ? 'up' : pct < -0.05 ? 'down' : 'flat');
+
+    // Range bar
+    const rng = d.range_pct ?? 50;
+    document.getElementById('azRangeFill').style.width  = rng + '%';
+    document.getElementById('azRangeMarker').style.left = rng + '%';
+    $t('az52Low',  d.week52_low  ? `$${d.week52_low.toFixed(2)}`  : 'N/A');
+    $t('az52High', d.week52_high ? `$${d.week52_high.toFixed(2)}` : 'N/A');
+
+    // Sparkline
+    drawSparkline(d.price_history);
+
+    // Momentum — direction
+    const dirEl = document.getElementById('azDirection');
+    const up = pct !== null && pct > 0;
+    dirEl.textContent = pct === null ? 'N/A' : (up ? '▲  UP' : '▼  DOWN');
+    dirEl.className   = 'az-stat-val ' + (pct === null ? 'col-neutral' : up ? 'col-up' : 'col-down');
+
+    // Volume ratio
+    const vrEl = document.getElementById('azVolRatio');
+    vrEl.textContent = d.vol_ratio ? `${d.vol_ratio}x avg` : 'N/A';
+    const vrClass = !d.vol_ratio ? 'col-neutral' : d.vol_ratio >= 1.1 ? 'col-up' : d.vol_ratio < 0.9 ? 'col-down' : 'col-neutral';
+    vrEl.className = 'az-stat-val ' + vrClass;
+    $t('azVolLabel', d.vol_ratio
+      ? (d.vol_ratio >= 1.2 ? 'Above average' : d.vol_ratio < 0.85 ? 'Below average' : 'Near average')
+      : '');
+
+    // Momentum chip
+    const chip    = document.getElementById('azMomentumChip');
+    const chipMap = { 'Running hot': 'hot', 'Selling pressure': 'pressure', 'Grinding higher': 'grind', 'Cooling off': 'cool', 'Quiet day': 'quiet' };
+    chip.textContent = d.momentum_label;
+    chip.className   = 'az-chip ' + (chipMap[d.momentum_label] || 'quiet');
+
+    // Valuation
+    $t('azPE',   d.pe ? d.pe.toFixed(1) : 'N/A');
+    const peTag  = document.getElementById('azPETag');
+    const peMap  = { 'Value territory': 'value', 'Fairly priced': 'fair', 'Growth premium': 'growth', 'Priced for perfection': 'perfection', 'N/A': 'fair' };
+    peTag.textContent = d.pe_label;
+    peTag.className   = 'az-pe-tag ' + (peMap[d.pe_label] || 'fair');
+    $t('azMCap', d.market_cap_fmt);
+
+    // Verdict
+    document.getElementById('azVerdict').innerHTML = formatVerdict(d.verdict);
+
+    show(panel);
+  }
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const ticker = input.value.trim().toUpperCase();
+    if (!ticker) { input.focus(); return; }
+
+    hide(errBox);
+    hide(panel);
+    show(loading);
+    btn.disabled = true;
+
+    try {
+      const res  = await fetch('/analyzer/', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': getCsrf() },
+        body:    'ticker=' + encodeURIComponent(ticker),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        errBox.textContent = data.error || 'Something went wrong. Try again.';
+        show(errBox);
+      } else {
+        render(data);
+      }
+    } catch (_) {
+      errBox.textContent = 'Could not connect. Check your connection and try again.';
+      show(errBox);
+    } finally {
+      hide(loading);
+      btn.disabled = false;
+    }
+  });
+})();
+</script>
+{% endblock %}

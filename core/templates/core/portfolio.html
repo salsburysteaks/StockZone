@@ -106,7 +106,7 @@
       </div>
     </div>
   </div>
-  <img src="{% static 'core/portoflio.png' %}" alt="" class="bull-hero">
+  <img src="{% static 'core/portoflio.png' %}" alt="" class="bull-hero bull-mascot">
 </section>
 
 <main class="page-content">
@@ -160,7 +160,7 @@
       </div>
       {% else %}
       <div style="text-align:center;padding:60px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;">
-        <img src="{% static 'core/portoflio.png' %}" alt="" style="height:200px;width:auto;mix-blend-mode:lighten;opacity:0.9;">
+        <img src="{% static 'core/portoflio.png' %}" alt="" class="bull-mascot" style="height:200px;width:auto;mix-blend-mode:lighten;opacity:0.9;">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;color:#fff;">YOUR PORTFOLIO IS EMPTY</div>
         <p style="color:#666;font-size:0.9rem;margin:0;">Buy your first stock and start building your paper portfolio.</p>
         <a href="#buy-panel" class="btn-purple">Buy Your First Stock</a>
@@ -217,4 +217,5 @@
     });
   });
 </script>
+{% endblock %}
 {% endblock %}

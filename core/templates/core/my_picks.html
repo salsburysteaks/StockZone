@@ -98,7 +98,7 @@
       </div>
     </div>
   </div>
-  <img src="{% static 'core/pick_history.png' %}" class="picks-bull" alt="" style="mix-blend-mode:lighten;opacity:0.9;">
+  <img src="{% static 'core/pick_history.png' %}" class="picks-bull bull-mascot" alt="" style="mix-blend-mode:lighten;opacity:0.9;">
 </section>
 
 <main class="page-content">
@@ -115,7 +115,7 @@
       <div class="picks-table">
         {% for pick in group.picks %}
         <div class="pick-row">
-          <span class="pick-ticker">{{ pick.ticker }}</span>
+          <a href="{% url 'stock_detail' pick.ticker %}" class="pick-ticker" onclick="event.stopPropagation()" style="text-decoration:none;color:inherit;">{{ pick.ticker }}</a>
           <span class="pick-company">{{ pick.company_name }}</span>
           {% if pick.direction == "UP" %}
             <span class="dir-up">▲ UP</span>
@@ -136,7 +136,7 @@
     </div>
   {% else %}
     <div style="text-align:center;padding:60px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;">
-      <img src="{% static 'core/smoke_bull_transparent.png' %}" alt="" style="height:200px;width:auto;">
+      <img src="{% static 'core/smoke_bull_transparent.png' %}" alt="" class="bull-mascot" style="height:200px;width:auto;">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;color:#fff;">NO PICK HISTORY YET</div>
       <p style="color:#666;font-size:0.9rem;margin:0;">Start building your record — make your first parlay today.</p>
       <a href="{% url 'build_parlay' %}" class="btn-purple">Build a Parlay</a>

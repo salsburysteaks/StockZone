@@ -23,6 +23,40 @@
   .player-link:hover { color: #fff; text-shadow: 0 0 8px rgba(153,69,255,0.9); }
   .you-name .player-link { color: #9945FF; }
   @media (max-width: 600px) { .hero-bull-img { display: none !important; } }
+
+  /* ── Tab bar ── */
+  .lb-tabs {
+    display: flex; gap: 0; border-bottom: 1px solid rgba(153,69,255,0.2);
+    margin-bottom: 28px;
+  }
+  .lb-tab {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 2px;
+    padding: 12px 28px; cursor: pointer; color: #555; background: none; border: none;
+    border-bottom: 3px solid transparent; margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+    position: relative;
+  }
+  .lb-tab:hover { color: #c084fc; }
+  .lb-tab.active { color: #fff; border-bottom-color: #9945FF; }
+
+  /* ── Weekly empty ── */
+  .week-empty {
+    text-align: center; padding: 56px 24px;
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+  }
+  .week-empty-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem;
+    letter-spacing: 2px; color: #fff;
+  }
+  .week-empty-sub { font-size: 0.88rem; color: #555; margin: 0; }
+
+  /* ── Crown ── */
+  .crown-icon { display: inline-block; margin-left: 5px; vertical-align: middle; }
+
+  /* ── Record cell ── */
+  .record-val { font-family: 'Roboto Mono', monospace; font-size: 0.85rem; color: #888; }
+  .record-val .w { color: #00ff87; }
+  .record-val .l { color: #ff4757; }
 </style>
 {% endblock %}
 
@@ -31,7 +65,7 @@
   <div>
     <h1>Win Rate <em>Leaderboard</em></h1>
     <div class="hero-underline"></div>
-    <p class="page-hero-sub">Ranked by pick accuracy — who's the sharpest caller on the market?</p>
+    <p class="page-hero-sub">Ranked by pick accuracy — who is the sharpest caller on the market?</p>
     <div class="stat-row">
       <div class="stat-card">
         <div class="stat-label">Players</div>
@@ -51,90 +85,208 @@
       </div>
     </div>
   </div>
-  <img src="{% static 'core/leaderboard.png' %}" class="hero-bull-img" alt="">
+  <img src="{% static 'core/leaderboard.png' %}" class="hero-bull-img bull-mascot" alt="">
 </section>
 
 <main class="page-content">
-  {% if rows %}
-    <div class="podium">
-      {% for row in rows %}{% if row.rank <= 3 %}
-      <div class="pod-card {% if row.rank == 1 %}g{% elif row.rank == 2 %}s{% else %}b{% endif %}">
-        <div class="pod-rank {% if row.rank == 1 %}g{% elif row.rank == 2 %}s{% else %}b{% endif %}">#{{ row.rank }}</div>
-        <div class="pod-name">
-          <a href="{% url 'user_profile' row.username %}" class="player-link">{{ row.username }}</a>
-          {% if row.username == request.user.username %} <span style="color:#9945FF;font-size:0.75rem">(you)</span>{% endif %}
-        </div>
-        <div class="pod-value">{{ row.win_rate }}%</div>
-        <div class="pod-sub">{{ row.total_wins }}W / {{ row.total_picks }} picks</div>
-      </div>
-      {% endif %}{% endfor %}
-    </div>
 
-    <div class="pcard">
-      <div class="pcard-hd">
-        <span class="pcard-title">Full Rankings</span>
-        <span class="pcard-badge">{{ rows|length }} Player{{ rows|length|pluralize }}</span>
+  <!-- Tab bar -->
+  <div class="lb-tabs">
+    <button class="lb-tab active" id="tab-alltime" onclick="setTab('alltime')">All Time</button>
+    <button class="lb-tab" id="tab-week" onclick="setTab('week')">This Week</button>
+  </div>
+
+  <!-- ══ ALL TIME PANEL ══ -->
+  <div id="panel-alltime">
+    {% if rows %}
+      <div class="podium">
+        {% for row in rows %}{% if row.rank <= 3 %}
+        <div class="pod-card {% if row.rank == 1 %}g{% elif row.rank == 2 %}s{% else %}b{% endif %}">
+          <div class="pod-rank {% if row.rank == 1 %}g{% elif row.rank == 2 %}s{% else %}b{% endif %}">#{{ row.rank }}</div>
+          <div class="pod-name">
+            <a href="{% url 'user_profile' row.username %}" class="player-link">{{ row.username }}</a>
+            {% if row.username == request.user.username %} <span style="color:#9945FF;font-size:0.75rem">(you)</span>{% endif %}
+          </div>
+          <div class="pod-value">{{ row.win_rate }}%</div>
+          <div class="pod-sub">{{ row.total_wins }}W / {{ row.total_picks }} picks</div>
+        </div>
+        {% endif %}{% endfor %}
       </div>
-      <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th><th>Player</th><th>Win Rate</th>
-            <th>Wins</th><th>Total Picks</th><th>Hot Streak</th><th>Best Streak</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for row in rows %}
-          <tr>
-            <td class="rank-cell {% if row.rank == 1 %}r1{% elif row.rank == 2 %}r2{% elif row.rank == 3 %}r3{% endif %}">{{ row.rank }}</td>
-            <td class="{% if row.username == request.user.username %}you-name{% else %}tc-ticker{% endif %}">
-              <a href="{% url 'user_profile' row.username %}" class="player-link">
-                {{ row.username }}{% if row.username == request.user.username %} (you){% endif %}
-              </a>
-            </td>
-            <td>
-              <div class="wr-wrap">
-                <div class="wr-bar"><div class="wr-fill" style="width:{{ row.win_rate }}%"></div></div>
-                <span class="wr-val">{{ row.win_rate }}%</span>
-              </div>
-            </td>
-            <td style="color:#00ff87;font-family:'Roboto Mono',monospace">{{ row.total_wins }}</td>
-            <td class="mono">{{ row.total_picks }}</td>
-            <td>
-              {% if row.current_streak > 0 %}
-              <span class="streak-tag">
-                {% if row.current_streak >= 3 %}
-                <svg class="purple-flame" width="18" height="24" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 1C12 1 17 9 17 14C17 14 20 10 18.5 7C22 11 23 16 23 19C23 26.18 18.07 31.5 12 31.5C5.93 31.5 1 26.18 1 19C1 11.5 7.5 5 12 1Z" fill="url(#fg1lb)"/>
-                  <path d="M12 13C12 13 14.5 17.5 14.5 21C14.5 21 16 19 15.5 17C17.5 19.5 18 22.5 18 24C18 27.866 15.314 31 12 31C8.686 31 6 27.866 6 24C6 19.5 9.5 14.5 12 13Z" fill="url(#fg2lb)" opacity="0.85"/>
-                  <path d="M12 20C12 20 13 22 13 24C13 25.105 12.552 26 12 26C11.448 26 11 25.105 11 24C11 22 12 20 12 20Z" fill="#e9d5ff" opacity="0.6"/>
-                  <defs>
-                    <linearGradient id="fg1lb" x1="12" y1="1" x2="12" y2="31.5" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stop-color="#c084fc"/><stop offset="40%" stop-color="#9945FF"/><stop offset="100%" stop-color="#5b21b6"/>
-                    </linearGradient>
-                    <linearGradient id="fg2lb" x1="12" y1="13" x2="12" y2="31" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stop-color="#f0abfc"/><stop offset="100%" stop-color="#7c3aed"/>
-                    </linearGradient>
-                  </defs>
-                </svg>
-                {% endif %}
-                {{ row.current_streak }}
-              </span>
-              {% else %}—{% endif %}
-            </td>
-            <td class="mono" style="color:#ffd700">{% if row.longest_streak > 0 %}{{ row.longest_streak }}{% else %}—{% endif %}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+
+      <div class="pcard">
+        <div class="pcard-hd">
+          <span class="pcard-title">Full Rankings</span>
+          <span class="pcard-badge">{{ rows|length }} Player{{ rows|length|pluralize }}</span>
+        </div>
+        <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Player</th><th>Win Rate</th>
+              <th>Record</th><th>Total Picks</th><th>Hot Streak</th><th>Best Streak</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            <tr>
+              <td class="rank-cell {% if row.rank == 1 %}r1{% elif row.rank == 2 %}r2{% elif row.rank == 3 %}r3{% endif %}">{{ row.rank }}</td>
+              <td class="{% if row.username == request.user.username %}you-name{% else %}tc-ticker{% endif %}">
+                <a href="{% url 'user_profile' row.username %}" class="player-link">
+                  {{ row.username }}{% if row.username == request.user.username %} (you){% endif %}
+                </a>
+              </td>
+              <td>
+                <div class="wr-wrap">
+                  <div class="wr-bar"><div class="wr-fill" style="width:{{ row.win_rate }}%"></div></div>
+                  <span class="wr-val">{{ row.win_rate }}%</span>
+                </div>
+              </td>
+              <td class="record-val"><span class="w">{{ row.total_wins }}W</span> / <span class="l">{{ row.total_losses }}L</span></td>
+              <td class="mono">{{ row.total_picks }}</td>
+              <td>
+                {% if row.current_streak > 0 %}
+                <span class="streak-tag">
+                  {% if row.current_streak >= 3 %}
+                  <svg class="purple-flame" width="18" height="24" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 1C12 1 17 9 17 14C17 14 20 10 18.5 7C22 11 23 16 23 19C23 26.18 18.07 31.5 12 31.5C5.93 31.5 1 26.18 1 19C1 11.5 7.5 5 12 1Z" fill="url(#fg1lb)"/>
+                    <path d="M12 13C12 13 14.5 17.5 14.5 21C14.5 21 16 19 15.5 17C17.5 19.5 18 22.5 18 24C18 27.866 15.314 31 12 31C8.686 31 6 27.866 6 24C6 19.5 9.5 14.5 12 13Z" fill="url(#fg2lb)" opacity="0.85"/>
+                    <path d="M12 20C12 20 13 22 13 24C13 25.105 12.552 26 12 26C11.448 26 11 25.105 11 24C11 22 12 20 12 20Z" fill="#e9d5ff" opacity="0.6"/>
+                    <defs>
+                      <linearGradient id="fg1lb" x1="12" y1="1" x2="12" y2="31.5" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#c084fc"/><stop offset="40%" stop-color="#9945FF"/><stop offset="100%" stop-color="#5b21b6"/>
+                      </linearGradient>
+                      <linearGradient id="fg2lb" x1="12" y1="13" x2="12" y2="31" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#f0abfc"/><stop offset="100%" stop-color="#7c3aed"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  {% endif %}
+                  {{ row.current_streak }}
+                </span>
+                {% else %}—{% endif %}
+              </td>
+              <td class="mono" style="color:#ffd700">{% if row.longest_streak > 0 %}{{ row.longest_streak }}{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        </div>
       </div>
-    </div>
-  {% else %}
-    <div style="text-align:center;padding:60px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;">
-      <img src="{% static 'core/leaderboard.png' %}" alt="" style="height:200px;width:auto;mix-blend-mode:lighten;opacity:0.9;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;color:#fff;">NO PLAYERS YET</div>
-      <p style="color:#666;font-size:0.9rem;margin:0;">Be the first on the board — make your picks and climb to #1.</p>
-    </div>
-  {% endif %}
+    {% else %}
+      <div style="text-align:center;padding:60px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;">
+        <img src="{% static 'core/leaderboard.png' %}" alt="" class="bull-mascot" style="height:200px;width:auto;mix-blend-mode:lighten;opacity:0.9;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;color:#fff;">NO PLAYERS YET</div>
+        <p style="color:#666;font-size:0.9rem;margin:0;">Be the first on the board — make your picks and climb to #1.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ══ THIS WEEK PANEL ══ -->
+  <div id="panel-week" style="display:none;">
+    {% if weekly_rows %}
+      <div class="podium">
+        {% for row in weekly_rows %}{% if row.rank <= 3 %}
+        <div class="pod-card {% if row.rank == 1 %}g{% elif row.rank == 2 %}s{% else %}b{% endif %}">
+          <div class="pod-rank {% if row.rank == 1 %}g{% elif row.rank == 2 %}s{% else %}b{% endif %}">#{{ row.rank }}</div>
+          <div class="pod-name">
+            <a href="{% url 'user_profile' row.username %}" class="player-link">{{ row.username }}</a>
+            {% if row.username == request.user.username %} <span style="color:#9945FF;font-size:0.75rem">(you)</span>{% endif %}
+            {% if row.rank == 1 %}<span class="crown-icon" title="Weekly Leader">&#x1F451;</span>{% endif %}
+          </div>
+          <div class="pod-value">{{ row.win_rate }}%</div>
+          <div class="pod-sub">{{ row.total_wins }}W / {{ row.total_picks }} picks this week</div>
+        </div>
+        {% endif %}{% endfor %}
+      </div>
+
+      <div class="pcard">
+        <div class="pcard-hd">
+          <span class="pcard-title">This Week's Rankings</span>
+          <span class="pcard-badge">{{ weekly_rows|length }} Player{{ weekly_rows|length|pluralize }}</span>
+        </div>
+        <div style="font-size: 0.72rem; color: #444; padding: 8px 16px 2px;">
+          Since {{ week_start|date:"M j" }} &mdash; min 3 picks to qualify
+        </div>
+        <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Player</th><th>Win Rate</th>
+              <th>Record</th><th>Picks</th><th>Streak</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in weekly_rows %}
+            <tr>
+              <td class="rank-cell {% if row.rank == 1 %}r1{% elif row.rank == 2 %}r2{% elif row.rank == 3 %}r3{% endif %}">{{ row.rank }}</td>
+              <td class="{% if row.username == request.user.username %}you-name{% else %}tc-ticker{% endif %}">
+                <a href="{% url 'user_profile' row.username %}" class="player-link">
+                  {{ row.username }}{% if row.username == request.user.username %} (you){% endif %}
+                </a>
+                {% if row.rank == 1 %}<span class="crown-icon" title="Weekly Leader">&#x1F451;</span>{% endif %}
+              </td>
+              <td>
+                <div class="wr-wrap">
+                  <div class="wr-bar"><div class="wr-fill" style="width:{{ row.win_rate }}%"></div></div>
+                  <span class="wr-val">{{ row.win_rate }}%</span>
+                </div>
+              </td>
+              <td class="record-val"><span class="w">{{ row.total_wins }}W</span> / <span class="l">{{ row.total_losses }}L</span></td>
+              <td class="mono">{{ row.total_picks }}</td>
+              <td>
+                {% if row.current_streak > 0 %}
+                <span class="streak-tag">
+                  {% if row.current_streak >= 3 %}
+                  <svg class="purple-flame" width="18" height="24" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 1C12 1 17 9 17 14C17 14 20 10 18.5 7C22 11 23 16 23 19C23 26.18 18.07 31.5 12 31.5C5.93 31.5 1 26.18 1 19C1 11.5 7.5 5 12 1Z" fill="url(#fg1wk)"/>
+                    <path d="M12 13C12 13 14.5 17.5 14.5 21C14.5 21 16 19 15.5 17C17.5 19.5 18 22.5 18 24C18 27.866 15.314 31 12 31C8.686 31 6 27.866 6 24C6 19.5 9.5 14.5 12 13Z" fill="url(#fg2wk)" opacity="0.85"/>
+                    <path d="M12 20C12 20 13 22 13 24C13 25.105 12.552 26 12 26C11.448 26 11 25.105 11 24C11 22 12 20 12 20Z" fill="#e9d5ff" opacity="0.6"/>
+                    <defs>
+                      <linearGradient id="fg1wk" x1="12" y1="1" x2="12" y2="31.5" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#c084fc"/><stop offset="40%" stop-color="#9945FF"/><stop offset="100%" stop-color="#5b21b6"/>
+                      </linearGradient>
+                      <linearGradient id="fg2wk" x1="12" y1="13" x2="12" y2="31" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#f0abfc"/><stop offset="100%" stop-color="#7c3aed"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  {% endif %}
+                  {{ row.current_streak }}
+                </span>
+                {% else %}—{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        </div>
+      </div>
+    {% else %}
+      <div class="pcard">
+        <div class="week-empty">
+          <div class="week-empty-title">No Picks This Week Yet</div>
+          <p class="week-empty-sub">Make at least 3 picks since {{ week_start|date:"M j" }} to appear on the weekly board.</p>
+          <a href="{% url 'build_parlay' %}" class="btn-purple">Make Picks</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
 </main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function setTab(tab) {
+    document.querySelectorAll('.lb-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('[id^="panel-"]').forEach(function(p) { p.style.display = 'none'; });
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('panel-' + tab).style.display = '';
+    history.replaceState(null, '', location.pathname + (tab === 'week' ? '#week' : ''));
+  }
+
+  (function () {
+    if (location.hash === '#week') setTab('week');
+  })();
+</script>
 {% endblock %}

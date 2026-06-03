@@ -1,0 +1,443 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block page_title %}{{ ticker }} — StockZone{% endblock %}
+{% block active_nav %}dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Hero ── */
+  .sd-hero {
+    padding: 36px 48px 32px;
+    background: linear-gradient(180deg, #150832 0%, #0c0720 100%);
+    border-bottom: 1px solid rgba(153,69,255,0.3);
+    position: relative; overflow: hidden;
+  }
+  .sd-hero::before {
+    content: ''; position: absolute; top: -60px; right: -60px;
+    width: 300px; height: 300px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(153,69,255,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .sd-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.78rem; font-weight: 600; color: #555; text-decoration: none;
+    margin-bottom: 18px; transition: color 0.15s;
+  }
+  .sd-back:hover { color: #9945FF; }
+  .sd-hero-inner { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .sd-left { flex: 1; min-width: 0; }
+  .sd-ticker {
+    font-family: 'Bebas Neue', sans-serif; font-size: 4.5rem; color: #fff;
+    letter-spacing: 3px; line-height: 1;
+    text-shadow: 0 0 40px rgba(153,69,255,0.4);
+  }
+  .sd-name   { font-size: 1.05rem; color: #aaa; font-weight: 500; margin-top: 4px; }
+  .sd-sector {
+    display: inline-block; margin-top: 8px;
+    font-size: 0.65rem; font-weight: 700; color: #9945FF;
+    background: rgba(153,69,255,0.1); border: 1px solid rgba(153,69,255,0.3);
+    border-radius: 20px; padding: 3px 12px; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .sd-right { text-align: right; flex-shrink: 0; }
+  .sd-price {
+    font-size: 3rem; font-weight: 800; color: #fff;
+    font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 10px;
+    text-shadow: 0 0 16px rgba(255,255,255,0.1);
+  }
+  .sd-day-pct {
+    display: inline-block; font-size: 1.3rem; font-weight: 700;
+    padding: 7px 20px; border-radius: 10px; font-variant-numeric: tabular-nums;
+    margin-bottom: 16px;
+  }
+  .sd-day-pct.pos { color: #00ff87; background: rgba(0,255,135,0.1); border: 1px solid rgba(0,255,135,0.4); box-shadow: 0 0 16px rgba(0,255,135,0.4); text-shadow: 0 0 8px rgba(0,255,135,0.9); }
+  .sd-day-pct.neg { color: #ff4757; background: rgba(255,71,87,0.1);  border: 1px solid rgba(255,71,87,0.4);  box-shadow: 0 0 16px rgba(255,71,87,0.4);  text-shadow: 0 0 8px rgba(255,71,87,0.9); }
+  .sd-pick-btn {
+    display: inline-block; padding: 12px 28px; border-radius: 8px;
+    background: #9945FF; color: #fff; font-size: 0.9rem; font-weight: 700;
+    text-decoration: none; letter-spacing: 0.3px; white-space: nowrap;
+    transition: background 0.15s, box-shadow 0.15s;
+    box-shadow: 0 0 20px rgba(153,69,255,0.4);
+  }
+  .sd-pick-btn:hover { background: #7c2ee0; box-shadow: 0 0 28px rgba(153,69,255,0.6); }
+
+  /* ── Sections ── */
+  .sd-content { display: flex; flex-direction: column; gap: 24px; padding: 24px 48px 60px; }
+  .sd-card {
+    background: rgba(153,69,255,0.06); border: 1px solid rgba(153,69,255,0.22);
+    border-radius: 16px; overflow: hidden;
+  }
+  .sd-card-hd {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px; border-bottom: 1px solid rgba(153,69,255,0.15);
+    background: rgba(153,69,255,0.04);
+  }
+  .sd-card-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1rem;
+    letter-spacing: 2px; color: #fff;
+  }
+
+  /* ── Chart ── */
+  .sd-chart-wrap { padding: 0 24px 20px; }
+  .sd-timeframe-bar { display: flex; gap: 6px; padding: 16px 24px 0; }
+  .sd-tf {
+    font-size: 0.72rem; font-weight: 700; padding: 5px 14px; border-radius: 6px;
+    cursor: pointer; background: none; border: 1px solid rgba(153,69,255,0.25);
+    color: #555; font-family: inherit; transition: all 0.15s;
+  }
+  .sd-tf:hover { color: #c084fc; border-color: rgba(153,69,255,0.5); }
+  .sd-tf.active { color: #9945FF; border-color: #9945FF; background: rgba(153,69,255,0.1); box-shadow: 0 0 10px rgba(153,69,255,0.2); }
+  canvas#priceChart { display: block; width: 100% !important; }
+
+  /* ── Key Stats ── */
+  .sd-stats-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 20px 24px; }
+  .sd-stats-row { display: flex; gap: 0; min-width: 680px; }
+  .sd-stat { flex: 1; padding: 0 20px; border-right: 1px solid rgba(153,69,255,0.15); }
+  .sd-stat:first-child { padding-left: 0; }
+  .sd-stat:last-child  { border-right: none; }
+  .sd-stat-lbl { font-size: 0.6rem; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px; }
+  .sd-stat-val { font-family: 'Roboto Mono', monospace; font-size: 1rem; font-weight: 700; color: #fff; }
+  .sd-stat-val.green { color: #00ff87; text-shadow: 0 0 8px rgba(0,255,135,0.5); }
+  .sd-stat-val.red   { color: #ff4757; }
+  .sd-stat-val.gold  { color: #ffd700; }
+  .sd-stat-val.purple { color: #c084fc; }
+
+  /* ── Verdict ── */
+  .sd-verdict { padding: 22px 24px; line-height: 1.75; font-size: 0.92rem; color: #ccc; }
+  .sd-verdict-number { color: #9945FF; font-weight: 700; font-family: 'Roboto Mono', monospace; }
+
+  /* ── News ── */
+  .sd-news-list { padding: 8px 0; }
+  .sd-news-item {
+    display: block; padding: 13px 24px; border-bottom: 1px solid rgba(153,69,255,0.08);
+    text-decoration: none; transition: background 0.12s;
+  }
+  .sd-news-item:last-child { border-bottom: none; }
+  .sd-news-item:hover { background: rgba(153,69,255,0.1); }
+  .sd-news-title { font-size: 0.84rem; color: #ddd; font-weight: 500; line-height: 1.35; margin-bottom: 4px; }
+  .sd-news-pub   { font-size: 0.68rem; color: #555; }
+
+  /* ── Community Activity ── */
+  .sd-activity { padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; }
+  .sd-act-row { display: flex; gap: 0; }
+  .sd-act-stat { flex: 1; text-align: center; padding: 0 16px; border-right: 1px solid rgba(153,69,255,0.15); }
+  .sd-act-stat:last-child { border-right: none; }
+  .sd-act-val { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: 1px; color: #fff; line-height: 1; }
+  .sd-act-lbl { font-size: 0.62rem; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+  .sd-bar-wrap { display: flex; gap: 0; border-radius: 6px; overflow: hidden; height: 8px; }
+  .sd-bar-up   { background: rgba(0,255,135,0.7); transition: width 0.6s ease; }
+  .sd-bar-dn   { background: rgba(255,71,87,0.7); transition: width 0.6s ease; }
+  .sd-bar-legend { display: flex; gap: 20px; font-size: 0.68rem; font-weight: 700; }
+  .sd-bar-legend .up { color: #00ff87; }
+  .sd-bar-legend .dn { color: #ff4757; }
+
+  /* ── Range bar ── */
+  .sd-range-track { height: 4px; background: rgba(153,69,255,0.2); border-radius: 2px; margin-top: 14px; position: relative; }
+  .sd-range-fill  { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #ff4757, #ffd700, #00ff87); }
+  .sd-range-dot   { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; border-radius: 50%; background: #fff; border: 2px solid #9945FF; box-shadow: 0 0 8px rgba(153,69,255,0.8); }
+
+  @media (max-width: 768px) {
+    .sd-hero { padding: 20px 16px 24px; }
+    .sd-ticker { font-size: 3rem; }
+    .sd-price  { font-size: 2.2rem; }
+    .sd-content { padding: 16px 16px 60px; }
+    .sd-card-hd { padding: 12px 16px; }
+    .sd-chart-wrap { padding: 0 16px 16px; }
+    .sd-timeframe-bar { padding: 12px 16px 0; }
+    .sd-stats-scroll { padding: 16px 16px; }
+    .sd-verdict { padding: 16px 16px; }
+    .sd-news-item { padding: 11px 16px; }
+    .sd-activity { padding: 16px 16px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ══ Hero ══ -->
+<div class="sd-hero">
+  <a href="javascript:history.back()" class="sd-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back
+  </a>
+  <div class="sd-hero-inner">
+    <div class="sd-left">
+      <div class="sd-ticker">{{ ticker }}</div>
+      <div class="sd-name">{{ name }}</div>
+      {% if sector %}<div class="sd-sector">{{ sector }}</div>{% endif %}
+    </div>
+    <div class="sd-right">
+      <div class="sd-price">${{ price|floatformat:2 }}</div>
+      {% if day_pct is not None %}
+      <div class="sd-day-pct {% if day_pct >= 0 %}pos{% else %}neg{% endif %}">
+        {% if day_pct >= 0 %}+{% endif %}{{ day_pct|floatformat:2 }}%
+      </div>
+      {% endif %}
+      <br>
+      <a href="{% url 'build_parlay' %}?pick={{ ticker }}" class="sd-pick-btn">+ Pick This Stock</a>
+    </div>
+  </div>
+</div>
+
+<div class="sd-content">
+
+  <!-- ══ Price Chart ══ -->
+  <div class="sd-card">
+    <div class="sd-card-hd">
+      <span class="sd-card-title">Price Chart</span>
+      <div class="sd-timeframe-bar" style="padding:0;border:none;">
+        <button class="sd-tf" data-period="1w">1W</button>
+        <button class="sd-tf active" data-period="1m">1M</button>
+        <button class="sd-tf" data-period="3m">3M</button>
+        <button class="sd-tf" data-period="1y">1Y</button>
+      </div>
+    </div>
+    <div class="sd-chart-wrap" style="padding-top:20px;">
+      <canvas id="priceChart" height="120"></canvas>
+    </div>
+  </div>
+
+  <!-- ══ Key Stats ══ -->
+  <div class="sd-card">
+    <div class="sd-card-hd">
+      <span class="sd-card-title">Key Stats</span>
+    </div>
+    <div class="sd-stats-scroll">
+      <div class="sd-stats-row">
+        <div class="sd-stat">
+          <div class="sd-stat-lbl">Current Price</div>
+          <div class="sd-stat-val green">${{ price|floatformat:2 }}</div>
+        </div>
+        <div class="sd-stat">
+          <div class="sd-stat-lbl">Prev Close</div>
+          <div class="sd-stat-val">{% if prev_close %}${{ prev_close|floatformat:2 }}{% else %}N/A{% endif %}</div>
+        </div>
+        <div class="sd-stat">
+          <div class="sd-stat-lbl">52W High</div>
+          <div class="sd-stat-val gold">{% if week52_high %}${{ week52_high|floatformat:2 }}{% else %}N/A{% endif %}</div>
+        </div>
+        <div class="sd-stat">
+          <div class="sd-stat-lbl">52W Low</div>
+          <div class="sd-stat-val red">{% if week52_low %}${{ week52_low|floatformat:2 }}{% else %}N/A{% endif %}</div>
+        </div>
+        <div class="sd-stat">
+          <div class="sd-stat-lbl">Volume</div>
+          <div class="sd-stat-val purple">{{ volume_fmt }}</div>
+        </div>
+        <div class="sd-stat">
+          <div class="sd-stat-lbl">Avg Volume</div>
+          <div class="sd-stat-val">{{ avg_volume_fmt }}</div>
+        </div>
+        <div class="sd-stat">
+          <div class="sd-stat-lbl">Market Cap</div>
+          <div class="sd-stat-val">{{ market_cap_fmt }}</div>
+        </div>
+        <div class="sd-stat">
+          <div class="sd-stat-lbl">P/E Ratio</div>
+          <div class="sd-stat-val">{% if pe %}{{ pe }}{% else %}N/A{% endif %}</div>
+        </div>
+      </div>
+      {% if range_pct is not None and week52_low and week52_high %}
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(153,69,255,0.1);">
+        <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:#444;margin-bottom:6px;">
+          <span>52W Low ${{ week52_low|floatformat:2 }}</span>
+          <span style="color:#9945FF;font-weight:700;">{{ range_pct }}% of range</span>
+          <span>52W High ${{ week52_high|floatformat:2 }}</span>
+        </div>
+        <div class="sd-range-track">
+          <div class="sd-range-fill" style="width:{{ range_pct }}%"></div>
+          <div class="sd-range-dot"  style="left:{{ range_pct }}%"></div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ══ Analyst Verdict ══ -->
+  <div class="sd-card">
+    <div class="sd-card-hd">
+      <span class="sd-card-title">Analyst Verdict</span>
+      <span style="font-size:0.65rem;color:#555;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Bullish AI</span>
+    </div>
+    <div class="sd-verdict" id="verdictText">{{ verdict }}</div>
+  </div>
+
+  <!-- ══ Latest News ══ -->
+  <div class="sd-card">
+    <div class="sd-card-hd">
+      <span class="sd-card-title">Latest News</span>
+    </div>
+    <div class="sd-news-list">
+      {% if news %}
+        {% for article in news %}
+        <a href="{{ article.link }}" target="_blank" rel="noopener" class="sd-news-item">
+          <div class="sd-news-title">{{ article.title }}</div>
+          <div class="sd-news-pub">{{ article.publisher }}</div>
+        </a>
+        {% endfor %}
+      {% else %}
+        <div style="padding:24px;text-align:center;color:#444;font-size:0.84rem;">No recent news found.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ══ StockZone Activity ══ -->
+  <div class="sd-card">
+    <div class="sd-card-hd">
+      <span class="sd-card-title">StockZone Activity</span>
+      {% if sz_total %}
+      <span style="font-size:0.7rem;color:#555;">{{ sz_total }} pick{{ sz_total|pluralize }} all time</span>
+      {% endif %}
+    </div>
+    {% if sz_total %}
+    <div class="sd-activity">
+      <div class="sd-act-row">
+        <div class="sd-act-stat">
+          <div class="sd-act-val" style="color:#9945FF;">{{ sz_total }}</div>
+          <div class="sd-act-lbl">Total Picks</div>
+        </div>
+        {% if sz_up_pct is not None %}
+        <div class="sd-act-stat">
+          <div class="sd-act-val" style="color:#00ff87;">{{ sz_up_pct }}%</div>
+          <div class="sd-act-lbl">Picked UP</div>
+        </div>
+        <div class="sd-act-stat">
+          <div class="sd-act-val" style="color:#ff4757;">{{ sz_down_pct }}%</div>
+          <div class="sd-act-lbl">Picked DOWN</div>
+        </div>
+        {% endif %}
+        {% if sz_win_rate is not None %}
+        <div class="sd-act-stat">
+          <div class="sd-act-val" style="color:#ffd700;">{{ sz_win_rate }}%</div>
+          <div class="sd-act-lbl">Win Rate</div>
+        </div>
+        {% endif %}
+      </div>
+      {% if sz_up_pct is not None %}
+      <div>
+        <div class="sd-bar-legend" style="margin-bottom:8px;">
+          <span class="up">▲ UP {{ sz_up_pct }}%</span>
+          <span class="dn">▼ DOWN {{ sz_down_pct }}%</span>
+        </div>
+        <div class="sd-bar-wrap">
+          <div class="sd-bar-up" style="width:{{ sz_up_pct }}%"></div>
+          <div class="sd-bar-dn" style="width:{{ sz_down_pct }}%"></div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
+    <div style="padding:32px;text-align:center;color:#444;font-size:0.88rem;">
+      No one has picked {{ ticker }} yet. Be the first.
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  const TICKER = '{{ ticker }}';
+
+  /* ── Highlight numbers in verdict ── */
+  (function () {
+    const el = document.getElementById('verdictText');
+    el.innerHTML = el.innerHTML.replace(
+      /(\$[\d,]+(?:\.\d+)?|\d+(?:\.\d+)?x|\d+(?:\.\d+)?%)/g,
+      '<span class="sd-verdict-number">$1</span>'
+    );
+  })();
+
+  /* ── Chart setup ── */
+  const initLabels = {{ chart_labels|safe }};
+  const initData   = {{ chart_data|safe }};
+
+  const ctx = document.getElementById('priceChart').getContext('2d');
+
+  function makeGradient(ctx, isPos) {
+    const grad = ctx.createLinearGradient(0, 0, 0, 300);
+    if (isPos) {
+      grad.addColorStop(0, 'rgba(153,69,255,0.35)');
+      grad.addColorStop(1, 'rgba(153,69,255,0)');
+    } else {
+      grad.addColorStop(0, 'rgba(255,71,87,0.25)');
+      grad.addColorStop(1, 'rgba(255,71,87,0)');
+    }
+    return grad;
+  }
+
+  function isPositive(data) {
+    return data.length < 2 || data[data.length - 1] >= data[0];
+  }
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: initLabels,
+      datasets: [{
+        data: initData,
+        borderColor: isPositive(initData) ? '#9945FF' : '#ff4757',
+        borderWidth: 2.5,
+        tension: 0.35,
+        fill: true,
+        backgroundColor: makeGradient(ctx, isPositive(initData)),
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#9945FF',
+        pointHoverBorderColor: '#fff',
+        pointHoverBorderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0e0820',
+          borderColor: 'rgba(153,69,255,0.4)',
+          borderWidth: 1,
+          titleColor: '#888',
+          bodyColor: '#fff',
+          bodyFont: { family: "'Roboto Mono', monospace", size: 13 },
+          callbacks: {
+            label: ctx => ' $' + ctx.parsed.y.toFixed(2),
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#444', font: { size: 10 }, maxTicksLimit: 8 },
+          border: { display: false },
+        },
+        y: {
+          position: 'right',
+          grid: { color: 'rgba(153,69,255,0.07)' },
+          ticks: { color: '#555', font: { family: "'Roboto Mono', monospace", size: 10 }, callback: v => '$' + v.toFixed(0) },
+          border: { display: false },
+        },
+      },
+      interaction: { mode: 'index', intersect: false },
+    },
+  });
+
+  /* ── Timeframe buttons ── */
+  document.querySelectorAll('.sd-tf').forEach(btn => {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.sd-tf').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      fetch(`/stock/${TICKER}/chart/?period=${this.dataset.period}`)
+        .then(r => r.json())
+        .then(d => {
+          const pos = isPositive(d.data);
+          chart.data.labels = d.labels;
+          chart.data.datasets[0].data = d.data;
+          chart.data.datasets[0].borderColor = pos ? '#9945FF' : '#ff4757';
+          chart.data.datasets[0].backgroundColor = makeGradient(ctx, pos);
+          chart.update();
+        });
+    });
+  });
+</script>
+{% endblock %}

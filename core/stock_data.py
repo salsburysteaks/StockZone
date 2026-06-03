@@ -1,9 +1,6 @@
-import time
 from datetime import datetime, timedelta
 import yfinance as yf
-
-_cache = {"data": None, "timestamp": 0}
-CACHE_TTL = 60
+from django.core.cache import cache
 
 SECTOR_TICKERS = {
     "Technology": ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMD", "INTC", "CRM", "AVGO", "QCOM", "TXN", "ADBE", "MU", "AMAT", "ORCL"],
@@ -95,9 +92,9 @@ def calculate_future_odds(realized_vol, timeframe):
 
 
 def get_top_stocks_by_sector(top_n=5):
-    global _cache
-    if _cache["data"] and time.time() - _cache["timestamp"] < CACHE_TTL:
-        return _cache["data"]
+    cached = cache.get('top_stocks')
+    if cached is not None:
+        return cached
 
     end   = datetime.today()
     start = end - timedelta(days=7)
@@ -169,5 +166,18 @@ def get_top_stocks_by_sector(top_n=5):
         sector_stocks.sort(key=lambda x: x["momentum"], reverse=True)
         all_results.extend(sector_stocks[:top_n])
 
-    _cache = {"data": all_results, "timestamp": time.time()}
+    # Overlay live price and momentum for the displayed tickers only
+    for stock in all_results:
+        try:
+            info = yf.Ticker(stock["ticker"]).fast_info
+            live_price = info.last_price
+            prev_close = info.previous_close
+            if live_price and prev_close and prev_close > 0:
+                stock["price"]      = round(float(live_price), 2)
+                stock["prev_close"] = round(float(prev_close), 2)
+                stock["momentum"]   = round(((live_price - prev_close) / prev_close) * 100, 2)
+        except Exception:
+            pass
+
+    cache.set('top_stocks', all_results, timeout=55)
     return all_results

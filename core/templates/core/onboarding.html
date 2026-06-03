@@ -1,0 +1,544 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to StockZone</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, #080612 0%, #0a0818 100%);
+      background-attachment: fixed;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Background ── */
+    .bg-layer {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+    }
+    .bg-grid {
+      position: absolute; inset: 0;
+      background-image:
+        repeating-linear-gradient(rgba(153,69,255,0.06) 0px, rgba(153,69,255,0.06) 1px, transparent 1px, transparent 40px),
+        repeating-linear-gradient(90deg, rgba(153,69,255,0.06) 0px, rgba(153,69,255,0.06) 1px, transparent 1px, transparent 40px);
+      animation: grid-pulse 4s ease-in-out infinite;
+    }
+    @keyframes grid-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+    .bg-left-border {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+      background: linear-gradient(180deg, transparent 0%, #9945FF 15%, #9945FF 85%, transparent 100%);
+      box-shadow: 0 0 8px rgba(153,69,255,0.6), 0 0 20px rgba(153,69,255,0.2);
+    }
+    .bg-particle {
+      position: absolute; border-radius: 50%; background: #9945FF;
+      animation: particle-rise linear infinite;
+    }
+    @keyframes particle-rise {
+      0%   { transform: translateY(0);      opacity: 0; }
+      8%   { opacity: 1; }
+      90%  { opacity: 0.6; }
+      100% { transform: translateY(-100vh); opacity: 0; }
+    }
+    .green-particle {
+      position: absolute; color: rgba(0,255,135,0.3); line-height: 1;
+      pointer-events: none; user-select: none;
+      animation: green-rise linear infinite;
+    }
+    @keyframes green-rise {
+      0%   { transform: translateY(0);      opacity: 0; }
+      8%   { opacity: 1; }
+      90%  { opacity: 0.5; }
+      100% { transform: translateY(-105vh); opacity: 0; }
+    }
+
+    /* ── Card ── */
+    .ob-wrap {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 520px;
+      padding: 20px 16px;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .ob-card {
+      width: 100%;
+      background: linear-gradient(160deg, rgba(21,8,50,0.97) 0%, rgba(12,7,32,0.98) 100%);
+      border: 1px solid rgba(153,69,255,0.5);
+      border-radius: 20px;
+      box-shadow: 0 0 60px rgba(153,69,255,0.25), 0 24px 80px rgba(0,0,0,0.7);
+      overflow: hidden;
+    }
+
+    /* ── Header bar ── */
+    .ob-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px;
+      border-bottom: 1px solid rgba(153,69,255,0.2);
+      background: rgba(153,69,255,0.06);
+    }
+    .ob-brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem; letter-spacing: 2px; color: #9945FF;
+      text-shadow: 0 0 10px rgba(153,69,255,0.7);
+    }
+    .ob-skip-top {
+      font-size: 0.72rem; font-weight: 600; color: #444;
+      background: none; border: none; cursor: pointer;
+      font-family: inherit; padding: 4px 8px; border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .ob-skip-top:hover { color: #777; background: rgba(255,255,255,0.05); }
+
+    /* ── Step dots ── */
+    .ob-dots {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 20px 24px 0;
+    }
+    .ob-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(153,69,255,0.2);
+      border: 1px solid rgba(153,69,255,0.3);
+      transition: background 0.25s, box-shadow 0.25s, transform 0.25s;
+    }
+    .ob-dot.active {
+      background: #9945FF;
+      box-shadow: 0 0 10px rgba(153,69,255,0.8);
+      transform: scale(1.35);
+    }
+    .ob-dot.done {
+      background: rgba(153,69,255,0.5);
+    }
+    .ob-step-label {
+      text-align: center;
+      font-size: 0.65rem; font-weight: 700; color: #444;
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-top: 8px;
+    }
+
+    /* ── Step panes ── */
+    .ob-pane { display: none; padding: 28px 32px 24px; }
+    .ob-pane.active { display: block; }
+
+    /* ── Step content shared styles ── */
+    .ob-eyebrow {
+      font-size: 0.65rem; font-weight: 700; color: #9945FF;
+      text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;
+    }
+    .ob-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.4rem; line-height: 1; color: #fff;
+      letter-spacing: 1px; margin-bottom: 14px;
+    }
+    .ob-title em { font-style: normal; color: #9945FF; text-shadow: 0 0 10px rgba(153,69,255,0.8); }
+    .ob-body {
+      font-size: 0.88rem; color: #999; line-height: 1.65; margin-bottom: 6px;
+    }
+    .ob-body strong { color: #ccc; font-weight: 600; }
+
+    /* ── Step 1 bull ── */
+    .ob-bull-wrap {
+      text-align: center; margin: 4px 0 20px;
+    }
+    .ob-bull-wrap img {
+      height: 160px; width: auto;
+      mix-blend-mode: lighten; opacity: 0.9;
+      filter: drop-shadow(0 0 24px rgba(153,69,255,0.5));
+    }
+    .bull-mascot {
+      transform-origin: bottom center;
+      transition: transform 0.3s ease, filter 0.3s ease;
+      animation: bull-pulse 2.5s ease-in-out infinite;
+      will-change: transform;
+    }
+    @keyframes bull-pulse {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.06); }
+    }
+    .bull-mascot:hover {
+      animation: none;
+      transform: scale(1.12) rotate(2deg);
+      filter: drop-shadow(0 0 12px #9945FF);
+    }
+
+    /* ── Step 1 copy ── */
+    .ob-subheading {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem; font-weight: 600;
+      color: #9945FF; letter-spacing: 0.3px;
+      margin-bottom: 16px;
+      text-shadow: 0 0 12px rgba(153,69,255,0.5);
+    }
+    .ob-mission {
+      font-family: 'Inter', sans-serif;
+      font-size: 15px; color: #fff; line-height: 1.7;
+      max-width: 480px; margin: 0 auto 16px;
+    }
+    .ob-tagline {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem; color: #444;
+      text-align: center; letter-spacing: 0.5px;
+    }
+
+    /* ── Step 2 pick list ── */
+    .ob-pick-list { margin: 20px 0 6px; display: flex; flex-direction: column; gap: 10px; }
+    .ob-pick-item {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(153,69,255,0.08);
+      border: 1px solid rgba(153,69,255,0.2);
+      border-radius: 10px; padding: 12px 16px;
+    }
+    .ob-pick-icon {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 700;
+    }
+    .ob-pick-icon.up   { background: rgba(0,255,135,0.1); color: #00ff87; border: 1px solid rgba(0,255,135,0.3); }
+    .ob-pick-icon.down { background: rgba(255,71,87,0.1);  color: #ff4757; border: 1px solid rgba(255,71,87,0.3);  }
+    .ob-pick-icon.win  { background: rgba(153,69,255,0.12); color: #9945FF; border: 1px solid rgba(153,69,255,0.3); font-size: 1rem; }
+    .ob-pick-text { font-size: 0.82rem; color: #bbb; line-height: 1.4; }
+    .ob-pick-text strong { color: #e0e0e0; }
+
+    /* ── Step 3 parlay slip ── */
+    .ob-slip {
+      margin: 20px 0 6px;
+      background: rgba(8,6,18,0.7);
+      border: 1px solid rgba(153,69,255,0.35);
+      border-radius: 12px; overflow: hidden;
+    }
+    .ob-slip-hd {
+      padding: 10px 16px;
+      background: rgba(153,69,255,0.12);
+      border-bottom: 1px solid rgba(153,69,255,0.2);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.95rem; letter-spacing: 2px; color: #9945FF;
+    }
+    .ob-slip-row {
+      display: flex; align-items: center;
+      padding: 9px 16px;
+      border-bottom: 1px solid rgba(153,69,255,0.08);
+      gap: 10px;
+    }
+    .ob-slip-row:last-of-type { border-bottom: none; }
+    .ob-slip-ticker { font-weight: 800; color: #fff; font-size: 0.85rem; min-width: 46px; }
+    .ob-slip-dir {
+      font-size: 0.68rem; font-weight: 700;
+      padding: 2px 8px; border-radius: 4px; flex-shrink: 0;
+    }
+    .ob-slip-dir.up {
+      color: #00ff87; background: rgba(0,255,135,0.08);
+      border: 1px solid rgba(0,255,135,0.35);
+    }
+    .ob-slip-dir.dn {
+      color: #ff4757; background: rgba(255,71,87,0.08);
+      border: 1px solid rgba(255,71,87,0.35);
+    }
+    .ob-slip-odds {
+      margin-left: auto;
+      font-family: 'Roboto Mono', monospace; font-size: 0.75rem;
+      color: #666;
+    }
+    .ob-slip-sep { height: 1px; background: rgba(153,69,255,0.2); margin: 0 16px; }
+    .ob-slip-total {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 16px;
+      font-size: 0.72rem; color: #555;
+      border-bottom: 1px solid rgba(153,69,255,0.07);
+    }
+    .ob-slip-total:last-child { border-bottom: none; }
+    .ob-slip-total-val { font-family: 'Roboto Mono', monospace; font-weight: 600; }
+    .ob-slip-total-val.mult   { color: #9945FF; }
+    .ob-slip-total-val.payout { color: #00ff87; font-size: 0.85rem; text-shadow: 0 0 8px rgba(0,255,135,0.7); }
+
+    /* ── Step 4 balance display ── */
+    .ob-balance-card {
+      margin: 20px 0 6px;
+      background: rgba(153,69,255,0.1);
+      border: 1px solid rgba(153,69,255,0.4);
+      border-radius: 12px; padding: 18px 20px;
+      box-shadow: 0 0 20px rgba(153,69,255,0.15);
+    }
+    .ob-balance-label {
+      font-size: 0.65rem; font-weight: 700; color: #555;
+      text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;
+    }
+    .ob-balance-amount {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 2.2rem; font-weight: 600; color: #00ff87;
+      text-shadow: 0 0 10px rgba(0,255,135,0.8), 0 0 20px rgba(0,255,135,0.4);
+      line-height: 1; margin-bottom: 10px;
+    }
+    .ob-balance-sub { font-size: 0.8rem; color: #555; line-height: 1.5; }
+    .ob-actions-row {
+      display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;
+    }
+    .ob-action-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.72rem; font-weight: 600; padding: 6px 12px; border-radius: 6px;
+    }
+    .ob-action-chip.buy  { color: #00ff87; background: rgba(0,255,135,0.08); border: 1px solid rgba(0,255,135,0.25); }
+    .ob-action-chip.sell { color: #ff4757; background: rgba(255,71,87,0.08);  border: 1px solid rgba(255,71,87,0.25);  }
+    .ob-action-chip.safe { color: #9945FF; background: rgba(153,69,255,0.08); border: 1px solid rgba(153,69,255,0.25); }
+
+    /* ── Bottom navigation ── */
+    .ob-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 32px 24px; gap: 12px;
+    }
+    .ob-skip-btn {
+      font-size: 0.78rem; font-weight: 600; color: #444;
+      background: none; border: none; cursor: pointer;
+      font-family: inherit; padding: 8px 4px;
+      transition: color 0.15s;
+    }
+    .ob-skip-btn:hover { color: #666; }
+    .ob-next-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 28px; border-radius: 8px;
+      font-size: 0.9rem; font-weight: 700;
+      background: #9945FF; color: #fff;
+      border: none; cursor: pointer; font-family: inherit;
+      letter-spacing: 0.2px;
+      transition: background 0.15s, box-shadow 0.15s;
+      box-shadow: 0 0 18px rgba(153,69,255,0.5);
+    }
+    .ob-next-btn:hover { background: #7c2ee0; box-shadow: 0 0 28px rgba(153,69,255,0.7); }
+    .ob-next-btn .arrow { transition: transform 0.15s; }
+    .ob-next-btn:hover .arrow { transform: translateX(3px); }
+
+    @media (max-width: 540px) {
+      .ob-pane { padding: 22px 20px 20px; }
+      .ob-nav  { padding: 14px 20px 20px; }
+      .ob-title { font-size: 2rem; }
+      .ob-bull-wrap img { height: 130px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Background ── -->
+  <div class="bg-layer" aria-hidden="true">
+    <div class="bg-grid"></div>
+    <div class="bg-left-border"></div>
+    <div id="bgParticles"></div>
+    <div id="greenParticles"></div>
+  </div>
+
+  <!-- ── Complete form (shared by Skip and Let's Go) ── -->
+  <form id="obForm" method="POST" action="{% url 'onboarding' %}">
+    {% csrf_token %}
+  </form>
+
+  <!-- ── Card ── -->
+  <div class="ob-wrap">
+    <div class="ob-card">
+
+      <!-- Header -->
+      <div class="ob-header">
+        <span class="ob-brand">StockZone</span>
+        <button class="ob-skip-top" type="button" id="obSkipTop">Skip intro</button>
+      </div>
+
+      <!-- Step dots -->
+      <div class="ob-dots" id="obDots">
+        <div class="ob-dot active" data-dot="1"></div>
+        <div class="ob-dot" data-dot="2"></div>
+        <div class="ob-dot" data-dot="3"></div>
+        <div class="ob-dot" data-dot="4"></div>
+      </div>
+      <div class="ob-step-label" id="obStepLabel">Step 1 of 4</div>
+
+      <!-- ── Step 1: Welcome ── -->
+      <div class="ob-pane active" data-step="1">
+        <div class="ob-bull-wrap">
+          <img src="{% static 'core/hype_bull.png' %}" alt="StockZone bull mascot" class="bull-mascot">
+        </div>
+        <div class="ob-title">WELCOME TO<br><em>STOCKZONE</em></div>
+        <p class="ob-subheading">Where the sportsbook meets Wall Street</p>
+        <p class="ob-mission">
+          Sports betting is taking over and it is designed to make you lose. StockZone changes that. We took everything you love about the energy of a sportsbook and built it around something that can actually build your wealth. Real stocks. Real market data. Real financial education. Whether you are here to compete, learn, or both, Bullish and the entire StockZone platform are here to make sure you leave knowing more than when you came in.
+        </p>
+        <p class="ob-tagline">Built for the next generation of investors</p>
+      </div>
+
+      <!-- ── Step 2: How Picks Work ── -->
+      <div class="ob-pane" data-step="2">
+        <div class="ob-eyebrow">Daily Picks</div>
+        <div class="ob-title">How <em>Picks</em><br>Work</div>
+        <p class="ob-body">Each day a fresh set of stocks is available. Make your call before the market closes.</p>
+        <div class="ob-pick-list">
+          <div class="ob-pick-item">
+            <div class="ob-pick-icon up">▲</div>
+            <div class="ob-pick-text">
+              <strong>Pick UP or DOWN</strong><br>
+              Predict whether a stock closes higher or lower than it opened.
+            </div>
+          </div>
+          <div class="ob-pick-item">
+            <div class="ob-pick-icon down">▼</div>
+            <div class="ob-pick-text">
+              <strong>Results after close</strong><br>
+              Picks resolve automatically at end of day using live price data.
+            </div>
+          </div>
+          <div class="ob-pick-item">
+            <div class="ob-pick-icon win">★</div>
+            <div class="ob-pick-text">
+              <strong>Build your record</strong><br>
+              Every correct call builds your win rate and streak on the leaderboard.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Step 3: Build a Parlay ── -->
+      <div class="ob-pane" data-step="3">
+        <div class="ob-eyebrow">Parlays</div>
+        <div class="ob-title">Build a <em>Parlay</em></div>
+        <p class="ob-body">
+          Combine multiple picks into a parlay and <strong>multiply your odds</strong>.
+          Each leg stacks — the more legs, the bigger the potential payout.
+        </p>
+        <div class="ob-slip">
+          <div class="ob-slip-hd">Parlay Slip</div>
+          <div class="ob-slip-row">
+            <span class="ob-slip-ticker">AAPL</span>
+            <span class="ob-slip-dir up">▲ UP</span>
+            <span class="ob-slip-odds">×1.70</span>
+          </div>
+          <div class="ob-slip-row">
+            <span class="ob-slip-ticker">TSLA</span>
+            <span class="ob-slip-dir dn">▼ DOWN</span>
+            <span class="ob-slip-odds">×1.85</span>
+          </div>
+          <div class="ob-slip-row">
+            <span class="ob-slip-ticker">NVDA</span>
+            <span class="ob-slip-dir up">▲ UP</span>
+            <span class="ob-slip-odds">×1.70</span>
+          </div>
+          <div class="ob-slip-sep"></div>
+          <div class="ob-slip-total">
+            <span>3-LEG MULTIPLIER</span>
+            <span class="ob-slip-total-val mult">×5.33</span>
+          </div>
+          <div class="ob-slip-total">
+            <span>WAGER</span>
+            <span class="ob-slip-total-val">$50.00</span>
+          </div>
+          <div class="ob-slip-total">
+            <span>POTENTIAL PAYOUT</span>
+            <span class="ob-slip-total-val payout">$266.50</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Step 4: Your Portfolio ── -->
+      <div class="ob-pane" data-step="4">
+        <div class="ob-eyebrow">Paper Trading</div>
+        <div class="ob-title">Your <em>Portfolio</em></div>
+        <p class="ob-body">
+          You start with <strong>$10,000 in paper money</strong> and can buy or sell any stock at live market prices.
+          No real cash — just real market data and real competition.
+        </p>
+        <div class="ob-balance-card">
+          <div class="ob-balance-label">Starting Balance</div>
+          <div class="ob-balance-amount">$10,000.00</div>
+          <div class="ob-balance-sub">Grows with smart buys. Shrinks with bad ones. Reset anytime via admin.</div>
+          <div class="ob-actions-row">
+            <span class="ob-action-chip buy">▲ Buy stocks</span>
+            <span class="ob-action-chip sell">▼ Sell anytime</span>
+            <span class="ob-action-chip safe">No real money</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Nav ── -->
+      <div class="ob-nav">
+        <button class="ob-skip-btn" type="button" id="obSkipBtn">Skip</button>
+        <button class="ob-next-btn" type="button" id="obNextBtn">
+          <span id="obNextLabel">Next</span>
+          <span class="arrow" id="obNextArrow">→</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /* ── Particles ── */
+    (function () {
+      const bp = document.getElementById('bgParticles');
+      for (let i = 0; i < 28; i++) {
+        const p = document.createElement('div'); p.className = 'bg-particle';
+        const sz = 1 + Math.random() * 2;
+        p.style.cssText = 'left:' + (Math.random()*100) + 'vw;bottom:' + (Math.random()*100) + 'vh;width:' + sz + 'px;height:' + sz + 'px;opacity:' + (0.2+Math.random()*0.5) + ';animation-duration:' + (18+Math.random()*28) + 's;animation-delay:' + (-Math.random()*30) + 's';
+        bp.appendChild(p);
+      }
+      const gp = document.getElementById('greenParticles');
+      for (let i = 0; i < 16; i++) {
+        const p = document.createElement('div'); p.className = 'green-particle';
+        p.textContent = '▲';
+        const sz = 8 + Math.random() * 8;
+        p.style.cssText = 'left:' + (Math.random()*100) + 'vw;bottom:' + (-Math.random()*15) + 'vh;font-size:' + sz + 'px;animation-duration:' + (14+Math.random()*22) + 's;animation-delay:' + (-Math.random()*25) + 's';
+        gp.appendChild(p);
+      }
+    })();
+
+    /* ── Stepper ── */
+    (function () {
+      const TOTAL = 4;
+      let current = 1;
+
+      const panes    = document.querySelectorAll('.ob-pane');
+      const dots     = document.querySelectorAll('.ob-dot');
+      const label    = document.getElementById('obStepLabel');
+      const nextBtn  = document.getElementById('obNextBtn');
+      const nextLbl  = document.getElementById('obNextLabel');
+      const nextArrow = document.getElementById('obNextArrow');
+      const form     = document.getElementById('obForm');
+
+      function goTo(n) {
+        panes.forEach(function (p) {
+          p.classList.toggle('active', parseInt(p.dataset.step) === n);
+        });
+        dots.forEach(function (d) {
+          const dn = parseInt(d.dataset.dot);
+          d.classList.toggle('active', dn === n);
+          d.classList.toggle('done', dn < n);
+        });
+        label.textContent = 'Step ' + n + ' of ' + TOTAL;
+
+        if (n === TOTAL) {
+          nextLbl.textContent = "Let's Go";
+          nextArrow.textContent = '✓';
+        } else {
+          nextLbl.textContent = 'Next';
+          nextArrow.textContent = '→';
+        }
+        current = n;
+      }
+
+      nextBtn.addEventListener('click', function () {
+        if (current < TOTAL) {
+          goTo(current + 1);
+        } else {
+          form.submit();
+        }
+      });
+
+      function submitForm() { form.submit(); }
+      document.getElementById('obSkipBtn').addEventListener('click', submitForm);
+      document.getElementById('obSkipTop').addEventListener('click', submitForm);
+    })();
+  </script>
+</body>
+</html>

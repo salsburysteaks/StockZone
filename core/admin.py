@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Stock, Portfolio, DailyPick, PaperPortfolio, PaperHolding, UserProfile, Parlay, ParlayLeg, FutureBet
+from .models import Stock, Portfolio, DailyPick, PaperPortfolio, PaperHolding, UserProfile, Parlay, ParlayLeg, FutureBet, BullishPick
 
 
 @admin.register(Stock)
@@ -66,3 +66,11 @@ class FutureBetAdmin(admin.ModelAdmin):
     list_display = ('user', 'ticker', 'direction', 'timeframe', 'wager', 'payout', 'result', 'placed_at', 'resolves_at')
     list_filter = ('direction', 'timeframe', 'result')
     search_fields = ('user__username', 'ticker')
+
+
+@admin.register(BullishPick)
+class BullishPickAdmin(admin.ModelAdmin):
+    list_display = ('date', 'ticker', 'company_name', 'direction', 'price', 'momentum', 'generated_at')
+    list_filter = ('direction',)
+    search_fields = ('ticker', 'company_name')
+    readonly_fields = ('generated_at',)

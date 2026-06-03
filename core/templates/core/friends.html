@@ -1,0 +1,301 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block page_title %}Your Crew — StockZone{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-content { padding: 28px 20px 80px; max-width: 680px; margin: 0 auto; }
+
+  /* ── Tabs ── */
+  .cr-tabs {
+    display: flex; gap: 0; margin-bottom: 28px;
+    border-bottom: 1px solid rgba(153,69,255,0.2);
+  }
+  .cr-tab {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1rem;
+    letter-spacing: 2px; color: #444; padding: 10px 24px;
+    cursor: pointer; border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: color 0.15s, border-color 0.15s;
+    user-select: none;
+  }
+  .cr-tab:hover { color: #9945FF; }
+  .cr-tab.active { color: #9945FF; border-bottom-color: #9945FF; }
+  .cr-tab-badge {
+    font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 700;
+    color: #555; margin-left: 6px; letter-spacing: 0;
+  }
+
+  .cr-panel { display: none; }
+  .cr-panel.active { display: block; }
+
+  /* ── User card ── */
+  .cr-card {
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(153,69,255,0.06);
+    border: 1px solid rgba(153,69,255,0.18);
+    border-radius: 12px; padding: 14px 18px;
+    transition: background 0.2s, border-color 0.2s;
+    margin-bottom: 10px;
+  }
+  .cr-card:hover { background: rgba(153,69,255,0.10); border-color: rgba(153,69,255,0.35); }
+
+  .cr-avatar {
+    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(153,69,255,0.18); border: 1px solid rgba(153,69,255,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem;
+    color: #c084fc; letter-spacing: 1px;
+  }
+  .cr-info { flex: 1; min-width: 0; }
+  .cr-username {
+    font-weight: 700; color: #fff; font-size: 0.92rem;
+    margin-bottom: 3px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;
+  }
+  .cr-stats { font-size: 0.74rem; color: #555; }
+  .cr-stat-val { color: #9945FF; font-weight: 600; }
+
+  .cr-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+
+  /* ── Buttons ── */
+  .cr-btn {
+    font-family: 'Inter', sans-serif; font-size: 0.74rem; font-weight: 700;
+    padding: 6px 14px; border-radius: 7px; border: none; cursor: pointer;
+    text-decoration: none; display: inline-flex; align-items: center;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .cr-btn-view {
+    background: rgba(153,69,255,0.18); color: #c084fc;
+    border: 1px solid rgba(153,69,255,0.35);
+  }
+  .cr-btn-view:hover { background: rgba(153,69,255,0.28); box-shadow: 0 0 12px rgba(153,69,255,0.3); }
+  .cr-btn-follow {
+    background: #9945FF; color: #fff;
+    box-shadow: 0 0 14px rgba(153,69,255,0.4);
+  }
+  .cr-btn-follow:hover { background: #7c2ee0; box-shadow: 0 0 20px rgba(153,69,255,0.6); }
+  .cr-btn-unfollow {
+    background: rgba(255,71,87,0.08); color: #ff4757;
+    border: 1px solid rgba(255,71,87,0.25);
+  }
+  .cr-btn-unfollow:hover { background: rgba(255,71,87,0.15); }
+  .cr-btn-following-label {
+    background: transparent; color: #00ff87;
+    border: 1px solid rgba(0,255,135,0.25); cursor: default; font-size: 0.72rem;
+  }
+
+  /* ── Search ── */
+  .cr-search-row { display: flex; gap: 10px; margin-bottom: 14px; }
+  .cr-search-wrap { position: relative; flex: 1; }
+  .cr-search-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: #555; pointer-events: none;
+  }
+  .cr-search-input {
+    width: 100%; padding: 12px 14px 12px 42px;
+    background: rgba(153,69,255,0.08);
+    border: 1px solid rgba(153,69,255,0.28); border-radius: 10px;
+    color: #e0e0e0; font-family: 'Inter', sans-serif; font-size: 0.9rem;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+  }
+  .cr-search-input:focus { border-color: #9945FF; box-shadow: 0 0 16px rgba(153,69,255,0.2); }
+  .cr-search-input::placeholder { color: #444; }
+
+  .cr-empty {
+    text-align: center; padding: 32px 0;
+    color: #3a3a3a; font-size: 0.86rem;
+  }
+
+  @media (max-width: 600px) {
+    .cr-card { flex-wrap: wrap; }
+    .cr-actions { width: 100%; }
+    .cr-tab { font-size: 0.85rem; padding: 10px 16px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ Hero ══ -->
+<section class="page-hero">
+  <div class="page-hero-inner">
+    <div>
+      <h1>Your <em>Crew</em></h1>
+      <div class="hero-underline"></div>
+      <p class="page-hero-sub">Follow players, compare picks, and track the competition</p>
+    </div>
+    <img src="{% static 'core/daboy.png' %}" style="height:160px;width:auto;mix-blend-mode:lighten;opacity:0.9;pointer-events:none;" alt="" class="bull-mascot">
+  </div>
+</section>
+
+<div class="page-content">
+
+  <!-- ══ Tabs ══ -->
+  <div class="cr-tabs">
+    <div class="cr-tab active" data-tab="following">
+      Following<span class="cr-tab-badge">{{ following|length }}</span>
+    </div>
+    <div class="cr-tab" data-tab="followers">
+      Followers<span class="cr-tab-badge">{{ followers|length }}</span>
+    </div>
+    <div class="cr-tab" data-tab="find">Find Players</div>
+  </div>
+
+  <!-- ══ Following Panel ══ -->
+  <div class="cr-panel active" id="panel-following">
+    {% if following %}
+      {% for f in following %}
+      <div class="cr-card">
+        <div class="cr-avatar">{{ f.user.username|first|upper }}</div>
+        <div class="cr-info">
+          <div class="cr-username">{{ f.user.username }}</div>
+          <div class="cr-stats">
+            <span class="cr-stat-val">{{ f.profile.win_rate }}%</span> Win Rate
+            &nbsp;|&nbsp;
+            <span class="cr-stat-val">{{ f.profile.current_streak }}</span> Streak
+          </div>
+        </div>
+        <div class="cr-actions">
+          <a href="{% url 'friend_profile' f.user.username %}" class="cr-btn cr-btn-view">View</a>
+          <button class="cr-btn cr-btn-unfollow follow-toggle" data-username="{{ f.user.username }}" data-following="true">Unfollow</button>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="cr-empty">You are not following anyone yet. Find players below.</div>
+    {% endif %}
+  </div>
+
+  <!-- ══ Followers Panel ══ -->
+  <div class="cr-panel" id="panel-followers">
+    {% if followers %}
+      {% for f in followers %}
+      <div class="cr-card">
+        <div class="cr-avatar">{{ f.user.username|first|upper }}</div>
+        <div class="cr-info">
+          <div class="cr-username">{{ f.user.username }}</div>
+          <div class="cr-stats">
+            <span class="cr-stat-val">{{ f.profile.win_rate }}%</span> Win Rate
+            &nbsp;|&nbsp;
+            <span class="cr-stat-val">{{ f.profile.total_picks }}</span> Picks
+          </div>
+        </div>
+        <div class="cr-actions">
+          <a href="{% url 'friend_profile' f.user.username %}" class="cr-btn cr-btn-view">View</a>
+          {% if f.you_follow_back %}
+            <button class="cr-btn cr-btn-unfollow follow-toggle" data-username="{{ f.user.username }}" data-following="true">Unfollow</button>
+          {% else %}
+            <button class="cr-btn cr-btn-follow follow-toggle" data-username="{{ f.user.username }}" data-following="false">Follow Back</button>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="cr-empty">Nobody is following you yet.</div>
+    {% endif %}
+  </div>
+
+  <!-- ══ Find Players Panel ══ -->
+  <div class="cr-panel" id="panel-find">
+    <div class="cr-search-row">
+      <div class="cr-search-wrap">
+        <svg class="cr-search-icon" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="playerSearch" class="cr-search-input"
+               placeholder="Search by username..." autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <div id="searchResults"></div>
+  </div>
+
+</div>
+
+<script>
+const CSRF = document.cookie.split('; ').find(r => r.startsWith('csrftoken=')).split('=')[1];
+
+/* ── Tabs ── */
+document.querySelectorAll('.cr-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.cr-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.cr-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+/* ── Follow toggle ── */
+function attachFollowToggle(btn) {
+  btn.addEventListener('click', async () => {
+    const username = btn.dataset.username;
+    const res = await fetch(`/friends/follow/${username}/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': CSRF },
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.following) {
+      btn.textContent = 'Unfollow';
+      btn.classList.remove('cr-btn-follow');
+      btn.classList.add('cr-btn-unfollow');
+      btn.dataset.following = 'true';
+    } else {
+      btn.textContent = 'Follow';
+      btn.classList.remove('cr-btn-unfollow');
+      btn.classList.add('cr-btn-follow');
+      btn.dataset.following = 'false';
+    }
+  });
+}
+document.querySelectorAll('.follow-toggle').forEach(attachFollowToggle);
+
+/* ── AJAX search ── */
+let searchTimer;
+const searchInput = document.getElementById('playerSearch');
+const resultsEl = document.getElementById('searchResults');
+
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(doSearch, 300);
+});
+
+async function doSearch() {
+  const q = searchInput.value.trim();
+  if (!q) { resultsEl.innerHTML = ''; return; }
+  const res = await fetch(`/friends/search/?q=${encodeURIComponent(q)}`);
+  const data = await res.json();
+  renderResults(data.results);
+}
+
+function renderResults(results) {
+  if (!results.length) {
+    resultsEl.innerHTML = '<div class="cr-empty">No players found.</div>';
+    return;
+  }
+  resultsEl.innerHTML = results.map(r => `
+    <div class="cr-card">
+      <div class="cr-avatar">${r.username[0].toUpperCase()}</div>
+      <div class="cr-info">
+        <div class="cr-username">${r.username}</div>
+        <div class="cr-stats">
+          <span class="cr-stat-val">${r.win_rate}%</span> Win Rate
+          &nbsp;|&nbsp;
+          <span class="cr-stat-val">${r.total_picks}</span> Picks
+        </div>
+      </div>
+      <div class="cr-actions">
+        <a href="/friends/profile/${r.username}/" class="cr-btn cr-btn-view">View</a>
+        <button class="cr-btn ${r.is_following ? 'cr-btn-unfollow' : 'cr-btn-follow'} follow-toggle"
+                data-username="${r.username}" data-following="${r.is_following}">
+          ${r.is_following ? 'Unfollow' : 'Follow'}
+        </button>
+      </div>
+    </div>
+  `).join('');
+  resultsEl.querySelectorAll('.follow-toggle').forEach(attachFollowToggle);
+}
+</script>
+
+{% endblock %}

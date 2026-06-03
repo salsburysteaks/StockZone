@@ -1,0 +1,80 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block page_title %}Edit Profile — StockZone{% endblock %}
+{% block active_nav %}profile{% endblock %}
+
+{% block extra_css %}
+<style>
+  .ep-wrap { max-width: 520px; margin: 48px auto; padding: 0 20px 80px; }
+  .ep-card {
+    background: rgba(153,69,255,0.07);
+    border: 1px solid rgba(153,69,255,0.28);
+    border-radius: 16px; padding: 32px;
+  }
+  .ep-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem;
+    color: #fff; letter-spacing: 2px; margin-bottom: 6px;
+  }
+  .ep-sub { font-size: 0.78rem; color: #555; margin-bottom: 28px; }
+  .ep-label {
+    display: block; font-size: 0.68rem; font-weight: 700; color: #555;
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px;
+  }
+  .ep-input, .ep-textarea {
+    width: 100%; background: rgba(100,40,200,0.15);
+    border: 1px solid rgba(153,69,255,0.35); border-radius: 8px;
+    color: #e0e0e0; font-size: 0.9rem; font-family: inherit;
+    padding: 10px 14px; outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    margin-bottom: 20px;
+  }
+  .ep-input:focus, .ep-textarea:focus {
+    border-color: #9945FF; box-shadow: 0 0 12px rgba(153,69,255,0.3);
+  }
+  .ep-textarea { resize: vertical; min-height: 90px; }
+  .ep-hint { font-size: 0.68rem; color: #444; margin-top: -16px; margin-bottom: 20px; }
+  .ep-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+  .ep-save {
+    padding: 10px 28px; background: #9945FF; border: none; border-radius: 8px;
+    color: #fff; font-size: 0.86rem; font-weight: 700; font-family: inherit;
+    cursor: pointer; transition: background 0.15s, box-shadow 0.15s;
+    box-shadow: 0 0 16px rgba(153,69,255,0.4);
+  }
+  .ep-save:hover { background: #7c2ee0; box-shadow: 0 0 24px rgba(153,69,255,0.6); }
+  .ep-cancel {
+    padding: 10px 24px; background: transparent;
+    border: 1px solid rgba(153,69,255,0.3); border-radius: 8px;
+    color: #666; font-size: 0.86rem; font-weight: 600; font-family: inherit;
+    cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .ep-cancel:hover { border-color: rgba(153,69,255,0.5); color: #9945FF; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ep-wrap">
+  <div class="ep-card">
+    <div class="ep-title">Edit Profile</div>
+    <div class="ep-sub">Your display name and bio are visible to all players on your public profile.</div>
+
+    <form method="POST">
+      {% csrf_token %}
+      <label class="ep-label" for="display_name">Display Name</label>
+      <input class="ep-input" type="text" id="display_name" name="display_name"
+             value="{{ profile.display_name }}" maxlength="50"
+             placeholder="Optional name shown below your username">
+
+      <label class="ep-label" for="bio">Bio</label>
+      <textarea class="ep-textarea" id="bio" name="bio"
+                maxlength="150" placeholder="Tell other players about yourself...">{{ profile.bio }}</textarea>
+      <div class="ep-hint">Max 150 characters</div>
+
+      <div class="ep-actions">
+        <button type="submit" class="ep-save">Save Changes</button>
+        <a href="{% url 'my_profile' %}" class="ep-cancel">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

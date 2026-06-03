@@ -70,6 +70,9 @@ class UserProfile(models.Model):
     total_picks = models.IntegerField(default=0)
     total_wins = models.IntegerField(default=0)
     last_pick_date = models.DateField(null=True, blank=True)
+    has_completed_onboarding = models.BooleanField(default=False)
+    display_name = models.CharField(max_length=50, blank=True)
+    bio = models.TextField(max_length=150, blank=True)
 
     @property
     def win_rate(self):
@@ -152,6 +155,39 @@ class FutureBet(models.Model):
 
     def __str__(self):
         return f"{self.user} — {self.ticker} {self.direction} ({self.get_timeframe_display()})"
+
+
+class Follow(models.Model):
+    follower  = models.ForeignKey(User, on_delete=models.CASCADE, related_name="following")
+    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followers")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("follower", "following")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.follower} -> {self.following}"
+
+
+class BullishPick(models.Model):
+    DIRECTION_CHOICES = [("UP", "Up"), ("DOWN", "Down")]
+
+    ticker       = models.CharField(max_length=10)
+    company_name = models.CharField(max_length=100)
+    sector       = models.CharField(max_length=100, blank=True)
+    direction    = models.CharField(max_length=4, choices=DIRECTION_CHOICES)
+    reasoning    = models.TextField()
+    price        = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    momentum     = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    generated_at = models.DateTimeField(auto_now_add=True)
+    date         = models.DateField(unique=True)
+
+    class Meta:
+        ordering = ["-date"]
+
+    def __str__(self):
+        return f"{self.date} — {self.ticker} {self.direction}"
 
 
 class Notification(models.Model):

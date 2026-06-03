@@ -45,7 +45,7 @@
       <tbody>
         {% for bet in bets %}
         <tr>
-          <td class="tc-ticker">{{ bet.ticker }}</td>
+          <td class="tc-ticker"><a href="{% url 'stock_detail' bet.ticker %}" style="text-decoration:none;color:inherit;">{{ bet.ticker }}</a></td>
           <td>{% if bet.direction == "UP" %}<span class="dir-up">▲ UP</span>{% else %}<span class="dir-dn">▼ DOWN</span>{% endif %}</td>
           <td><span class="tf-tag">{{ bet.get_timeframe_display }}</span></td>
           <td class="mono">{% if bet.price_at_pick %}${{ bet.price_at_pick }}{% else %}—{% endif %}</td>
@@ -60,7 +60,7 @@
     </table>
     {% else %}
     <div style="text-align:center;padding:60px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;">
-      <img src="{% static 'core/coin_bull.png' %}" alt="" style="height:200px;width:auto;mix-blend-mode:lighten;opacity:0.9;">
+      <img src="{% static 'core/coin_bull.png' %}" alt="" class="bull-mascot" style="height:200px;width:auto;mix-blend-mode:lighten;opacity:0.9;">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;color:#fff;">NO FUTURE BETS YET</div>
       <p style="color:#666;font-size:0.9rem;margin:0;">Make a long-term call on a stock — 3 days to 1 month out.</p>
       <a href="{% url 'place_future_bet' %}" class="btn-purple">Place a Bet</a>

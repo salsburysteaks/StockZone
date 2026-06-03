@@ -1,0 +1,200 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ parlay.user.username }} Parlay — StockZone</title>
+  <meta property="og:title" content="{{ parlay.user.username }} hit a {{ parlay.leg_count }}-leg parlay on StockZone">
+  <meta property="og:description" content="{{ parlay.payout_multiplier }}x multiplier. Can you beat their picks? Play at stockzone.app">
+  <meta property="og:site_name" content="StockZone">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;800&family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; min-height: 100vh;
+      background: #080612;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: 100%; max-width: 480px;
+      background: linear-gradient(160deg, #0e0820 0%, #080612 100%);
+      border: 1px solid rgba(153,69,255,0.45);
+      border-radius: 20px; overflow: hidden;
+      box-shadow: 0 0 60px rgba(153,69,255,0.25), 0 0 120px rgba(153,69,255,0.1);
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* ── Top bar ── */
+    .card-top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 24px 16px;
+      border-bottom: 1px solid rgba(153,69,255,0.2);
+      background: rgba(153,69,255,0.06);
+    }
+    .brand {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem;
+      letter-spacing: 2px; color: #fff;
+    }
+    .brand em { color: #9945FF; font-style: normal; text-shadow: 0 0 12px rgba(153,69,255,0.9); }
+    .card-date { font-size: 0.72rem; color: #444; }
+
+    /* ── Result hero ── */
+    .result-hero {
+      padding: 28px 24px 20px; text-align: center;
+      border-bottom: 1px solid rgba(153,69,255,0.15);
+    }
+    .result-label {
+      font-family: 'Bebas Neue', sans-serif; font-size: 5rem;
+      letter-spacing: 4px; line-height: 1;
+    }
+    .result-label.WON  { color: #00ff87; text-shadow: 0 0 24px rgba(0,255,135,0.8), 0 0 48px rgba(0,255,135,0.4); }
+    .result-label.LOST { color: #ff4757; text-shadow: 0 0 24px rgba(255,71,87,0.8), 0 0 48px rgba(255,71,87,0.4); }
+    .result-label.PENDING { color: #f59e0b; text-shadow: 0 0 16px rgba(245,158,11,0.6); }
+    .result-sub {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+      letter-spacing: 3px; color: #555; margin-top: 4px;
+    }
+    .mult-row {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 14px;
+      background: rgba(153,69,255,0.1); border: 1px solid rgba(153,69,255,0.3);
+      border-radius: 30px; padding: 6px 18px;
+    }
+    .mult-val {
+      font-family: 'Roboto Mono', monospace; font-size: 1.4rem;
+      font-weight: 700; color: #9945FF;
+      text-shadow: 0 0 10px rgba(153,69,255,0.8);
+    }
+    .mult-lbl { font-size: 0.72rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ── Legs ── */
+    .legs-section { padding: 4px 0; }
+    .leg {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 24px;
+      border-bottom: 1px solid rgba(153,69,255,0.08);
+    }
+    .leg:last-child { border-bottom: none; }
+    .leg-num {
+      font-size: 0.65rem; font-weight: 700; color: #333;
+      width: 18px; text-align: center; flex-shrink: 0;
+    }
+    .leg-ticker {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+      color: #fff; letter-spacing: 1px; min-width: 52px;
+    }
+    .leg-dir {
+      font-size: 0.72rem; font-weight: 700; padding: 3px 10px;
+      border-radius: 5px; flex-shrink: 0;
+    }
+    .leg-dir.up   { color: #00ff87; background: rgba(0,255,135,0.08); border: 1px solid rgba(0,255,135,0.3); }
+    .leg-dir.down { color: #ff4757; background: rgba(255,71,87,0.08); border: 1px solid rgba(255,71,87,0.3); }
+    .leg-sector { font-size: 0.68rem; color: #3a3a3a; flex: 1; }
+    .leg-result {
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px; padding: 3px 10px; border-radius: 5px;
+    }
+    .leg-result.WIN  { color: #00ff87; background: rgba(0,255,135,0.08); border: 1px solid rgba(0,255,135,0.25); }
+    .leg-result.LOSS { color: #ff4757; background: rgba(255,71,87,0.08); border: 1px solid rgba(255,71,87,0.25); }
+    .leg-result.PENDING { color: #555; background: rgba(255,255,255,0.03); border: 1px solid #222; }
+
+    /* ── Payout bar ── */
+    .payout-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px;
+      background: rgba(153,69,255,0.06);
+      border-top: 1px solid rgba(153,69,255,0.15);
+    }
+    .payout-item { text-align: center; }
+    .payout-lbl { font-size: 0.6rem; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .payout-val { font-family: 'Roboto Mono', monospace; font-size: 1rem; font-weight: 700; color: #fff; }
+    .payout-val.green { color: #00ff87; text-shadow: 0 0 8px rgba(0,255,135,0.6); }
+    .payout-divider { width: 1px; height: 32px; background: rgba(153,69,255,0.2); }
+
+    /* ── Footer ── */
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px;
+      border-top: 1px solid rgba(153,69,255,0.15);
+      background: rgba(8,6,18,0.8);
+    }
+    .footer-user {
+      font-size: 0.78rem; font-weight: 700; color: #9945FF;
+      text-shadow: 0 0 8px rgba(153,69,255,0.5);
+    }
+    .footer-tag { font-size: 0.7rem; color: #333; }
+  </style>
+</head>
+<body>
+  <div class="card">
+
+    <!-- Top bar -->
+    <div class="card-top">
+      <div class="brand">Stock<em>Zone</em></div>
+      <div class="card-date">{{ parlay.created_at|date:"M j, Y" }}</div>
+    </div>
+
+    <!-- Result hero -->
+    <div class="result-hero">
+      {% if parlay.result == "WIN" %}
+        <div class="result-label WON">WON</div>
+        <div class="result-sub">{{ parlay.leg_count }} LEG PARLAY</div>
+      {% elif parlay.result == "LOSS" %}
+        <div class="result-label LOST">LOST</div>
+        <div class="result-sub">{{ parlay.leg_count }} LEG PARLAY</div>
+      {% else %}
+        <div class="result-label PENDING">LIVE</div>
+        <div class="result-sub">{{ parlay.leg_count }} LEG PARLAY</div>
+      {% endif %}
+      <div class="mult-row">
+        <span class="mult-val">{{ parlay.payout_multiplier }}x</span>
+        <span class="mult-lbl">Multiplier</span>
+      </div>
+    </div>
+
+    <!-- Legs -->
+    <div class="legs-section">
+      {% for leg in legs %}
+      <div class="leg">
+        <span class="leg-num">{{ forloop.counter }}</span>
+        <span class="leg-ticker">{{ leg.ticker }}</span>
+        <span class="leg-dir {% if leg.direction == 'UP' %}up{% else %}down{% endif %}">
+          {% if leg.direction == 'UP' %}▲ UP{% else %}▼ DOWN{% endif %}
+        </span>
+        <span class="leg-sector">{{ leg.sector }}</span>
+        <span class="leg-result {{ leg.result }}">{{ leg.result }}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Payout bar -->
+    <div class="payout-bar">
+      <div class="payout-item">
+        <div class="payout-lbl">Wager</div>
+        <div class="payout-val">${{ parlay.wager }}</div>
+      </div>
+      <div class="payout-divider"></div>
+      <div class="payout-item">
+        <div class="payout-lbl">Odds</div>
+        <div class="payout-val">{{ parlay.payout_multiplier }}x</div>
+      </div>
+      <div class="payout-divider"></div>
+      <div class="payout-item">
+        <div class="payout-lbl">Payout</div>
+        <div class="payout-val green">${{ parlay.payout|default:"TBD" }}</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="card-footer">
+      <span class="footer-user">@{{ parlay.user.username }}</span>
+      <span class="footer-tag">Play the market at stockzone.app</span>
+    </div>
+
+  </div>
+</body>
+</html>

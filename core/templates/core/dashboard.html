@@ -24,7 +24,7 @@
     width: 68px; height: 4px; background: #9945FF; border-radius: 2px; margin-bottom: 14px;
     box-shadow: 0 0 14px rgba(153,69,255,0.6);
   }
-  .hero-tagline { display: flex; align-items: center; gap: 8px; font-size: 0.87rem; color: #666; font-weight: 500; }
+  .hero-tagline { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #fff; font-weight: 500; }
   .live-dot {
     width: 8px; height: 8px; border-radius: 50%; background: #00ff87;
     box-shadow: 0 0 6px #00ff87; animation: pulse-dot 1.8s ease-in-out infinite; flex-shrink: 0;
@@ -69,13 +69,74 @@
     border-radius: 14px; padding: 24px 32px 0 32px; overflow: hidden;
     box-shadow: 0 0 36px rgba(153,69,255,0.3), inset 0 0 32px rgba(153,69,255,0.06);
   }
-  .spotlight-bull-wrap { position: relative; flex-shrink: 0; align-self: stretch; width: 200px; pointer-events: none; }
-  .bull-frame { position: absolute; bottom: 0; right: 0; height: 120px; width: auto; mix-blend-mode: lighten; }
+  .spotlight-bull-wrap { position: relative; flex-shrink: 0; align-self: stretch; width: 200px; pointer-events: none; background: transparent; }
+  .bull-frame { position: absolute; bottom: 0; right: 0; height: 120px; width: auto; background: transparent; mix-blend-mode: screen; }
   .bull-frame-base   { opacity: 1; }
   .bull-frame-exhale { opacity: 0; animation: exhale-show 4s ease-in-out infinite; }
   @keyframes exhale-show {
     0%    { opacity: 0; } 62.5% { opacity: 0; } 75% { opacity: 1; } 95% { opacity: 1; } 100% { opacity: 0; }
   }
+
+  /* ── Bullish Pick card ── */
+  @keyframes bullish-pulse {
+    from { box-shadow: 0 0 32px var(--bp-glow-a), inset 0 0 28px var(--bp-glow-b); }
+    to   { box-shadow: 0 0 52px var(--bp-glow-a), inset 0 0 44px var(--bp-glow-b); }
+  }
+  .bullish-card {
+    position: relative; display: flex; align-items: stretch;
+    border: 1px solid var(--bp-border); border-left: 4px solid var(--bp-accent);
+    border-radius: 14px; overflow: hidden;
+    background: var(--bp-bg);
+    animation: bullish-pulse 2.4s ease-in-out infinite alternate;
+    --bp-glow-a: rgba(153,69,255,0.3); --bp-glow-b: rgba(153,69,255,0.06);
+    --bp-border: rgba(153,69,255,0.5); --bp-accent: #9945FF; --bp-bg: rgba(153,69,255,0.12);
+  }
+  .bullish-card.up {
+    --bp-glow-a: rgba(0,255,135,0.22); --bp-glow-b: rgba(0,255,135,0.05);
+    --bp-border: rgba(0,255,135,0.45); --bp-accent: #00ff87; --bp-bg: rgba(0,255,135,0.07);
+  }
+  .bullish-card.dn {
+    --bp-glow-a: rgba(255,71,87,0.22); --bp-glow-b: rgba(255,71,87,0.05);
+    --bp-border: rgba(255,71,87,0.45); --bp-accent: #ff4757; --bp-bg: rgba(255,71,87,0.07);
+  }
+  .bullish-main { flex: 1; padding: 22px 28px 22px 28px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .bullish-eyebrow {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.65rem; font-weight: 700; color: #9945FF;
+    text-transform: uppercase; letter-spacing: 1.5px;
+  }
+  .bullish-eyebrow img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+  .bullish-meta { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .bullish-ticker { font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; color: #fff; letter-spacing: 2px; line-height: 1; }
+  .bullish-company { font-size: 0.88rem; color: #888; font-weight: 500; }
+  .bullish-dir {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 3px;
+    padding: 6px 22px; border-radius: 8px; border: 2px solid; white-space: nowrap;
+  }
+  .bullish-dir.up { color: #00ff87; border-color: rgba(0,255,135,0.6); background: rgba(0,255,135,0.12); box-shadow: 0 0 16px rgba(0,255,135,0.5); text-shadow: 0 0 10px rgba(0,255,135,0.9); }
+  .bullish-dir.dn { color: #ff4757; border-color: rgba(255,71,87,0.6); background: rgba(255,71,87,0.12); box-shadow: 0 0 16px rgba(255,71,87,0.5); text-shadow: 0 0 10px rgba(255,71,87,0.9); }
+  .bullish-reasoning {
+    font-size: 0.88rem; color: #bbb; line-height: 1.65;
+    font-style: italic; max-width: 560px;
+  }
+  .bullish-cta { margin-top: 4px; }
+  .bullish-pick-btn {
+    display: inline-block; padding: 10px 24px; border-radius: 8px;
+    background: #9945FF; color: #fff; font-size: 0.82rem; font-weight: 700;
+    text-decoration: none; letter-spacing: 0.3px;
+    transition: background 0.15s, box-shadow 0.15s;
+    box-shadow: 0 0 16px rgba(153,69,255,0.35);
+  }
+  .bullish-pick-btn:hover { background: #7c2ee0; box-shadow: 0 0 24px rgba(153,69,255,0.55); }
+  .bullish-aside {
+    flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    padding: 0 24px 0 0; position: relative; width: 160px;
+  }
+  .bullish-bull-img {
+    height: 110px; width: auto; mix-blend-mode: screen;
+    opacity: 0.92; pointer-events: none;
+  }
+
   .spotlight-card::before {
     content: ''; position: absolute; top: -40px; right: -40px; width: 200px; height: 200px;
     border-radius: 50%; background: radial-gradient(ellipse at center, rgba(255,215,0,0.07) 0%, transparent 70%);
@@ -200,84 +261,6 @@
   }
   .picks-btn:hover { background: rgba(153,69,255,0.1); border-color: #9945FF; color: #9945FF; }
 
-  /* ── Modal ── */
-  .modal-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
-    z-index: 400; align-items: center; justify-content: center; padding: 24px;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal-card {
-    background: rgba(153,69,255,0.14); border: 1px solid rgba(153,69,255,0.55);
-    border-left: 3px solid #9945FF; border-radius: 16px;
-    padding: 28px 28px 24px; width: 100%; max-width: 420px; position: relative;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(153,69,255,0.3), inset 0 0 24px rgba(153,69,255,0.05);
-    animation: modal-in 0.18s ease-out;
-    max-height: 90vh; overflow-y: auto;
-  }
-  @keyframes modal-in { from { opacity: 0; transform: translateY(12px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
-  .modal-close { position: absolute; top: 16px; right: 18px; background: none; border: none; color: #555; font-size: 1.4rem; cursor: pointer; line-height: 1; transition: color 0.15s; }
-  .modal-close:hover { color: #fff; }
-  .modal-ticker  { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; color: #fff; letter-spacing: 1px; line-height: 1; margin-bottom: 3px; }
-  .modal-company { font-size: 1rem; font-weight: 500; color: #aaa; margin-bottom: 5px; }
-  .modal-sector  { font-size: 0.71rem; font-weight: 600; color: #9945FF; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 18px; }
-  .modal-price-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-  .modal-price { font-size: 1.6rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
-  .modal-mom { font-size: 1rem; font-weight: 700; padding: 6px 16px; border-radius: 8px; font-variant-numeric: tabular-nums; }
-  .modal-mom.pos { color: #00ff87; background: rgba(0,255,135,0.1); border: 1px solid rgba(0,255,135,0.4); box-shadow: 0 0 10px rgba(0,255,135,0.3); }
-  .modal-mom.neg { color: #ff4757; background: rgba(255,71,87,0.1); border: 1px solid rgba(255,71,87,0.4); box-shadow: 0 0 10px rgba(255,71,87,0.3); }
-  .modal-divider { height: 1px; background: rgba(153,69,255,0.2); margin-bottom: 18px; }
-  .modal-stats { display: flex; flex-direction: column; gap: 11px; margin-bottom: 22px; }
-  .modal-stat { display: flex; align-items: center; justify-content: space-between; }
-  .modal-stat-label { font-size: 0.79rem; color: #555; font-weight: 500; }
-  .modal-stat-value { font-size: 0.88rem; font-weight: 700; color: #ddd; font-variant-numeric: tabular-nums; }
-
-  /* ── Stat tooltips ── */
-  .stat-tip {
-    position: relative; display: inline-flex; align-items: center; gap: 5px;
-  }
-  .tip-icon {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 14px; height: 14px; border-radius: 50%;
-    border: 1px solid rgba(153,69,255,0.35); color: rgba(153,69,255,0.6);
-    font-size: 0.58rem; font-weight: 700; font-style: normal;
-    cursor: default; flex-shrink: 0; line-height: 1; user-select: none;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
-  }
-  .tip-icon:hover, .stat-tip.tip-open .tip-icon {
-    border-color: rgba(153,69,255,0.75); color: #9945FF;
-    background: rgba(153,69,255,0.1);
-  }
-  .tip-bubble {
-    position: absolute; bottom: calc(100% + 7px); left: 0;
-    background: #130d20; border: 1px solid rgba(153,69,255,0.3);
-    border-radius: 8px; padding: 8px 11px;
-    width: 210px; font-size: 0.71rem; color: #ccc; line-height: 1.45;
-    font-weight: 400; white-space: normal; pointer-events: none;
-    opacity: 0; transform: translateY(5px);
-    transition: opacity 0.14s ease, transform 0.14s ease;
-    z-index: 20; box-shadow: 0 6px 24px rgba(0,0,0,0.6);
-  }
-  .tip-bubble::after {
-    content: ''; position: absolute; top: 100%; left: 13px;
-    border: 5px solid transparent; border-top-color: rgba(153,69,255,0.3);
-  }
-  .tip-bubble::before {
-    content: ''; position: absolute; top: calc(100% - 1px); left: 14px;
-    border: 4px solid transparent; border-top-color: #130d20;
-  }
-  .stat-tip:hover .tip-bubble,
-  .stat-tip.tip-open .tip-bubble {
-    opacity: 1; transform: translateY(0);
-  }
-  .modal-picks-btn {
-    display: block; text-align: center; padding: 11px;
-    background: #9945FF; border: none; border-radius: 8px;
-    color: #fff; font-size: 0.88rem; font-weight: 700;
-    text-decoration: none; letter-spacing: 0.3px; transition: background 0.15s;
-  }
-  .modal-picks-btn:hover { background: #7c2ee0; }
-
   /* ── No Results ── */
   .no-results { display: none; text-align: center; padding: 40px; color: #444; font-size: 0.88rem; }
 
@@ -328,7 +311,7 @@
         <div class="hero-underline"></div>
         <div class="hero-tagline">
           <span class="live-dot"></span>
-          Live picks refreshing every 60 seconds
+          <span id="refreshTagline">Live picks refreshing every 60 seconds</span>
         </div>
       </div>
       <div class="hero-pills">
@@ -358,10 +341,35 @@
   <!-- ══ Mood Banner ══ -->
   <div class="mood-banner" id="moodBanner"></div>
 
-  <!-- ══ Stock of the Day Spotlight ══ -->
-  {% if spotlight %}
+  <!-- ══ Bullish Pick of the Day / Spotlight ══ -->
+  {% if bullish_pick %}
   <div class="spotlight-wrap">
-    <div class="spotlight-card">
+    <div class="bullish-card {% if bullish_pick.direction == 'UP' %}up{% else %}dn{% endif %}">
+      <div class="bullish-main">
+        <div class="bullish-eyebrow">
+          <img src="{% static 'core/logo.png' %}" alt="Bullish">
+          Bullish's Pick of the Day
+        </div>
+        <div class="bullish-meta">
+          <a href="{% url 'stock_detail' bullish_pick.ticker %}" class="bullish-ticker" style="text-decoration:none;color:inherit;">{{ bullish_pick.ticker }}</a>
+          <div class="bullish-dir {% if bullish_pick.direction == 'UP' %}up{% else %}dn{% endif %}">
+            {% if bullish_pick.direction == 'UP' %}▲ UP{% else %}▼ DOWN{% endif %}
+          </div>
+        </div>
+        <div class="bullish-company">{{ bullish_pick.company_name }}{% if bullish_pick.sector %} · {{ bullish_pick.sector }}{% endif %}</div>
+        <div class="bullish-reasoning">{{ bullish_pick.reasoning }}</div>
+        <div class="bullish-cta">
+          <a href="{% url 'build_parlay' %}?pick={{ bullish_pick.ticker }}" class="bullish-pick-btn">+ Pick This Stock</a>
+        </div>
+      </div>
+      <div class="bullish-aside">
+        <img src="{% static 'core/hype_bull.png' %}" alt="" class="bullish-bull-img bull-mascot">
+      </div>
+    </div>
+  </div>
+  {% elif spotlight %}
+  <div class="spotlight-wrap">
+    <div class="spotlight-card" style="cursor:pointer;" onclick="window.location.href='/stock/{{ spotlight.ticker }}/'">
       <div class="spotlight-left">
         <div class="spotlight-eyebrow"><span class="spotlight-crown">👑</span> Stock of the Day</div>
         <div class="spotlight-ticker">{{ spotlight.ticker }}</div>
@@ -369,14 +377,14 @@
         <div class="spotlight-sector">{{ spotlight.sector }}</div>
       </div>
       <div class="spotlight-right">
-        <div class="spotlight-price">${{ spotlight.price }}</div>
+        <div class="spotlight-price">${{ spotlight.price|floatformat:2 }}</div>
         <div class="spotlight-mom {% if spotlight.momentum >= 0 %}pos{% else %}neg{% endif %}">
           {% if spotlight.momentum >= 0 %}+{% endif %}{{ spotlight.momentum }}%
         </div>
       </div>
       <div class="spotlight-bull-wrap">
-        <img class="bull-frame bull-frame-base"   src="{% static 'core/smoke_bull.png' %}"  alt="">
-        <img class="bull-frame bull-frame-exhale" src="{% static 'core/smoke_bull2.png' %}" alt="">
+        <img class="bull-frame bull-frame-base bull-mascot"   src="{% static 'core/smoke_bull_transparent.png' %}"  alt="">
+        <img class="bull-frame bull-frame-exhale" src="{% static 'core/smoke_bull2_transparent.png' %}" alt="">
       </div>
     </div>
   </div>
@@ -397,6 +405,33 @@
 
   <!-- ══ Sector Cards ══ -->
   <div class="content">
+
+    {% if friends_activity %}
+    <div class="card" id="friendsActivityCard">
+      <div class="card-header">
+        <div class="card-header-left">
+          <h2>Friends Activity</h2>
+        </div>
+        <a href="{% url 'friends_list' %}" style="font-size:0.75rem;color:#9945FF;text-decoration:none;font-weight:600;">View All</a>
+      </div>
+      <div style="display:flex;flex-direction:column;">
+        {% for pick in friends_activity %}
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 28px;border-bottom:1px solid #161616;">
+          <div style="width:32px;height:32px;border-radius:50%;background:rgba(153,69,255,0.18);border:1px solid rgba(153,69,255,0.35);display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;color:#c084fc;flex-shrink:0;">{{ pick.user.username|first|upper }}</div>
+          <div style="flex:1;min-width:0;">
+            <span style="font-weight:600;color:#e0e0e0;font-size:0.84rem;">{{ pick.user.username }}</span>
+            <span style="color:#555;font-size:0.84rem;"> picked </span>
+            <span style="font-weight:700;color:#fff;font-size:0.84rem;">{{ pick.ticker }}</span>
+            <span style="font-size:0.8rem;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:4px;{% if pick.direction == 'UP' %}color:#00ff87;background:rgba(0,255,135,0.1);{% else %}color:#ff4757;background:rgba(255,71,87,0.1);{% endif %}">{% if pick.direction == 'UP' %}▲{% else %}▼{% endif %} {{ pick.direction }}</span>
+            {% if pick.result == 'WIN' %}<span style="font-size:0.72rem;color:#00ff87;margin-left:6px;font-weight:700;">WIN</span>{% elif pick.result == 'LOSS' %}<span style="font-size:0.72rem;color:#ff4757;margin-left:6px;font-weight:700;">LOSS</span>{% endif %}
+          </div>
+          <div style="font-size:0.7rem;color:#444;white-space:nowrap;flex-shrink:0;">{{ pick.picked_at|timesince }} ago</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
     {% for sector, stocks in sectors.items %}
     <div class="card" id="sect-{{ sector }}" data-sector="{{ sector }}">
       <div class="card-header">
@@ -414,11 +449,7 @@
            data-ticker="{{ stock.ticker }}"
            data-company="{{ stock.company_name }}"
            data-price="{{ stock.price }}"
-           data-momentum="{{ stock.momentum }}"
-           data-sector="{{ sector }}"
-           data-prev-close="{{ stock.prev_close }}"
-           data-week52="{{ stock.week52_high }}"
-           data-volume="{{ stock.volume }}">
+           data-sector="{{ sector }}">
         <div class="rank rank-{{ forloop.counter }}">{{ forloop.counter }}</div>
         {% if forloop.first %}<span class="top-flame">🔥</span>{% else %}<span class="no-flame"></span>{% endif %}
         <div class="stock-identity">
@@ -426,7 +457,7 @@
           <div class="stock-sublabel">{{ stock.company_name }}</div>
         </div>
         <div class="sparkline-wrap" data-ticker="{{ stock.ticker }}" data-momentum="{{ stock.momentum }}"></div>
-        <div class="stock-price">${{ stock.price }}</div>
+        <div class="stock-price">${{ stock.price|floatformat:2 }}</div>
         <div class="mom-badge {% if stock.momentum >= 0 %}pos{% else %}neg{% endif %}{% if stock.momentum >= 50 %} pulse-glow{% endif %}"
              data-value="{{ stock.momentum }}">
           {% if stock.momentum >= 0 %}+{% endif %}{{ stock.momentum }}%
@@ -444,60 +475,6 @@
     <div class="no-results" id="noResults">No stocks match your search.</div>
   </div>
 
-  <!-- ══ Modal ══ -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal-card">
-      <button class="modal-close" id="modalClose">×</button>
-      <div class="modal-ticker"  id="modalTicker"></div>
-      <div class="modal-company" id="modalCompany"></div>
-      <div class="modal-sector"  id="modalSector"></div>
-      <div class="modal-price-row">
-        <div class="modal-price" id="modalPrice"></div>
-        <div class="modal-mom"   id="modalMom"></div>
-      </div>
-      <div class="modal-divider"></div>
-      <div class="modal-stats">
-        <div class="modal-stat">
-          <span class="modal-stat-label stat-tip">
-            Prev Close
-            <i class="tip-icon">?</i>
-            <span class="tip-bubble">The price this stock closed at yesterday</span>
-          </span>
-          <span class="modal-stat-value" id="modalPrevClose"></span>
-        </div>
-        <div class="modal-stat">
-          <span class="modal-stat-label stat-tip">
-            52-Week High
-            <i class="tip-icon">?</i>
-            <span class="tip-bubble">The highest price this stock has reached in the past year</span>
-          </span>
-          <span class="modal-stat-value" id="modal52w"></span>
-        </div>
-        <div class="modal-stat">
-          <span class="modal-stat-label stat-tip">
-            Volume
-            <i class="tip-icon">?</i>
-            <span class="tip-bubble">How many shares have been traded today</span>
-          </span>
-          <span class="modal-stat-value" id="modalVolume"></span>
-        </div>
-        <div class="modal-stat">
-          <span class="modal-stat-label stat-tip">
-            P/E Ratio (Trailing)
-            <i class="tip-icon">?</i>
-            <span class="tip-bubble">How expensive the stock is relative to its earnings — higher means investors are paying more for each dollar of profit</span>
-          </span>
-          <span class="modal-stat-value" id="modalPE"></span>
-        </div>
-      </div>
-      <div class="modal-divider"></div>
-      <div style="font-size:0.79rem;color:#555;font-weight:500;margin-bottom:10px;">LATEST NEWS</div>
-      <div id="modalNews"></div>
-      <div style="margin-top:16px;">
-        <a href="{% url 'build_parlay' %}" class="modal-picks-btn">Build a Parlay</a>
-      </div>
-    </div>
-  </div>
 {% endblock %}
 
 {% block extra_js %}
@@ -541,7 +518,34 @@
 
     setInterval(updateMarketPill, 1000);
     updateMarketPill();
-    setInterval(() => { if (isMarketOpen()) location.reload(); }, 60000);
+
+    let countdown = 60;
+    const tagline = document.getElementById('refreshTagline');
+
+    function fmtCountdown(s) {
+      return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    }
+    function updateTagline() {
+      if (isMarketOpen()) {
+        tagline.innerHTML = 'Refreshing in <span style="color:#9945FF;font-weight:700;font-variant-numeric:tabular-nums;text-shadow:0 0 8px rgba(153,69,255,0.8);">' + fmtCountdown(countdown) + '</span>';
+      } else {
+        tagline.textContent = 'Market closed — prices paused';
+      }
+    }
+
+    setInterval(() => {
+      if (isMarketOpen()) {
+        countdown--;
+        if (countdown <= 0) {
+          location.reload();
+        }
+      } else {
+        countdown = 60;
+      }
+      updateTagline();
+    }, 1000);
+
+    updateTagline();
   })();
 
   /* ── Animated momentum counters ── */
@@ -654,72 +658,9 @@
     document.getElementById('noResults').style.display = anyVisible || !q ? 'none' : 'block';
   });
 
-  /* ── Stock news loader ── */
-  function loadStockNews(ticker) {
-    const newsContainer = document.getElementById('modalNews');
-    newsContainer.innerHTML = '<div style="color:#444;font-size:0.75rem;">Loading...</div>';
-    fetch(`/news/${ticker}/`)
-      .then(r => r.json())
-      .then(data => {
-        // P/E
-        document.getElementById('modalPE').textContent =
-          (data.pe_ratio !== null && data.pe_ratio !== undefined) ? data.pe_ratio : 'N/A';
-        // News
-        if (!data.news.length) {
-          newsContainer.innerHTML = '<div style="color:#444;font-size:0.75rem;">No recent news.</div>';
-          return;
-        }
-        newsContainer.innerHTML = data.news.map(a => `
-          <a href="${a.link}" target="_blank" rel="noopener" style="display:block;padding:8px 0;border-bottom:1px solid #1a1a1a;text-decoration:none;">
-            <div style="font-size:0.78rem;color:#ddd;font-weight:500;line-height:1.3;margin-bottom:3px;">${a.title}</div>
-            <div style="font-size:0.68rem;color:#555;">${a.publisher}</div>
-          </a>
-        `).join('');
-      })
-      .catch(() => {
-        document.getElementById('modalPE').textContent = 'N/A';
-        newsContainer.innerHTML = '<div style="color:#444;font-size:0.75rem;">Could not load news.</div>';
-      });
-  }
-
-  /* ── Stock row modal ── */
-  const overlay = document.getElementById('modalOverlay');
-  const closeBtn = document.getElementById('modalClose');
-  function openModal(row) {
-    const mom = parseFloat(row.dataset.momentum), isPos = mom >= 0;
-    document.getElementById('modalTicker').textContent  = row.dataset.ticker;
-    document.getElementById('modalCompany').textContent = row.dataset.company;
-    document.getElementById('modalSector').textContent  = row.dataset.sector;
-    document.getElementById('modalPrice').textContent   = '$' + row.dataset.price;
-    document.getElementById('modalPrevClose').textContent = '$' + row.dataset.prevClose;
-    document.getElementById('modal52w').textContent       = '$' + row.dataset.week52;
-    document.getElementById('modalVolume').textContent  = row.dataset.volume;
-    document.getElementById('modalPE').textContent      = 'Loading…';
-    const momEl = document.getElementById('modalMom');
-    momEl.textContent = (isPos ? '+' : '') + mom.toFixed(2) + '%';
-    momEl.className   = 'modal-mom ' + (isPos ? 'pos' : 'neg');
-    overlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    loadStockNews(row.dataset.ticker);
-  }
-  function closeModal() { overlay.classList.remove('open'); document.body.style.overflow = ''; }
-  document.querySelectorAll('.stock-row').forEach(row => row.addEventListener('click', () => openModal(row)));
-  closeBtn.addEventListener('click', closeModal);
-  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-  /* ── Stat tooltip click-toggle (touch / mobile) ── */
-  document.querySelectorAll('.tip-icon').forEach(icon => {
-    icon.addEventListener('click', function (e) {
-      e.stopPropagation();
-      const tip = this.closest('.stat-tip');
-      const isOpen = tip.classList.contains('tip-open');
-      document.querySelectorAll('.stat-tip.tip-open').forEach(t => t.classList.remove('tip-open'));
-      if (!isOpen) tip.classList.add('tip-open');
-    });
-  });
-  document.addEventListener('click', () => {
-    document.querySelectorAll('.stat-tip.tip-open').forEach(t => t.classList.remove('tip-open'));
-  });
+  /* ── Stock row navigation ── */
+  document.querySelectorAll('.stock-row').forEach(row => row.addEventListener('click', () => {
+    window.location.href = '/stock/' + row.dataset.ticker + '/';
+  }));
 </script>
 {% endblock %}
