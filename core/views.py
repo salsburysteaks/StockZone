@@ -13,6 +13,7 @@ from collections import defaultdict
 from groq import Groq
 import os
 import json
+import concurrent.futures
 import yfinance as yf
 try:
     yf.set_tz_cache_location("/tmp/yfinance_cache")
@@ -1259,54 +1260,114 @@ def stock_news(request, ticker):
         return JsonResponse({'ticker': ticker, 'news': [], 'pe_ratio': None, 'error': str(e)})
 
 
-@login_required
-def stock_detail(request, ticker):
-    ticker = ticker.upper().strip()
+def _fetch_stock_detail_data(ticker):
+    """All yfinance I/O for stock_detail, isolated so it can run in a timed thread."""
+    stock = yf.Ticker(ticker)
 
     try:
-        stock = yf.Ticker(ticker)
-        fi   = stock.fast_info
+        fi = stock.fast_info
+        price = getattr(fi, 'last_price', None)
+    except Exception:
+        fi = None
+        price = None
+
+    try:
         info = stock.info
+    except Exception:
+        info = {}
 
-        price = getattr(fi, 'last_price', None) or info.get('currentPrice') or info.get('regularMarketPrice')
-        if not price:
-            raise ValueError(f"No price data for {ticker}")
+    price = price or info.get('currentPrice') or info.get('regularMarketPrice')
+    if not price:
+        raise ValueError(f"No price data for {ticker}")
 
-        prev_close  = (info.get('previousClose') or info.get('regularMarketPreviousClose') or getattr(fi, 'previous_close', None))
-        week52_high = info.get('fiftyTwoWeekHigh') or getattr(fi, 'year_high', None)
-        week52_low  = info.get('fiftyTwoWeekLow')  or getattr(fi, 'year_low',  None)
-        volume      = getattr(fi, 'last_volume', None)
-        avg_volume  = info.get('averageVolume') or info.get('averageVolume10days') or getattr(fi, 'ten_day_average_volume', None)
-        market_cap  = getattr(fi, 'market_cap', None) or info.get('marketCap')
-        pe          = info.get('trailingPE')
+    prev_close  = (info.get('previousClose') or info.get('regularMarketPreviousClose')
+                   or (getattr(fi, 'previous_close', None) if fi else None))
+    week52_high = info.get('fiftyTwoWeekHigh') or (getattr(fi, 'year_high', None) if fi else None)
+    week52_low  = info.get('fiftyTwoWeekLow')  or (getattr(fi, 'year_low',  None) if fi else None)
+    volume      = getattr(fi, 'last_volume', None) if fi else None
+    avg_volume  = (info.get('averageVolume') or info.get('averageVolume10days')
+                   or (getattr(fi, 'ten_day_average_volume', None) if fi else None))
+    market_cap  = (getattr(fi, 'market_cap', None) if fi else None) or info.get('marketCap')
+    pe          = info.get('trailingPE')
 
-        day_pct = round(((price - prev_close) / prev_close) * 100, 2) if prev_close else None
-
-        range_pct = None
-        if week52_low and week52_high and week52_high > week52_low:
-            range_pct = max(0.0, min(100.0, round((price - week52_low) / (week52_high - week52_low) * 100, 1)))
-
-        vol_ratio = round(volume / avg_volume, 2) if volume and avg_volume else None
-
-        # 1-month chart data (also slice last 5 rows for verdict momentum)
+    try:
         hist = stock.history(period='1mo')
-        chart_labels, chart_data, price_history = [], [], []
+    except Exception:
+        hist = None
+
+    chart_labels, chart_data, price_history = [], [], []
+    if hist is not None and not hist.empty:
         for dt, row in hist.iterrows():
             chart_labels.append(dt.strftime('%m/%d'))
             chart_data.append(round(float(row['Close']), 2))
         for dt, row in hist.tail(5).iterrows():
             price_history.append({'date': dt.strftime('%m/%d'), 'close': round(float(row['Close']), 2)})
 
-        # News
+    try:
         raw_news = stock.news[:5] if stock.news else []
-        news = []
-        for item in raw_news:
+    except Exception:
+        raw_news = []
+
+    news = []
+    for item in raw_news:
+        try:
             content = item.get('content', {}) or {}
             news.append({
                 'title':     content.get('title') or item.get('title', ''),
                 'publisher': (content.get('provider', {}) or {}).get('displayName') or item.get('publisher', ''),
                 'link':      (content.get('canonicalUrl', {}) or {}).get('url') or item.get('link', ''),
             })
+        except Exception:
+            continue
+
+    return {
+        'price': price, 'info': info,
+        'prev_close': prev_close, 'week52_high': week52_high, 'week52_low': week52_low,
+        'volume': volume, 'avg_volume': avg_volume, 'market_cap': market_cap, 'pe': pe,
+        'chart_labels': chart_labels, 'chart_data': chart_data,
+        'price_history': price_history, 'news': news,
+    }
+
+
+@login_required
+def stock_detail(request, ticker):
+    ticker = ticker.upper().strip()
+
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(_fetch_stock_detail_data, ticker)
+            try:
+                d = future.result(timeout=10)
+            except concurrent.futures.TimeoutError:
+                messages.error(request, f'Loading "{ticker}" timed out. Try again in a moment.')
+                return redirect('dashboard')
+    except Exception:
+        messages.error(request, f'Could not load data for "{ticker}". Check the ticker and try again.')
+        return redirect('dashboard')
+
+    price       = d['price']
+    info        = d['info']
+    prev_close  = d['prev_close']
+    week52_high = d['week52_high']
+    week52_low  = d['week52_low']
+    volume      = d['volume']
+    avg_volume  = d['avg_volume']
+    market_cap  = d['market_cap']
+    pe          = d['pe']
+    chart_labels  = d['chart_labels']
+    chart_data    = d['chart_data']
+    price_history = d['price_history']
+    news          = d['news']
+
+    day_pct = round(((price - prev_close) / prev_close) * 100, 2) if prev_close else None
+
+    range_pct = None
+    if week52_low and week52_high and week52_high > week52_low:
+        range_pct = max(0.0, min(100.0, round((price - week52_low) / (week52_high - week52_low) * 100, 1)))
+
+    vol_ratio = round(volume / avg_volume, 2) if volume and avg_volume else None
+
+    try:
 
         def fmt_large(n):
             if not n: return 'N/A'
