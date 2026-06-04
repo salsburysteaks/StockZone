@@ -3,11 +3,11 @@ import yfinance as yf
 from django.core.cache import cache
 
 SECTOR_TICKERS = {
-    "Technology": ["AAPL", "MSFT", "NVDA", "GOOGL", "META"],
-    "Healthcare": ["JNJ", "UNH", "LLY", "ABBV", "MRK"],
-    "Finance":    ["JPM", "BAC", "GS", "MS", "WFC"],
-    "Energy":     ["XOM", "CVX", "COP", "EOG", "SLB"],
-    "Consumer":   ["WMT", "HD", "PG", "KO", "MCD"],
+    "Technology": ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMD", "INTC", "CRM", "AVGO", "QCOM", "TXN", "ADBE", "MU", "AMAT", "ORCL"],
+    "Healthcare": ["JNJ", "UNH", "PFE", "ABBV", "MRK", "TMO", "ABT", "LLY", "DHR", "BMY", "AMGN", "GILD", "CVS", "CI", "HUM"],
+    "Finance":    ["JPM", "BAC", "WFC", "GS", "MS", "C", "BLK", "AXP", "USB", "PNC", "TFC", "COF", "SCHW", "MET", "PRU"],
+    "Energy":     ["XOM", "CVX", "COP", "EOG", "SLB", "MPC", "PSX", "VLO", "OXY", "HAL", "DVN", "HES", "MRO", "BKR", "CTRA"],
+    "Consumer":   ["WMT", "HD", "PG", "KO", "PEP", "COST", "TGT", "MCD", "NKE", "SBUX", "LOW", "DG", "DLTR", "CL", "PM"],
 }
 
 COMPANY_NAMES = {
@@ -93,7 +93,7 @@ def calculate_future_odds(realized_vol, timeframe):
     return round(max(minimum, min(realized_vol * factor, 20.0)), 2)
 
 
-def get_top_stocks_by_sector(top_n=2):
+def get_top_stocks_by_sector(top_n=5):
     cached = cache.get('top_stocks')
     if cached is not None:
         return cached
@@ -168,6 +168,19 @@ def get_top_stocks_by_sector(top_n=2):
 
         sector_stocks.sort(key=lambda x: x["momentum"], reverse=True)
         all_results.extend(sector_stocks[:top_n])
+
+    # Overlay live price and momentum for the displayed tickers only
+    for stock in all_results:
+        try:
+            info = yf.Ticker(stock["ticker"]).fast_info
+            live_price = info.last_price
+            prev_close = info.previous_close
+            if live_price and prev_close and prev_close > 0:
+                stock["price"]      = round(float(live_price), 2)
+                stock["prev_close"] = round(float(prev_close), 2)
+                stock["momentum"]   = round(((live_price - prev_close) / prev_close) * 100, 2)
+        except Exception:
+            pass
 
     cache.set('top_stocks', all_results, timeout=60)
     return all_results
