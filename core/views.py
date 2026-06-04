@@ -673,6 +673,21 @@ def portfolio(request):
         for s in snapshots
     ]
 
+    # Total return since the $10,000 starting balance
+    total_return_pct = round((float(total_value) - 10000) / 10000 * 100, 2)
+    total_return_abs = abs(round(float(total_value) - 10000, 2))
+
+    # Today's gain vs the previous snapshot
+    today_gain = None
+    today_gain_abs = None
+    today_gain_pct = None
+    if len(snapshots) >= 2:
+        prev_val = float(snapshots[-2].total_value)
+        today_gain = round(float(total_value) - prev_val, 2)
+        today_gain_abs = abs(today_gain)
+        if prev_val:
+            today_gain_pct = round(today_gain / prev_val * 100, 2)
+
     return render(request, "core/portfolio.html", {
         "paper": paper,
         "holdings": enriched,
@@ -680,6 +695,11 @@ def portfolio(request):
         "total_value": total_value,
         "sector_chart_data": sector_chart_data,
         "value_chart_data": value_chart_data,
+        "total_return_pct": total_return_pct,
+        "total_return_abs": total_return_abs,
+        "today_gain": today_gain,
+        "today_gain_abs": today_gain_abs,
+        "today_gain_pct": today_gain_pct,
         "ticker_stocks": get_top_stocks_by_sector(),
     })
 
