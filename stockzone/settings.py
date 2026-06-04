@@ -76,6 +76,13 @@ TEMPLATES = [
 WSGI_APPLICATION = "stockzone.wsgi.application"
 
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/tmp/django_cache',
+    }
+}
+
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
