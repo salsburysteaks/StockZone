@@ -76,16 +76,11 @@
 
   .sv-red { color: #ff4757 !important; }
 
-  .port-stats { display: flex; gap: 12px; margin-bottom: 16px; }
-  .port-stats .stat-card { flex: 1; min-width: 0; }
-
   @media (max-width: 1000px) { .portfolio-layout { grid-template-columns: 1fr; } }
   @media (max-width: 768px) {
     .page-hero { overflow: visible; }
     .portfolio-layout { grid-template-columns: 1fr; }
     .bull-hero { display: none; }
-    .port-stats { flex-wrap: wrap; }
-    .port-stats .stat-card { min-width: calc(50% - 6px); }
   }
 
   .sector-chart-wrap {
@@ -151,7 +146,7 @@
     <div style="display:flex;flex-direction:column;gap:16px;">
 
       <!-- Stats Row -->
-      <div class="port-stats">
+      <div class="stat-row" style="margin-top:0">
         <div class="stat-card">
           <div class="stat-label">Total Return</div>
           <div class="stat-value mono {% if total_return_pct >= 0 %}sv-green{% else %}sv-red{% endif %}">
@@ -160,7 +155,7 @@
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Today's Change</div>
+          <div class="stat-label">Today's Gain / Loss</div>
           <div class="stat-value mono {% if today_gain is not None %}{% if today_gain >= 0 %}sv-green{% else %}sv-red{% endif %}{% endif %}">
             {% if today_gain is not None %}
               {% if today_gain >= 0 %}+{% else %}-{% endif %}${{ today_gain_abs|floatformat:2|intcomma }}
