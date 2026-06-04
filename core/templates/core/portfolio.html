@@ -80,6 +80,26 @@
     .portfolio-layout { grid-template-columns: 1fr; }
     .bull-hero { display: none; }
   }
+
+  .sector-chart-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 28px 24px 32px;
+  }
+  .sector-chart-canvas-wrap {
+    position: relative; width: 100%; max-width: 360px;
+  }
+  .sector-chart-center-label {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    text-align: center; pointer-events: none;
+  }
+  .sector-chart-center-label .scl-title {
+    font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.6px; color: #555;
+  }
+  .sector-chart-center-label .scl-val {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem;
+    letter-spacing: 1px; color: #fff; line-height: 1.1;
+  }
 </style>
 {% endblock %}
 
@@ -172,6 +192,25 @@
       </div>
     </div>
 
+    <!-- Sector Allocation Chart -->
+    {% if sector_chart_data %}
+    <div class="pcard" style="border-left-color:#9945FF">
+      <div class="pcard-hd">
+        <span class="pcard-title">Sector Allocation</span>
+        <span class="pcard-badge">By Holdings Value</span>
+      </div>
+      <div class="sector-chart-wrap">
+        <div class="sector-chart-canvas-wrap">
+          <canvas id="sectorChart"></canvas>
+          <div class="sector-chart-center-label">
+            <div class="scl-title">Holdings</div>
+            <div class="scl-val">${{ total_holdings_value|floatformat:0|intcomma }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Buy Panel -->
     <div id="buy-panel" class="pcard" style="border-left-color:#9945FF">
       <div class="pcard-hd">
@@ -198,6 +237,8 @@
 </main>
 
 {% block extra_js %}
+{% if sector_chart_data %}{{ sector_chart_data|json_script:"sectorData" }}{% endif %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script>
   // Buy form guard
   document.querySelector('form[action*="buy"]').addEventListener('submit', function () {
@@ -216,6 +257,59 @@
       btn.style.opacity = '0.7';
     });
   });
+
+  // Sector allocation doughnut chart
+  (function () {
+    const el = document.getElementById('sectorData');
+    if (!el) return;
+    const data = JSON.parse(el.textContent);
+    if (!data.length) return;
+
+    const COLORS = ['#9945FF','#b56aff','#7c2ee0','#c084fc','#6d28d9','#a855f7','#4c1d95','#d8b4fe'];
+
+    new Chart(document.getElementById('sectorChart').getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: data.map(d => d.sector + ' ' + d.pct + '%'),
+        datasets: [{
+          data: data.map(d => d.pct),
+          backgroundColor: COLORS.slice(0, data.length),
+          borderColor: 'rgba(10,10,18,0.6)',
+          borderWidth: 2,
+          hoverOffset: 10,
+        }]
+      },
+      options: {
+        responsive: true,
+        cutout: '62%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#aaa',
+              padding: 14,
+              font: { size: 11, family: 'inherit' },
+              boxWidth: 12,
+              boxHeight: 12,
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(18,10,30,0.92)',
+            borderColor: 'rgba(153,69,255,0.35)',
+            borderWidth: 1,
+            titleColor: '#fff',
+            bodyColor: '#bbb',
+            padding: 10,
+            callbacks: {
+              label: function(ctx) {
+                return '  ' + ctx.parsed + '% of holdings';
+              }
+            }
+          }
+        }
+      }
+    });
+  })();
 </script>
 {% endblock %}
 {% endblock %}

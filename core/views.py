@@ -25,7 +25,7 @@ try:
 except Exception:
     pass
 from .models import PaperPortfolio, PaperHolding, DailyPick, UserProfile, Parlay, ParlayLeg, FutureBet, Notification, Follow, BullishPick
-from .stock_data import get_top_stocks_by_sector, COMPANY_NAMES, calculate_future_odds
+from .stock_data import get_top_stocks_by_sector, COMPANY_NAMES, calculate_future_odds, TICKER_SECTORS
 
 
 def landing(request):
@@ -632,11 +632,32 @@ def portfolio(request):
             "holding_value": holding_value,
         })
 
+    total_hv = float(total_holdings_value)
+    sector_totals = {}
+    if total_hv > 0:
+        for row in enriched:
+            if row["holding_value"] is None:
+                continue
+            t = row["holding"].ticker
+            sector = TICKER_SECTORS.get(t)
+            if not sector:
+                try:
+                    sector = yf.Ticker(t).info.get("sector") or "Unknown"
+                except Exception:
+                    sector = "Unknown"
+            sector_totals[sector] = sector_totals.get(sector, 0.0) + float(row["holding_value"])
+
+    sector_chart_data = [
+        {"sector": s, "pct": round(v / total_hv * 100, 1)}
+        for s, v in sorted(sector_totals.items(), key=lambda x: -x[1])
+    ] if total_hv > 0 else []
+
     return render(request, "core/portfolio.html", {
         "paper": paper,
         "holdings": enriched,
         "total_holdings_value": total_holdings_value,
         "total_value": paper.balance + total_holdings_value,
+        "sector_chart_data": sector_chart_data,
         "ticker_stocks": get_top_stocks_by_sector(),
     })
 

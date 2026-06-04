@@ -43,6 +43,8 @@ COMPANY_NAMES = {
     "DLTR": "Dollar Tree", "CL": "Colgate-Palmolive", "PM": "Philip Morris",
 }
 
+TICKER_SECTORS = {t: s for s, ts in SECTOR_TICKERS.items() for t in ts}
+
 # (scale_factor, floor_minimum) per timeframe
 TIMEFRAME_FACTORS = {
     "3D": (1.5, 2.0),
