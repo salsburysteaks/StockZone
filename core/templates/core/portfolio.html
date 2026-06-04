@@ -234,10 +234,24 @@
       <p class="buy-note">Paper trading — no real money. Test strategies and track positions risk-free.</p>
     </div>
   </div>
+
+  <!-- Portfolio Value Over Time (full-width, below both columns) -->
+  {% if value_chart_data %}
+  <div class="pcard" style="margin-top:16px">
+    <div class="pcard-hd">
+      <span class="pcard-title">Portfolio Value</span>
+      <span class="pcard-badge">Last {{ value_chart_data|length }} Day{{ value_chart_data|length|pluralize }}</span>
+    </div>
+    <div style="padding:24px 24px 20px;position:relative;height:230px;">
+      <canvas id="valueChart"></canvas>
+    </div>
+  </div>
+  {% endif %}
 </main>
 
 {% block extra_js %}
 {% if sector_chart_data %}{{ sector_chart_data|json_script:"sectorData" }}{% endif %}
+{% if value_chart_data %}{{ value_chart_data|json_script:"valueData" }}{% endif %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script>
   // Buy form guard
@@ -303,6 +317,82 @@
             callbacks: {
               label: function(ctx) {
                 return '  ' + ctx.parsed + '% of holdings';
+              }
+            }
+          }
+        }
+      }
+    });
+  })();
+
+  // Portfolio value line chart
+  (function () {
+    const el = document.getElementById('valueData');
+    if (!el) return;
+    const data = JSON.parse(el.textContent);
+    if (!data.length) return;
+
+    const ctx = document.getElementById('valueChart').getContext('2d');
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.map(d => d.date),
+        datasets: [{
+          data: data.map(d => d.value),
+          borderColor: '#9945FF',
+          borderWidth: 2,
+          fill: true,
+          backgroundColor: function(context) {
+            const chart = context.chart;
+            const {ctx: c, chartArea} = chart;
+            if (!chartArea) return 'rgba(153,69,255,0.15)';
+            const grad = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            grad.addColorStop(0, 'rgba(153,69,255,0.32)');
+            grad.addColorStop(1, 'rgba(153,69,255,0)');
+            return grad;
+          },
+          pointBackgroundColor: '#9945FF',
+          pointBorderColor: '#0a0a12',
+          pointBorderWidth: 2,
+          pointRadius: data.length <= 14 ? 4 : 2,
+          pointHoverRadius: 6,
+          tension: 0.35,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(18,10,30,0.92)',
+            borderColor: 'rgba(153,69,255,0.35)',
+            borderWidth: 1,
+            titleColor: '#fff',
+            bodyColor: '#bbb',
+            padding: 10,
+            callbacks: {
+              label: function(ctx) {
+                return ' $' + ctx.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            border: { color: 'rgba(255,255,255,0.06)' },
+            ticks: { color: '#555', font: { size: 10, family: 'inherit' }, maxTicksLimit: 12 }
+          },
+          y: {
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            border: { color: 'rgba(255,255,255,0.06)' },
+            ticks: {
+              color: '#555',
+              font: { size: 10, family: 'inherit' },
+              callback: function(v) {
+                return '$' + v.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
               }
             }
           }

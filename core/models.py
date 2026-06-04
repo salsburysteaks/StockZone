@@ -190,6 +190,19 @@ class BullishPick(models.Model):
         return f"{self.date} — {self.ticker} {self.direction}"
 
 
+class PortfolioSnapshot(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="portfolio_snapshots")
+    date = models.DateField()
+    total_value = models.DecimalField(max_digits=14, decimal_places=2)
+
+    class Meta:
+        unique_together = ("user", "date")
+        ordering = ["date"]
+
+    def __str__(self):
+        return f"{self.user} — {self.date}: ${self.total_value}"
+
+
 class Notification(models.Model):
     TYPE_CHOICES = [
         ("pick_resolved", "Pick Resolved"),

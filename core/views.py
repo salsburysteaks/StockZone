@@ -24,7 +24,7 @@ try:
     yf_cache.set_location("/tmp")
 except Exception:
     pass
-from .models import PaperPortfolio, PaperHolding, DailyPick, UserProfile, Parlay, ParlayLeg, FutureBet, Notification, Follow, BullishPick
+from .models import PaperPortfolio, PaperHolding, DailyPick, UserProfile, Parlay, ParlayLeg, FutureBet, Notification, Follow, BullishPick, PortfolioSnapshot
 from .stock_data import get_top_stocks_by_sector, COMPANY_NAMES, calculate_future_odds, TICKER_SECTORS
 
 
@@ -652,12 +652,34 @@ def portfolio(request):
         for s, v in sorted(sector_totals.items(), key=lambda x: -x[1])
     ] if total_hv > 0 else []
 
+    total_value = paper.balance + total_holdings_value
+
+    # Record today's snapshot (last visit of the day wins)
+    today = timezone.now().date()
+    PortfolioSnapshot.objects.update_or_create(
+        user=request.user,
+        date=today,
+        defaults={"total_value": total_value},
+    )
+
+    # Fetch last 30 snapshots, oldest first for the chart
+    snapshots = list(
+        PortfolioSnapshot.objects.filter(user=request.user)
+        .order_by("-date")[:30]
+    )
+    snapshots.reverse()
+    value_chart_data = [
+        {"date": s.date.strftime("%-m/%-d"), "value": float(s.total_value)}
+        for s in snapshots
+    ]
+
     return render(request, "core/portfolio.html", {
         "paper": paper,
         "holdings": enriched,
         "total_holdings_value": total_holdings_value,
-        "total_value": paper.balance + total_holdings_value,
+        "total_value": total_value,
         "sector_chart_data": sector_chart_data,
+        "value_chart_data": value_chart_data,
         "ticker_stocks": get_top_stocks_by_sector(),
     })
 
