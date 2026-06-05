@@ -313,6 +313,9 @@
           <span class="live-dot"></span>
           <span id="refreshTagline">Live picks refreshing every 60 seconds</span>
         </div>
+        <button type="button" class="tour-replay-btn" onclick="window.startStockZoneTour && window.startStockZoneTour()">
+          &#9654; Take the Tour
+        </button>
       </div>
       <div class="hero-pills">
         {% if user_profile.current_streak > 0 %}
@@ -662,5 +665,182 @@
   document.querySelectorAll('.stock-row').forEach(row => row.addEventListener('click', () => {
     window.location.href = '/stock/' + row.dataset.ticker + '/';
   }));
+</script>
+
+<!-- ══ Shepherd.js Product Tour ══ -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shepherd.js@13/dist/css/shepherd.css">
+<script src="https://cdn.jsdelivr.net/npm/shepherd.js@13/dist/js/shepherd.min.js"></script>
+<style>
+  /* Dark purple Shepherd overrides */
+  .shepherd-element {
+    background: rgba(14, 7, 26, 0.97) !important;
+    border: 1px solid rgba(153,69,255,0.55) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 0 40px rgba(153,69,255,0.3), 0 8px 32px rgba(0,0,0,0.6) !important;
+    max-width: 320px !important;
+    font-family: inherit !important;
+  }
+  .shepherd-header {
+    background: transparent !important;
+    padding: 18px 20px 6px !important;
+    border-bottom: none !important;
+  }
+  .shepherd-title {
+    font-family: 'Bebas Neue', sans-serif !important;
+    font-size: 1.35rem !important;
+    letter-spacing: 1.5px !important;
+    color: #9945FF !important;
+    font-weight: 400 !important;
+  }
+  .shepherd-cancel-icon {
+    color: #555 !important;
+    font-size: 1.4rem !important;
+    background: none !important;
+  }
+  .shepherd-cancel-icon:hover { color: #fff !important; }
+  .shepherd-text {
+    padding: 6px 20px 16px !important;
+    font-size: 0.88rem !important;
+    line-height: 1.55 !important;
+    color: #ccc !important;
+  }
+  .shepherd-footer {
+    padding: 0 20px 16px !important;
+    border-top: none !important;
+    gap: 8px !important;
+  }
+  .shepherd-button {
+    border-radius: 8px !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    font-family: inherit !important;
+    padding: 7px 16px !important;
+    cursor: pointer !important;
+    transition: all 0.15s !important;
+    border: none !important;
+  }
+  .shepherd-button-primary {
+    background: #9945FF !important;
+    color: #fff !important;
+  }
+  .shepherd-button-primary:hover { background: #7c2ee0 !important; box-shadow: 0 0 16px rgba(153,69,255,0.5) !important; }
+  .shepherd-button-secondary {
+    background: transparent !important;
+    color: #666 !important;
+    border: 1px solid #333 !important;
+  }
+  .shepherd-button-secondary:hover { color: #aaa !important; border-color: #555 !important; }
+  .shepherd-arrow::before { background: rgba(14, 7, 26, 0.97) !important; border-color: rgba(153,69,255,0.55) !important; }
+  .shepherd-has-title .shepherd-content .shepherd-header { padding-top: 18px !important; }
+  /* Tour replay button on dashboard hero */
+  .tour-replay-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 8px; font-size: 0.76rem; font-weight: 700;
+    color: #9945FF; border: 1px solid rgba(153,69,255,0.4); background: rgba(153,69,255,0.08);
+    cursor: pointer; font-family: inherit; transition: all 0.15s; text-decoration: none;
+    margin-top: 10px;
+  }
+  .tour-replay-btn:hover { background: rgba(153,69,255,0.18); border-color: #9945FF; color: #fff; }
+</style>
+<script>
+(function () {
+  const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+
+  function markTourSeen() {
+    fetch('/tour/seen/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
+    }).catch(() => {});
+  }
+
+  function buildTour() {
+    const tour = new Shepherd.Tour({
+      useModalOverlay: true,
+      defaultStepOptions: {
+        scrollTo: { behavior: 'smooth', block: 'center' },
+        cancelIcon: { enabled: true },
+        modalOverlayOpeningRadius: 8,
+        modalOverlayOpeningPadding: 6,
+        buttons: [
+          { text: 'Skip Tour', classes: 'shepherd-button-secondary', action() { markTourSeen(); tour.cancel(); } },
+          { text: 'Next →', classes: 'shepherd-button-primary', action() { tour.next(); } },
+        ],
+      },
+    });
+
+    tour.addStep({
+      id: 'ticker-bar',
+      title: 'THE LIVE TICKER',
+      text: "That scrolling strip at the top is the live market ticker. Every stock you see on the dashboard, updating in real time. Green means up, red means down. Eyes on the tape.",
+      attachTo: { element: '.ticker-tape', on: 'bottom' },
+    });
+
+    tour.addStep({
+      id: 'sector-tabs',
+      title: 'FIVE SECTORS',
+      text: "Five sectors, 25 movers ranked by momentum. Jump between Tech, Healthcare, Finance, Energy, and Consumer with the tabs. The flaming stock at the top of each sector is the hottest mover right now.",
+      attachTo: { element: '.tabs-bar', on: 'bottom' },
+    });
+
+    tour.addStep({
+      id: 'stock-row',
+      title: 'THE PICKS',
+      text: "Every row is a live stock ranked by momentum. Click any stock to pull up the full detail page with price history, volume, P/E ratio, and my analyst verdict on whether it's worth a pick.",
+      attachTo: { element: '.stock-row.top-row', on: 'right' },
+    });
+
+    tour.addStep({
+      id: 'buy-btn',
+      title: 'BUY IN',
+      text: "Hit Buy to drop that stock into your paper portfolio. No real money, no risk. Build positions, watch them move, and see if your instincts are right.",
+      attachTo: { element: '.buy-btn', on: 'left' },
+    });
+
+    tour.addStep({
+      id: 'parlay-btn',
+      title: 'BUILD A PARLAY',
+      text: "Stack multiple picks into a Parlay and your payout multiplies every time you add a leg. One right pick is nice. Four in a row is a payday. Hit the Parlay tab in the nav to start stacking.",
+      attachTo: { element: '.picks-btn', on: 'top' },
+    });
+
+    tour.addStep({
+      id: 'portfolio-nav',
+      title: 'YOUR PORTFOLIO',
+      text: "The Portfolio page tracks every position you hold, your total return, today's gain or loss, and a full chart of your value over time. Check it every session.",
+      attachTo: { element: '.navbar-links a[href*="portfolio"]', on: 'bottom' },
+    });
+
+    tour.addStep({
+      id: 'chatbot',
+      title: "THAT'S ME",
+      text: "I'm Bullish, your personal stock analyst. Ask me what any term means, whether a pick looks good, or how to read the numbers on a stock page. I keep it real and I keep it quick.",
+      attachTo: { element: '#chatBubbleBtn', on: 'top' },
+      buttons: [
+        { text: 'Done', classes: 'shepherd-button-primary', action() { markTourSeen(); tour.complete(); } },
+      ],
+    });
+
+    tour.on('cancel', markTourSeen);
+
+    return tour;
+  }
+
+  // Auto-start for new users
+  {% if show_tour %}
+  window.addEventListener('load', function () {
+    setTimeout(function () { buildTour().start(); }, 800);
+  });
+  {% endif %}
+
+  // Replay button on dashboard + nav button when already on dashboard
+  window.startStockZoneTour = function () { buildTour().start(); };
+
+  // Handle ?tour=1 from nav "Take the Tour" link
+  if (new URLSearchParams(window.location.search).get('tour') === '1') {
+    window.addEventListener('load', function () {
+      setTimeout(function () { buildTour().start(); }, 800);
+    });
+  }
+})();
 </script>
 {% endblock %}

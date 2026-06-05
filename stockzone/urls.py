@@ -40,6 +40,7 @@ from core.views import (
     edit_profile,
     share_parlay, share_streak,
     stock_detail, stock_chart_json,
+    mark_tour_seen,
 )
 
 urlpatterns = [
@@ -81,4 +82,5 @@ urlpatterns = [
     path("friends/follow/<str:username>/", follow_user, name="follow_user"),
     path("friends/search/", user_search, name="user_search"),
     path("friends/profile/<str:username>/", friend_profile, name="friend_profile"),
+    path("tour/seen/", mark_tour_seen, name="mark_tour_seen"),
 ]

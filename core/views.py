@@ -400,6 +400,8 @@ def dashboard(request):
 
     bullish_pick = BullishPick.objects.filter(date=timezone.localdate()).first()
 
+    show_tour = not profile.has_seen_tour
+
     return render(request, "core/dashboard.html", {
         "sectors": dict(by_sector),
         "all_stocks": stocks,
@@ -408,7 +410,17 @@ def dashboard(request):
         "user_profile": profile,
         "bullish_pick": bullish_pick,
         "friends_activity": friends_activity,
+        "show_tour": show_tour,
     })
+
+
+@login_required
+@require_POST
+def mark_tour_seen(request):
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    profile.has_seen_tour = True
+    profile.save(update_fields=["has_seen_tour"])
+    return JsonResponse({"ok": True})
 
 
 @login_required

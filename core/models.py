@@ -71,6 +71,7 @@ class UserProfile(models.Model):
     total_wins = models.IntegerField(default=0)
     last_pick_date = models.DateField(null=True, blank=True)
     has_completed_onboarding = models.BooleanField(default=False)
+    has_seen_tour = models.BooleanField(default=False)
     display_name = models.CharField(max_length=50, blank=True)
     bio = models.TextField(max_length=150, blank=True)
 
