@@ -172,9 +172,9 @@ def get_top_stocks_by_sector(top_n=5):
     # Overlay live price and momentum for the displayed tickers only
     for stock in all_results:
         try:
-            info = yf.Ticker(stock["ticker"]).fast_info
-            live_price = info.last_price
-            prev_close = info.previous_close
+            fi = yf.Ticker(stock["ticker"]).fast_info
+            live_price = fi['lastPrice']
+            prev_close = fi['previousClose']
             if live_price and prev_close and prev_close > 0:
                 stock["price"]      = round(float(live_price), 2)
                 stock["prev_close"] = round(float(prev_close), 2)
