@@ -59,7 +59,10 @@ def stock_analyzer(request):
         info  = stock.info        # fundamentals — most complete source
 
         # ── Live price from fast_info ──────────────────────────────────────
-        price      = getattr(fi, 'last_price', None)
+        try:
+            price = yf.Ticker(ticker).fast_info['lastPrice']
+        except Exception:
+            price = None
         volume     = getattr(fi, 'last_volume', None)
         market_cap = getattr(fi, 'market_cap', None)
 
@@ -431,8 +434,11 @@ def stock_prices_json(request):
         ticker = s["ticker"]
         try:
             info = yf.Ticker(ticker).fast_info
-            price = info.last_price
-            prev_close = info.previous_close
+            try:
+                price = yf.Ticker(ticker).fast_info['lastPrice']
+            except Exception:
+                price = None
+            prev_close = info['previousClose']
             if price is None or prev_close is None or prev_close == 0:
                 raise ValueError("incomplete fast_info")
             momentum = ((price - prev_close) / prev_close) * 100
@@ -1345,7 +1351,10 @@ def _fetch_stock_detail_data(ticker):
 
     try:
         fi = stock.fast_info
-        price = getattr(fi, 'last_price', None)
+        try:
+            price = yf.Ticker(ticker).fast_info['lastPrice']
+        except Exception:
+            price = None
     except Exception:
         fi = None
         price = None
